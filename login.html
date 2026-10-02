@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Log in | RentNest</title>
+<style>
+:root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.logo{display:block;max-width:420px;margin:28px auto 0;padding:0 20px;font:700 1.25rem Georgia,serif;text-decoration:none}
+.card{max-width:420px;margin:16px auto 40px;background:var(--white);border:1px solid var(--line);border-radius:6px;padding:26px}
+h1{font:700 1.6rem Georgia,serif;margin:0 0 6px}
+p.sub{color:var(--muted);margin:0 0 18px}
+label{display:block;font-weight:600;margin:14px 0 4px}
+input,select{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+button{width:100%;margin-top:18px;padding:12px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+button.link{background:none;color:var(--muted);text-decoration:underline;margin-top:8px;padding:6px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
+#msg{margin-top:14px;min-height:1.4em;font-size:.95rem}
+#msg.err{color:#b3261e}
+#msg.ok{color:#0f6b4f}
+.hide{display:none}
+.code{letter-spacing:.4em;font-size:1.4rem;text-align:center}
+</style>
+</head>
+<body>
+<a class="logo" href="index.html">RentNest</a>
+<div class="card">
+
+<div id="stepEmail">
+<h1>Log in or sign up</h1>
+<p class="sub">Enter your email and we will send you a 6-digit code.</p>
+<label for="email">Email</label>
+<input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+<details style="margin-top:14px">
+<summary>New here? Add your details</summary>
+<label for="name">Full name</label>
+<input id="name" autocomplete="name">
+<label for="phone">Phone (optional)</label>
+<input id="phone" type="tel" autocomplete="tel">
+<label for="role">I want to</label>
+<select id="role"><option value="renter">Rent a property</option><option value="landlord">List my property</option></select>
+</details>
+<button id="send">Send code</button>
+</div>
+
+<div id="stepCode" class="hide">
+<h1>Enter your code</h1>
+<p class="sub" id="sentTo"></p>
+<label for="code">6-digit code</label>
+<input id="code" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+<button id="verify">Verify and continue</button>
+<button class="link" id="back">Use a different email</button>
+</div>
+
+<div id="stepIn" class="hide">
+<h1>You are logged in</h1>
+<p class="sub" id="who"></p>
+<button id="goHome">Go to home page</button>
+<button class="link" id="logout">Log out</button>
+</div>
+
+<div id="msg" role="status" aria-live="polite"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb = supabase.createClient(
+  "https://abppfpgazlngdhrejrog.supabase.co",
+  "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
+);
+var $ = function(id){ return document.getElementById(id); };
+function show(step){
+  ["stepEmail","stepCode","stepIn"].forEach(function(s){ $(s).classList.toggle("hide", s !== step); });
+}
+function say(text, kind){ $("msg").textContent = text || ""; $("msg").className = kind || ""; }
+
+async function showSession(){
+  var r = await sb.auth.getSession();
+  var s = r.data.session;
+  if(s){
+    $("who").textContent = "Signed in as " + s.user.email;
+    show("stepIn");
+  } else {
+    show("stepEmail");
+  }
+}
+
+$("send").onclick = async function(){
+  var email = $("email").value.trim();
+  if(!email){ say("Enter your email address.", "err"); return; }
+  $("send").disabled = true; say("Sending code...");
+  var res = await sb.auth.signInWithOtp({
+    email: email,
+    options: {
+      shouldCreateUser: true,
+      data: {
+        full_name: $("name").value.trim() || undefined,
+        phone: $("phone").value.trim() || undefined,
+        role: $("role").value
+      }
+    }
+  });
+  $("send").disabled = false;
+  if(res.error){ say(res.error.message, "err"); return; }
+  $("sentTo").textContent = "We sent a code to " + email + ". It can take a minute.";
+  show("stepCode"); say("");
+  $("code").focus();
+};
+
+$("verify").onclick = async function(){
+  var email = $("email").value.trim();
+  var token = $("code").value.trim();
+  if(token.length !== 6){ say("Enter the 6-digit code.", "err"); return; }
+  $("verify").disabled = true; say("Checking code...");
+  var res = await sb.auth.verifyOtp({ email: email, token: token, type: "email" });
+  $("verify").disabled = false;
+  if(res.error){ say("That code is wrong or has expired. Request a new one.", "err"); return; }
+  say("Email verified. You are logged in.", "ok");
+  showSession();
+};
+
+$("back").onclick = function(){ $("code").value = ""; say(""); show("stepEmail"); };
+$("goHome").onclick = function(){ location.href = "index.html"; };
+$("logout").onclick = async function(){
+  await sb.auth.signOut();
+  say("You are logged out.", "ok");
+  show("stepEmail");
+};
+
+showSession();
+</script>
+</body>
+</html>
