@@ -2,485 +2,1112 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Log in | RentNest</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login / Sign up | RentNest</title>
+<meta name="description" content="RentNest account login and signup">
 <style>
-:root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--white:#fff}
-*{box-sizing:border-box}
-body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
-a{color:inherit}
-.logo{display:block;max-width:420px;margin:28px auto 0;padding:0 20px;font:700 1.25rem Georgia,serif;text-decoration:none}
-.card{max-width:420px;margin:16px auto 40px;background:var(--white);border:1px solid var(--line);border-radius:6px;padding:26px}
-h1{font:700 1.6rem Georgia,serif;margin:0 0 6px}
-p.sub{color:var(--muted);margin:0 0 14px}
-.tabs{display:flex;gap:8px;margin-bottom:18px}
-.tabs button{flex:1;margin:0;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
-.tabs button.on{background:var(--ink);color:var(--white);border-color:var(--ink)}
-label{display:block;font-weight:600;margin:14px 0 4px}
-input,select{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
-button{width:100%;margin-top:18px;padding:12px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;cursor:pointer}
-button:disabled{opacity:.6;cursor:wait}
-button.link{background:none;color:var(--muted);text-decoration:underline;margin-top:8px;padding:6px}
-input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
-small{color:var(--muted)}
-#msg{margin-top:14px;min-height:1.4em;font-size:.95rem}
-#msg.err{color:#b3261e}
-#msg.ok{color:#0f6b4f}
-.hide{display:none}
-.btn{display:block;text-align:center;margin-top:18px;padding:12px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border-radius:4px;text-decoration:none}
-ol{padding-left:1.2em;color:var(--muted)}
-ol li{margin-bottom:6px}
-.code{letter-spacing:.4em;font-size:1.4rem;text-align:center}
+  :root{
+    --ink:#18212b;
+    --ink-2:#263444;
+    --muted:#687483;
+    --line:#dfe5eb;
+    --soft:#f5f7f9;
+    --white:#ffffff;
+    --success:#147a55;
+    --danger:#ba2d2d;
+    --accent:#e7aa3b;
+    --shadow:0 24px 70px rgba(18, 29, 43, .14);
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box}
+
+  html,body{min-height:100%}
+
+  body{
+    margin:0;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 10% 0%, rgba(231,170,59,.14), transparent 25%),
+      radial-gradient(circle at 100% 10%, rgba(24,33,43,.08), transparent 28%),
+      linear-gradient(180deg,#fbfcfd 0%,#f3f5f7 100%);
+  }
+
+  button,input,select{font:inherit}
+
+  a{color:inherit}
+
+  .page{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:28px 16px 44px;
+  }
+
+  .shell{
+    width:min(100%, 1040px);
+    display:grid;
+    grid-template-columns:1.08fr .92fr;
+    background:var(--white);
+    border:1px solid rgba(223,229,235,.9);
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+
+  .hero{
+    position:relative;
+    min-height:680px;
+    padding:48px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    color:#fff;
+    background:
+      linear-gradient(155deg,rgba(24,33,43,.96),rgba(24,33,43,.82)),
+      radial-gradient(circle at 25% 20%,rgba(231,170,59,.35),transparent 35%),
+      #18212b;
+  }
+
+  .hero:before,
+  .hero:after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter:blur(4px);
+    pointer-events:none;
+  }
+
+  .hero:before{
+    width:240px;
+    height:240px;
+    right:-90px;
+    top:42px;
+    background:rgba(231,170,59,.18);
+  }
+
+  .hero:after{
+    width:290px;
+    height:290px;
+    left:-150px;
+    bottom:-150px;
+    background:rgba(255,255,255,.05);
+  }
+
+  .brand{
+    position:relative;
+    z-index:1;
+    font-family:Georgia, "Times New Roman", serif;
+    font-weight:700;
+    font-size:1.5rem;
+    letter-spacing:-.02em;
+    text-decoration:none;
+  }
+
+  .hero-copy{
+    position:relative;
+    z-index:1;
+    max-width:480px;
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.09);
+    border:1px solid rgba(255,255,255,.12);
+    font-size:.78rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .eyebrow-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 4px rgba(231,170,59,.14);
+  }
+
+  .hero h1{
+    margin:20px 0 14px;
+    font-family:Georgia, "Times New Roman", serif;
+    font-size:clamp(2.25rem,4vw,4rem);
+    line-height:1.04;
+    letter-spacing:-.035em;
+  }
+
+  .hero p{
+    margin:0;
+    color:rgba(255,255,255,.76);
+    max-width:46ch;
+    font-size:1.02rem;
+  }
+
+  .hero-note{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding-top:22px;
+    color:rgba(255,255,255,.68);
+    font-size:.9rem;
+  }
+
+  .hero-note-icon{
+    width:32px;
+    height:32px;
+    display:grid;
+    place-items:center;
+    flex:0 0 32px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:10px;
+    background:rgba(255,255,255,.05);
+  }
+
+  .panel{
+    padding:44px 42px 38px;
+    background:#fff;
+  }
+
+  .tabs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+    padding:5px;
+    margin-bottom:28px;
+    background:var(--soft);
+    border-radius:13px;
+  }
+
+  .tab{
+    appearance:none;
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    min-height:42px;
+    border-radius:9px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+
+  .tab:hover{color:var(--ink)}
+  .tab.active{
+    color:var(--ink);
+    background:#fff;
+    box-shadow:0 3px 10px rgba(24,33,43,.08);
+  }
+
+  .form-title{
+    margin:0;
+    font-family:Georgia, "Times New Roman", serif;
+    font-size:2rem;
+    letter-spacing:-.025em;
+  }
+
+  .sub{
+    margin:7px 0 23px;
+    color:var(--muted);
+  }
+
+  .field{margin-top:15px}
+
+  .field label{
+    display:block;
+    margin-bottom:7px;
+    font-size:.9rem;
+    font-weight:750;
+  }
+
+  .input,
+  .select{
+    width:100%;
+    min-height:48px;
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:11px;
+    color:var(--ink);
+    background:#fff;
+    transition:.18s ease;
+    outline:none;
+  }
+
+  .input::placeholder{color:#a1aab4}
+
+  .input:focus,
+  .select:focus{
+    border-color:var(--ink);
+    box-shadow:0 0 0 4px rgba(24,33,43,.08);
+  }
+
+  .button{
+    width:100%;
+    min-height:50px;
+    border:0;
+    border-radius:11px;
+    padding:12px 15px;
+    margin-top:20px;
+    background:var(--ink);
+    color:#fff;
+    font-weight:800;
+    cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease, background .15s ease;
+  }
+
+  .button:hover{transform:translateY(-1px)}
+  .button:disabled{opacity:.58;cursor:wait;transform:none}
+
+  .button.secondary{
+    color:var(--ink);
+    background:var(--soft);
+    border:1px solid var(--line);
+  }
+
+  .link-button{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    padding:9px 0 2px;
+  }
+
+  .status{
+    min-height:22px;
+    margin-top:14px;
+    font-size:.92rem;
+  }
+
+  .status.error{color:var(--danger)}
+  .status.success{color:var(--success)}
+
+  .micro{
+    margin-top:18px;
+    color:var(--muted);
+    font-size:.82rem;
+    line-height:1.55;
+  }
+
+  .hidden{display:none !important}
+
+  /* OTP MODAL */
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:50;
+    display:grid;
+    place-items:center;
+    padding:18px;
+    background:rgba(8,15,22,.58);
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+  }
+
+  .modal{
+    width:min(100%, 480px);
+    background:#fff;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.8);
+    box-shadow:0 35px 95px rgba(0,0,0,.25);
+    overflow:hidden;
+    animation:modalIn .22s ease-out;
+  }
+
+  @keyframes modalIn{
+    from{opacity:0;transform:translateY(12px) scale(.98)}
+    to{opacity:1;transform:none}
+  }
+
+  .modal-top{
+    padding:26px 26px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+  .modal-icon{
+    width:52px;
+    height:52px;
+    display:grid;
+    place-items:center;
+    border-radius:15px;
+    color:var(--ink);
+    background:#fff4dd;
+    border:1px solid #f1ddaf;
+    font-size:1.25rem;
+    margin-bottom:17px;
+  }
+
+  .modal h2{
+    margin:0;
+    font-family:Georgia, "Times New Roman", serif;
+    font-size:1.75rem;
+    letter-spacing:-.025em;
+  }
+
+  .modal p{
+    margin:8px 0 0;
+    color:var(--muted);
+  }
+
+  .email-chip{
+    display:inline-flex;
+    margin-top:11px;
+    padding:7px 10px;
+    border-radius:9px;
+    background:var(--soft);
+    border:1px solid var(--line);
+    font-size:.86rem;
+    font-weight:700;
+    color:var(--ink);
+    word-break:break-word;
+  }
+
+  .close{
+    width:36px;
+    height:36px;
+    flex:0 0 36px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fff;
+    color:var(--muted);
+    cursor:pointer;
+    font-size:1.2rem;
+  }
+
+  .modal-body{padding:0 26px 26px}
+
+  .otp-grid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:9px;
+    margin:22px 0 8px;
+  }
+
+  .otp{
+    width:100%;
+    aspect-ratio: .84;
+    text-align:center;
+    font-size:1.55rem;
+    font-weight:800;
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--ink);
+    background:#fbfcfd;
+    outline:none;
+  }
+
+  .otp:focus{
+    border-color:var(--ink);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(24,33,43,.08);
+  }
+
+  .otp.error{
+    border-color:#df8484;
+    box-shadow:0 0 0 4px rgba(186,45,45,.08);
+  }
+
+  .verify-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-top:12px;
+    color:var(--muted);
+    font-size:.84rem;
+  }
+
+  .resend{
+    border:0;
+    background:transparent;
+    color:var(--ink);
+    font-weight:800;
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+
+  .resend:disabled{color:#a6afb8;cursor:default;text-decoration:none}
+
+  .attempt-status{
+    min-height:21px;
+    margin-top:8px;
+    font-size:.87rem;
+  }
+
+  .attempt-status.error{color:var(--danger)}
+  .attempt-status.success{color:var(--success)}
+
+  .modal-foot{
+    padding:14px 26px 22px;
+    border-top:1px solid #edf0f3;
+    background:#fafbfd;
+    text-align:center;
+    font-size:.8rem;
+    color:var(--muted);
+  }
+
+  @media (max-width:900px){
+    .shell{grid-template-columns:1fr}
+    .hero{min-height:330px;padding:34px}
+    .panel{padding:32px 26px}
+  }
+
+  @media (max-width:560px){
+    .page{padding:0}
+    .shell{border-radius:0;min-height:100vh;border-left:0;border-right:0}
+    .hero{min-height:280px;border-radius:0;padding:26px 22px}
+    .hero h1{font-size:2.25rem}
+    .panel{padding:26px 20px 30px}
+    .otp-grid{gap:6px}
+    .otp{font-size:1.25rem;border-radius:10px}
+    .modal{border-radius:18px}
+    .modal-top,.modal-body{padding-left:20px;padding-right:20px}
+    .modal-foot{padding-left:20px;padding-right:20px}
+    .verify-line{align-items:flex-start;flex-direction:column}
+  }
 </style>
 </head>
 <body>
-<a class="logo" href="index.html">RentNest</a>
-<div class="card">
-<div id="tabs" class="tabs">
-<button type="button" id="tabLogin" class="on">Log in</button>
-<button type="button" id="tabSignup">Sign up</button>
-</div>
 
-<form id="stLogin">
-<h1>Welcome back</h1>
-<label for="lEmail">Email</label>
-<input id="lEmail" type="email" autocomplete="email" required>
-<label for="lPass">Password</label>
-<input id="lPass" type="password" autocomplete="current-password" required>
-<button type="submit" id="lBtn">Log in</button>
-<button type="button" class="link hide" id="resendLogin">Resend verification email</button>
-<button type="button" class="link" id="toForgot">Forgot password?</button>
-</form>
+<main class="page">
+  <section class="shell">
 
-<form id="stSignup" class="hide">
-<h1>Create your account</h1>
-<label for="sName">Full name</label>
-<input id="sName" autocomplete="name" required>
-<label for="sEmail">Email</label>
-<input id="sEmail" type="email" autocomplete="email" required>
-<label for="sPhone">Phone <small>(optional)</small></label>
-<input id="sPhone" type="tel" autocomplete="tel">
-<label for="sRole">I want to</label>
-<select id="sRole"><option value="renter">Rent a property</option><option value="landlord">List my property</option></select>
-<label for="sPass">Create a password <small>(at least 8 characters)</small></label>
-<input id="sPass" type="password" autocomplete="new-password" minlength="8" required>
-<label for="sPass2">Confirm password</label>
-<input id="sPass2" type="password" autocomplete="new-password" minlength="8" required>
-<button type="submit" id="sBtn">Sign up</button>
-</form>
+    <aside class="hero">
+      <a class="brand" href="index.html">RentNest</a>
 
-<div id="stCheck" class="hide">
-<h1 id="cTitle"></h1>
-<p class="sub" id="cText"></p>
-<ol id="cSteps"></ol>
-<a id="cGmail" class="btn hide" href="https://mail.google.com/" target="_blank" rel="noopener">Open Gmail</a>
-<button type="button" id="cResend">Send the email again</button>
-<button type="button" class="link" id="cBack">Back to log in</button>
-</div>
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="eyebrow-dot"></span> Secure account</span>
+        <h1>Find your next place with confidence.</h1>
+        <p>Sign in to continue your rental journey, save properties, manage listings, and keep your account details in one place.</p>
+      </div>
 
-<form id="stForgot" class="hide">
-<h1>Reset your password</h1>
-<p class="sub">Enter your email and we will send you a reset link or code.</p>
-<label for="fEmail">Email</label>
-<input id="fEmail" type="email" autocomplete="email" required>
-<button type="submit" id="fBtn">Send reset email</button>
-<button type="button" class="link" id="fBack">Back to log in</button>
-</form>
+      <div class="hero-note">
+        <div class="hero-note-icon">✦</div>
+        <div>Your email verification helps us keep RentNest accounts secure.</div>
+      </div>
+    </aside>
 
-<form id="stReset" class="hide">
-<h1>Set a new password</h1>
-<label for="rPass">New password <small>(at least 8 characters)</small></label>
-<input id="rPass" type="password" autocomplete="new-password" minlength="8" required>
-<label for="rPass2">Confirm new password</label>
-<input id="rPass2" type="password" autocomplete="new-password" minlength="8" required>
-<button type="submit" id="rBtn">Save password</button>
-</form>
+    <section class="panel">
+      <div class="tabs">
+        <button type="button" class="tab active" id="tabLogin">Log in</button>
+        <button type="button" class="tab" id="tabSignup">Sign up</button>
+      </div>
 
-<div id="stIn" class="hide">
-<h1>You are logged in</h1>
-<p class="sub" id="who"></p>
-<button type="button" id="goHome">Go to home page</button>
-<button type="button" class="link" id="logout">Log out</button>
-</div>
+      <!-- LOGIN -->
+      <form id="formLogin" autocomplete="on">
+        <h2 class="form-title">Welcome back</h2>
+        <p class="sub">Log in to continue where you left off.</p>
 
-<div id="msg" role="status" aria-live="polite"></div>
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input class="input" id="loginEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input class="input" id="loginPassword" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+        </div>
+
+        <button class="button" id="loginButton" type="submit">Log in</button>
+        <button class="link-button" id="forgotButton" type="button">Forgot password?</button>
+
+        <div class="status" id="loginStatus" aria-live="polite"></div>
+      </form>
+
+      <!-- SIGNUP -->
+      <form id="formSignup" class="hidden" autocomplete="on">
+        <h2 class="form-title">Create your account</h2>
+        <p class="sub">It only takes a minute to get started.</p>
+
+        <div class="field">
+          <label for="signupName">Full name</label>
+          <input class="input" id="signupName" type="text" autocomplete="name" placeholder="Your full name" required>
+        </div>
+
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input class="input" id="signupEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+
+        <div class="field">
+          <label for="signupPhone">Phone <span style="font-weight:500;color:#87919c">(optional)</span></label>
+          <input class="input" id="signupPhone" type="tel" autocomplete="tel" placeholder="+91 ...">
+        </div>
+
+        <div class="field">
+          <label for="signupRole">I want to</label>
+          <select class="select" id="signupRole">
+            <option value="renter">Rent a property</option>
+            <option value="landlord">List my property</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="signupPassword">Create a password</label>
+          <input class="input" id="signupPassword" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required>
+        </div>
+
+        <div class="field">
+          <label for="signupPassword2">Confirm password</label>
+          <input class="input" id="signupPassword2" type="password" autocomplete="new-password" minlength="8" placeholder="Repeat your password" required>
+        </div>
+
+        <button class="button" id="signupButton" type="submit">Create account</button>
+
+        <div class="status" id="signupStatus" aria-live="polite"></div>
+
+        <p class="micro">After signup, a 6-digit verification code will open in a secure popup. Enter the code from your email to activate your account.</p>
+      </form>
+    </section>
+  </section>
+</main>
+
+<!-- OTP MODAL -->
+<div class="modal-backdrop hidden" id="otpModal" role="dialog" aria-modal="true" aria-labelledby="otpTitle">
+  <div class="modal">
+    <div class="modal-top">
+      <div>
+        <div class="modal-icon">✉</div>
+        <h2 id="otpTitle">Verify your email</h2>
+        <p>We sent a 6-digit code to your email address.</p>
+        <div class="email-chip" id="otpEmail">you@example.com</div>
+      </div>
+      <button class="close" id="closeOtp" type="button" aria-label="Close">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="otp-grid" id="otpGrid">
+        <input class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 1">
+        <input class="otp" inputmode="numeric" maxlength="1" aria-label="Digit 2">
+        <input class="otp" inputmode="numeric" maxlength="1" aria-label="Digit 3">
+        <input class="otp" inputmode="numeric" maxlength="1" aria-label="Digit 4">
+        <input class="otp" inputmode="numeric" maxlength="1" aria-label="Digit 5">
+        <input class="otp" inputmode="numeric" maxlength="1" aria-label="Digit 6">
+      </div>
+
+      <div class="attempt-status" id="otpStatus" aria-live="polite"></div>
+
+      <button class="button" id="verifyOtpButton" type="button">Verify email</button>
+
+      <div class="verify-line">
+        <span id="resendText">Didn't receive the code?</span>
+        <button class="resend" id="resendOtpButton" type="button">Resend code</button>
+      </div>
+    </div>
+
+    <div class="modal-foot">The code is sent by Supabase Auth. Check Spam / Promotions if you don't see the email.</div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-var SITE = "https://kiranpatel001200-code.github.io/rentals/";
-var sb = supabase.createClient(
-  "https://abppfpgazlngdhrejrog.supabase.co",
-  "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
-);
-var $ = function(id){ return document.getElementById(id); };
-var STEPS = ["stLogin","stSignup","stCheck","stForgot","stReset","stIn"];
-var pendingEmail = "";
-var recovering = false;
+(function(){
+  "use strict";
 
-/*
-  NEW:
-  Remember the page from which the user opened login/signup.
-  Example:
-  login.html?returnTo=listings.html
-  login.html?returnTo=listing.html?id=123
-*/
-function getReturnTo(){
-  var p = new URLSearchParams(location.search).get("returnTo");
-  if(p){
-    try{
-      p = decodeURIComponent(p);
-    }catch(e){}
+  var SITE = "https://kiranpatel001200-code.github.io/rentals/";
+
+  var sb = supabase.createClient(
+    "https://abppfpgazlngdhrejrog.supabase.co",
+    "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
+  );
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  var loginTab = $("tabLogin");
+  var signupTab = $("tabSignup");
+  var formLogin = $("formLogin");
+  var formSignup = $("formSignup");
+
+  var loginEmail = $("loginEmail");
+  var loginPassword = $("loginPassword");
+  var loginButton = $("loginButton");
+  var forgotButton = $("forgotButton");
+  var loginStatus = $("loginStatus");
+
+  var signupEmail = $("signupEmail");
+  var signupButton = $("signupButton");
+  var signupStatus = $("signupStatus");
+
+  var otpModal = $("otpModal");
+  var otpEmail = $("otpEmail");
+  var closeOtp = $("closeOtp");
+  var verifyOtpButton = $("verifyOtpButton");
+  var resendOtpButton = $("resendOtpButton");
+  var resendText = $("resendText");
+  var otpStatus = $("otpStatus");
+  var otpInputs = Array.prototype.slice.call(document.querySelectorAll(".otp"));
+
+  var pendingEmail = "";
+  var returnTo = "";
+  var resendTimer = null;
+  var verifying = false;
+
+  function setStatus(el, message, type){
+    el.textContent = message || "";
+    el.className = "status" + (type ? " " + type : "");
   }
 
-  // Only allow redirects inside this GitHub Pages site.
-  if(p && !/^https:\/\/kiranpatel001200-code\.github\.io\/rentals\//i.test(p)){
-    if(/^\/rentals\//i.test(p)){
-      p = SITE + p.replace(/^\/rentals\//i,"");
-    }else if(!/^https?:\/\//i.test(p)){
-      p = SITE + p.replace(/^\/+/,"");
-    }else{
+  function setOtpStatus(message, type){
+    otpStatus.textContent = message || "";
+    otpStatus.className = "attempt-status" + (type ? " " + type : "");
+  }
+
+  function setBusy(button, busy){
+    button.disabled = !!busy;
+    if(busy){
+      button.dataset.originalText = button.textContent;
+      button.textContent = "Please wait...";
+    }else if(button.dataset.originalText){
+      button.textContent = button.dataset.originalText;
+      delete button.dataset.originalText;
+    }
+  }
+
+  function getReturnTo(){
+    var p = new URLSearchParams(window.location.search).get("returnTo");
+
+    if(p){
+      try{
+        p = decodeURIComponent(p);
+      }catch(e){}
+    }
+
+    if(!p){
+      p = localStorage.getItem("rn_return_to") || "";
+    }
+
+    if(!p){
       p = SITE + "index.html";
     }
-  }
 
-  return p || localStorage.getItem("rn_return_to") || (SITE + "index.html");
-}
-
-var returnTo = getReturnTo();
-localStorage.setItem("rn_return_to", returnTo);
-
-function goBackToOrigin(){
-  var target = returnTo || localStorage.getItem("rn_return_to") || (SITE + "index.html");
-
-  // Never redirect outside the RentNest GitHub Pages site.
-  if(!/^https:\/\/kiranpatel001200-code\.github\.io\/rentals\//i.test(target)){
-    target = SITE + "index.html";
-  }
-
-  localStorage.removeItem("rn_return_to");
-  location.replace(target);
-}
-
-function show(step){
-  STEPS.forEach(function(s){ $(s).classList.toggle("hide", s !== step); });
-  $("tabs").classList.toggle("hide", step !== "stLogin" && step !== "stSignup");
-  $("tabLogin").classList.toggle("on", step === "stLogin");
-  $("tabSignup").classList.toggle("on", step === "stSignup");
-  say("");
-}
-
-function say(t, k){
-  $("msg").textContent = t || "";
-  $("msg").className = k || "";
-}
-
-function friendly(err){
-  var m = (err && err.message) || "Something went wrong.";
-  if(/invalid login/i.test(m)) return "Wrong email or password.";
-  if(/rate limit|too many|seconds/i.test(m)) return "Too many attempts. Please wait a little and try again.";
-  if(/at least|weak|password should/i.test(m)) return "Choose a stronger password (at least 8 characters).";
-  return m;
-}
-
-function busy(btn, on){ $(btn).disabled = on; }
-
-async function showSession(){
-  var r = await sb.auth.getSession();
-
-  if(r.data.session){
-    // NEW:
-    // After successful login/email confirmation, return to the page
-    // where the user originally started login/signup.
-    goBackToOrigin();
-  }else{
-    show("stLogin");
-  }
-}
-
-$("tabLogin").onclick = function(){ show("stLogin"); };
-$("tabSignup").onclick = function(){ show("stSignup"); };
-$("toForgot").onclick = function(){ $("fEmail").value = $("lEmail").value; show("stForgot"); };
-$("fBack").onclick = function(){ show("stLogin"); };
-
-$("resendLogin").onclick = async function(){
-  var email = $("lEmail").value.trim();
-
-  if(!email){
-    say("Enter your email address first.", "err");
-    return;
-  }
-
-  busy("resendLogin", true);
-  say("Sending verification email...");
-
-  var res = await sb.auth.resend({
-    type: "signup",
-    email: email,
-    options: {
-      emailRedirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
+    // Allow only same-site destinations.
+    if(/^https:\/\/kiranpatel001200-code\.github\.io\/rentals\//i.test(p)){
+      return p;
     }
+
+    if(/^\/rentals\//i.test(p)){
+      return SITE + p.replace(/^\/rentals\//i, "");
+    }
+
+    if(!/^https?:\/\//i.test(p)){
+      return SITE + p.replace(/^\/+/, "");
+    }
+
+    return SITE + "index.html";
+  }
+
+  returnTo = getReturnTo();
+  localStorage.setItem("rn_return_to", returnTo);
+
+  function goBackToOrigin(){
+    var target = returnTo || localStorage.getItem("rn_return_to") || (SITE + "index.html");
+
+    if(!/^https:\/\/kiranpatel001200-code\.github\.io\/rentals\//i.test(target)){
+      target = SITE + "index.html";
+    }
+
+    localStorage.removeItem("rn_return_to");
+    window.location.replace(target);
+  }
+
+  function switchTab(which){
+    var login = which === "login";
+
+    loginTab.classList.toggle("active", login);
+    signupTab.classList.toggle("active", !login);
+    formLogin.classList.toggle("hidden", !login);
+    formSignup.classList.toggle("hidden", login);
+
+    setStatus(loginStatus, "");
+    setStatus(signupStatus, "");
+  }
+
+  function otpCode(){
+    return otpInputs.map(function(input){ return input.value; }).join("");
+  }
+
+  function clearOtp(){
+    otpInputs.forEach(function(input){
+      input.value = "";
+      input.classList.remove("error");
+    });
+  }
+
+  function focusFirstOtp(){
+    if(otpInputs[0]){
+      setTimeout(function(){ otpInputs[0].focus(); }, 80);
+    }
+  }
+
+  function openOtpModal(email, message){
+    pendingEmail = email;
+    otpEmail.textContent = email;
+    clearOtp();
+    setOtpStatus(message || "Enter the 6-digit code from your email.");
+    otpModal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    startResendTimer(45);
+    focusFirstOtp();
+  }
+
+  function closeOtpModal(){
+    otpModal.classList.add("hidden");
+    document.body.style.overflow = "";
+    clearOtp();
+    setOtpStatus("");
+    if(resendTimer){
+      clearInterval(resendTimer);
+      resendTimer = null;
+    }
+  }
+
+  function startResendTimer(seconds){
+    if(resendTimer){
+      clearInterval(resendTimer);
+    }
+
+    resendOtpButton.disabled = true;
+    var left = seconds;
+    resendText.textContent = "You can resend in " + left + "s";
+
+    resendTimer = setInterval(function(){
+      left -= 1;
+
+      if(left <= 0){
+        clearInterval(resendTimer);
+        resendTimer = null;
+        resendOtpButton.disabled = false;
+        resendText.textContent = "Didn't receive the code?";
+        return;
+      }
+
+      resendText.textContent = "You can resend in " + left + "s";
+    }, 1000);
+  }
+
+  function friendlyError(error){
+    var m = (error && error.message) || "Something went wrong.";
+
+    if(/invalid login credentials/i.test(m)) return "Wrong email or password.";
+    if(/email not confirmed|not confirmed/i.test(m)) return "Your email is not verified yet.";
+    if(/invalid token|otp|expired/i.test(m)) return "That verification code is invalid or expired.";
+    if(/rate limit|too many requests|too many/i.test(m)) return "Too many attempts. Please wait a little and try again.";
+    if(/password/i.test(m) && /8|weak/i.test(m)) return "Use a stronger password with at least 8 characters.";
+    if(/already registered|user already/i.test(m)) return "This email is already registered. Try logging in instead.";
+
+    return m;
+  }
+
+  // OTP input UX
+  otpInputs.forEach(function(input, index){
+
+    input.addEventListener("input", function(){
+      input.value = input.value.replace(/\D/g, "").slice(0,1);
+      input.classList.remove("error");
+
+      if(input.value && index < otpInputs.length - 1){
+        otpInputs[index + 1].focus();
+      }
+
+      if(otpCode().length === 6){
+        setTimeout(verifyOtp, 80);
+      }
+    });
+
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Backspace" && !input.value && index > 0){
+        otpInputs[index - 1].focus();
+      }
+
+      if(e.key === "ArrowLeft" && index > 0){
+        e.preventDefault();
+        otpInputs[index - 1].focus();
+      }
+
+      if(e.key === "ArrowRight" && index < otpInputs.length - 1){
+        e.preventDefault();
+        otpInputs[index + 1].focus();
+      }
+
+      if(e.key === "Enter"){
+        e.preventDefault();
+        verifyOtp();
+      }
+    });
+
+    input.addEventListener("paste", function(e){
+      var pasted = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g,"").slice(0,6);
+
+      if(!pasted) return;
+
+      e.preventDefault();
+
+      pasted.split("").forEach(function(char, i){
+        if(otpInputs[i]) otpInputs[i].value = char;
+      });
+
+      var focusIndex = Math.min(pasted.length, 5);
+      otpInputs[focusIndex].focus();
+
+      if(pasted.length === 6){
+        setTimeout(verifyOtp, 80);
+      }
+    });
   });
 
-  busy("resendLogin", false);
-  say(
-    res.error ? friendly(res.error) : "Verification email sent again. Check your inbox.",
-    res.error ? "err" : "ok"
-  );
-};
+  async function verifyOtp(){
+    if(verifying) return;
 
-/* Log in */
-$("stLogin").onsubmit = async function(e){
-  e.preventDefault();
+    var token = otpCode();
 
-  var email = $("lEmail").value.trim();
-  busy("lBtn", true);
-  say("Logging in...");
-
-  var res = await sb.auth.signInWithPassword({
-    email: email,
-    password: $("lPass").value
-  });
-
-  busy("lBtn", false);
-
-  if(res.error){
-    if(/not confirmed/i.test(res.error.message)){
-      /*
-        Do not open the old "Confirm your email first" screen.
-        Stay on the normal login page and show a resend option.
-      */
-      pendingEmail = email;
-      $("resendLogin").classList.remove("hide");
-      say("Please verify your email first. We have sent a verification email.", "err");
+    if(token.length !== 6){
+      setOtpStatus("Enter all 6 digits.", "error");
+      otpInputs.forEach(function(input){
+        if(!input.value) input.classList.add("error");
+      });
       return;
     }
-    say(friendly(res.error), "err");
-    return;
+
+    verifying = true;
+    setOtpStatus("Verifying your email...");
+    setBusy(verifyOtpButton, true);
+
+    var result = await sb.auth.verifyOtp({
+      email: pendingEmail,
+      token: token,
+      type: "signup"
+    });
+
+    setBusy(verifyOtpButton, false);
+    verifying = false;
+
+    if(result.error){
+      otpInputs.forEach(function(input){ input.classList.add("error"); });
+      setOtpStatus(friendlyError(result.error), "error");
+      return;
+    }
+
+    setOtpStatus("Email verified successfully.", "success");
+    closeOtpModal();
+
+    if(result.data && result.data.session){
+      goBackToOrigin();
+      return;
+    }
+
+    // Fallback: if no session is returned, try the normal login screen.
+    setStatus(loginStatus, "Email verified. Please log in to continue.", "success");
+    switchTab("login");
+    loginEmail.value = pendingEmail;
+    loginPassword.focus();
   }
 
-  $("lPass").value = "";
-  $("resendLogin").classList.add("hide");
-  goBackToOrigin();
-};
+  async function resendOtp(){
+    if(!pendingEmail) return;
 
-/* Sign up */
-$("stSignup").onsubmit = async function(e){
-  e.preventDefault();
+    setOtpStatus("Sending a new verification code...");
+    resendOtpButton.disabled = true;
 
-  var email = $("sEmail").value.trim();
-  var p1 = $("sPass").value;
+    var result = await sb.auth.resend({
+      type: "signup",
+      email: pendingEmail
+    });
 
-  if(p1.length < 8){
-    say("Password must be at least 8 characters.", "err");
-    return;
+    if(result.error){
+      resendOtpButton.disabled = false;
+      setOtpStatus(friendlyError(result.error), "error");
+      return;
+    }
+
+    clearOtp();
+    setOtpStatus("A new 6-digit code has been sent.", "success");
+    startResendTimer(45);
+    focusFirstOtp();
   }
 
-  if(p1 !== $("sPass2").value){
-    say("The two passwords do not match.", "err");
-    return;
-  }
+  // Tabs
+  loginTab.addEventListener("click", function(){ switchTab("login"); });
+  signupTab.addEventListener("click", function(){ switchTab("signup"); });
 
-  busy("sBtn", true);
-  say("Creating your account...");
+  // Login
+  formLogin.addEventListener("submit", async function(e){
+    e.preventDefault();
 
-  /*
-    IMPORTANT:
-    Supabase sends the user back to login.html after email confirmation,
-    and the original page is carried in returnTo.
-  */
-  var confirmationUrl =
-    SITE + "login.html?returnTo=" +
-    encodeURIComponent(returnTo);
+    var email = loginEmail.value.trim();
+    var password = loginPassword.value;
 
-  var res = await sb.auth.signUp({
-    email: email,
-    password: p1,
-    options: {
-      emailRedirectTo: confirmationUrl,
-      data: {
-        full_name: $("sName").value.trim(),
-        phone: $("sPhone").value.trim() || undefined,
-        role: $("sRole").value
+    setStatus(loginStatus, "Logging in...");
+    setBusy(loginButton, true);
+
+    var result = await sb.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    setBusy(loginButton, false);
+
+    if(result.error){
+      if(/email not confirmed|not confirmed/i.test(result.error.message)){
+        openOtpModal(email, "Your email still needs to be verified. Enter the 6-digit code from your email.");
+        return;
       }
+
+      setStatus(loginStatus, friendlyError(result.error), "error");
+      return;
     }
-  });
 
-  busy("sBtn", false);
-
-  if(res.error){
-    say(friendly(res.error), "err");
-    return;
-  }
-
-  if(res.data.user && res.data.user.identities && res.data.user.identities.length === 0){
-    say("This email is already registered. Log in, or use Forgot password.", "err");
-    return;
-  }
-
-  /*
-    If Supabase returns a session immediately, the account does not need
-    email confirmation and we can return to the original page now.
-  */
-  if(res.data.session){
+    setStatus(loginStatus, "");
+    loginPassword.value = "";
     goBackToOrigin();
-    return;
-  }
+  });
 
-  /*
-    Instead of the old "Confirm your email first" page with Gmail buttons,
-    keep the user on the signup/login page and show a simple success message.
-  */
-  show("stSignup");
-  say(
-    "Account created. Please check your email and click the verification link. After verification, you will be returned to the page where you started.",
-    "ok"
-  );
-};
+  // Signup
+  formSignup.addEventListener("submit", async function(e){
+    e.preventDefault();
 
-/* Resend verification email */
-$("cResend").onclick = async function(){
-  if(!pendingEmail){
-    say("Enter your email address first.", "err");
-    return;
-  }
+    var name = $("signupName").value.trim();
+    var email = signupEmail.value.trim();
+    var phone = $("signupPhone").value.trim();
+    var role = $("signupRole").value;
+    var password = $("signupPassword").value;
+    var password2 = $("signupPassword2").value;
 
-  say("Sending...");
+    if(password.length < 8){
+      setStatus(signupStatus, "Password must be at least 8 characters.", "error");
+      return;
+    }
 
-  var res = await sb.auth.resend({
-    type: "signup",
-    email: pendingEmail,
-    options: {
-      emailRedirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
+    if(password !== password2){
+      setStatus(signupStatus, "The two passwords do not match.", "error");
+      return;
+    }
+
+    setStatus(signupStatus, "Creating your account...");
+    setBusy(signupButton, true);
+
+    /*
+      We use a same-site redirect as a backup for Supabase auth,
+      while the primary signup flow here is 6-digit OTP.
+    */
+    var result = await sb.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        emailRedirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo),
+        data: {
+          full_name: name,
+          phone: phone || undefined,
+          role: role
+        }
+      }
+    });
+
+    setBusy(signupButton, false);
+
+    if(result.error){
+      setStatus(signupStatus, friendlyError(result.error), "error");
+      return;
+    }
+
+    // If email confirmation is disabled, user will already be logged in.
+    if(result.data && result.data.session){
+      goBackToOrigin();
+      return;
+    }
+
+    // With Confirm Email ON, Supabase sends the email and returns no session.
+    pendingEmail = email;
+    setStatus(signupStatus, "");
+    openOtpModal(email, "Check your inbox and enter the 6-digit verification code.");
+  });
+
+  // Resend
+  resendOtpButton.addEventListener("click", resendOtp);
+
+  // Close modal
+  closeOtp.addEventListener("click", function(){
+    closeOtpModal();
+    setStatus(signupStatus, "Your account was created. Verify your email before logging in.", "success");
+  });
+
+  otpModal.addEventListener("click", function(e){
+    if(e.target === otpModal){
+      // Keep verification modal focused; clicking outside does not close it.
+      focusFirstOtp();
     }
   });
 
-  say(
-    res.error ? friendly(res.error) : "The verification email was sent again.",
-    res.error ? "err" : "ok"
-  );
-};
-
-/* Forgot password */
-$("stForgot").onsubmit = async function(e){
-  e.preventDefault();
-
-  var email = $("fEmail").value.trim();
-  busy("fBtn", true);
-  say("Sending...");
-
-  var res = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
-  });
-
-  busy("fBtn", false);
-
-  if(res.error){
-    say(friendly(res.error), "err");
-    return;
-  }
-
-  $("cTitle").textContent = "Check your email";
-  $("cText").textContent = "We sent a password reset link to " + email + ".";
-  $("cSteps").innerHTML = "";
-  [
-    "Open your email and find the password reset email.",
-    "Click the reset link.",
-    "You will come back here to choose a new password."
-  ].forEach(function(t){
-    var li = document.createElement("li");
-    li.textContent = t;
-    $("cSteps").appendChild(li);
-  });
-
-  $("cGmail").classList.toggle("hide", !/@(gmail|googlemail)\.com$/i.test(email));
-  $("cResend").classList.add("hide");
-  $("cBack").textContent = "Back to log in";
-  show("stCheck");
-};
-
-/* Back from check screen */
-$("cBack").onclick = function(){
-  $("cResend").classList.remove("hide");
-  show("stLogin");
-};
-
-/* Set new password */
-$("stReset").onsubmit = async function(e){
-  e.preventDefault();
-
-  var p1 = $("rPass").value;
-
-  if(p1.length < 8){
-    say("Password must be at least 8 characters.", "err");
-    return;
-  }
-
-  if(p1 !== $("rPass2").value){
-    say("The two passwords do not match.", "err");
-    return;
-  }
-
-  busy("rBtn", true);
-  say("Saving...");
-
-  var u = await sb.auth.updateUser({password:p1});
-
-  busy("rBtn", false);
-
-  if(u.error){
-    say(friendly(u.error), "err");
-    return;
-  }
-
-  recovering = false;
-  $("rPass").value = "";
-  $("rPass2").value = "";
-
-  say("Password saved. Returning to the page you started from...", "ok");
-  setTimeout(goBackToOrigin, 300);
-};
-
-/* Logout */
-$("logout").onclick = async function(){
-  await sb.auth.signOut();
-  show("stLogin");
-  say("You are logged out. Log in again any time with your email and password.", "ok");
-};
-
-/* Manual home button */
-$("goHome").onclick = function(){
-  location.href = "index.html";
-};
-
-/* Supabase auth events */
-sb.auth.onAuthStateChange(function(event, session){
-  if(event === "PASSWORD_RECOVERY"){
-    recovering = true;
-    show("stReset");
-    say("Choose a new password.", "ok");
-    return;
-  }
-
-  /*
-    Email confirmation normally creates a session.
-    When that happens, immediately send the user back to their
-    original page instead of showing "You are logged in".
-  */
-  if((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session && !recovering){
-    if(location.pathname.endsWith("/login.html") || location.pathname.endsWith("login.html")){
-      setTimeout(goBackToOrigin, 100);
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && !otpModal.classList.contains("hidden")){
+      closeOtpModal();
+      setStatus(signupStatus, "Your account was created. Verify your email before logging in.", "success");
     }
-  }
-});
+  });
 
-/*
-  If the user opens the login page while already authenticated,
-  return them to their original page.
-*/
-if(location.hash.indexOf("type=recovery") === -1){
-  showSession();
-}
+  verifyOtpButton.addEventListener("click", verifyOtp);
+
+  // Forgot password: send Supabase reset email.
+  forgotButton.addEventListener("click", async function(){
+    var email = loginEmail.value.trim();
+
+    if(!email){
+      setStatus(loginStatus, "Enter your email first, then click Forgot password.", "error");
+      loginEmail.focus();
+      return;
+    }
+
+    setStatus(loginStatus, "Sending password reset email...");
+
+    var result = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
+    });
+
+    if(result.error){
+      setStatus(loginStatus, friendlyError(result.error), "error");
+      return;
+    }
+
+    setStatus(loginStatus, "Password reset email sent. Check your inbox.", "success");
+  });
+
+  // Auth events
+  sb.auth.onAuthStateChange(function(event, session){
+    /*
+      During an OTP verification, verifyOtp() handles the redirect itself.
+      This prevents the auth event from redirecting too early.
+    */
+    if(event === "SIGNED_IN" && session && !verifying && !otpModal.classList.contains("hidden")){
+      // Let verifyOtp finish. Do not redirect from here.
+      return;
+    }
+
+    if(event === "PASSWORD_RECOVERY"){
+      // Password recovery is handled by Supabase's redirect flow.
+      setStatus(loginStatus, "Open the password reset email to choose a new password.", "success");
+    }
+  });
+
+  // If the user is already logged in and revisits this page, return to origin.
+  (async function(){
+    var result = await sb.auth.getSession();
+    if(result.data && result.data.session){
+      goBackToOrigin();
+    }
+  })();
+
+})();
 </script>
 </body>
 </html>
