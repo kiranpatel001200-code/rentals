@@ -1,3 +1,126 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rentals for rent in the US | RentNest</title><meta name="description" content="Browse rental listings by city, bedrooms and price."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap"><link rel="stylesheet" href="style.css"></head><body data-page="listings"><div id="nav"></div>
-<section><div class="wrap"><h1>Rentals</h1><div class="filters"><div><label for="city">City or state</label><input id="city"></div><div><label for="beds">Bedrooms</label><select id="beds"><option value="">Any</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select></div><div><label for="max">Max rent per month</label><input id="max" type="number" min="0" step="100"></div></div><p id="count" class="note" aria-live="polite"></p><div class="grid" id="results"></div></div></section>
-<div id="footer"></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rentals in the US and India | RentNest</title>
+<meta name="description" content="Browse apartments, houses and studios for rent in the United States and India.">
+<style>
+:root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--white:#fff;--us:#1d3557;--in:#0f6b4f}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{background:var(--white);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;justify-content:space-between;align-items:center;padding-top:14px;padding-bottom:14px}
+.logo{font:700 1.25rem Georgia,serif;text-decoration:none}
+nav a{margin-left:18px;text-decoration:none;color:var(--muted)}
+h1{font:700 1.9rem Georgia,serif;margin:28px 0 14px}
+form{display:flex;flex-wrap:wrap;gap:10px;background:var(--white);border:1px solid var(--line);border-radius:6px;padding:12px}
+form select,form input{flex:1 1 140px;padding:10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+button{padding:10px 20px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;cursor:pointer}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
+#count{color:var(--muted);margin:16px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;padding-bottom:50px}
+.card{background:var(--white);border:1px solid var(--line);border-top-width:5px;border-radius:4px;overflow:hidden}
+.card.USA{border-top-color:var(--us)}
+.card.India{border-top-color:var(--in)}
+.card img,.noimg{display:block;width:100%;height:170px;object-fit:cover;background:#e6eaee}
+.noimg{display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.body{padding:14px 16px}
+.price{font:700 1.3rem Georgia,serif}
+.card h2{font:600 1rem system-ui,sans-serif;margin:4px 0}
+.meta{color:var(--muted);font-size:.92rem}
+.empty{background:var(--white);border:1px dashed var(--line);border-radius:6px;padding:26px;color:var(--muted)}
+@media(max-width:600px){nav a{margin-left:12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<a class="logo" href="index.html">RentNest</a>
+<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="login.html">Log in</a></nav>
+</div></header>
+
+<main class="wrap">
+<h1>Rentals</h1>
+<form id="f">
+<select id="country" aria-label="Country"><option value="">US and India</option><option value="USA">United States</option><option value="India">India</option></select>
+<input id="city" placeholder="City" aria-label="City">
+<select id="beds" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
+<input id="max" type="number" min="0" placeholder="Max monthly rent" aria-label="Max monthly rent">
+<button type="submit">Search</button>
+</form>
+<div id="count" role="status" aria-live="polite"></div>
+<div class="grid" id="grid"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb = supabase.createClient(
+  "https://abppfpgazlngdhrejrog.supabase.co",
+  "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
+);
+var $ = function(id){ return document.getElementById(id); };
+
+// Home page links use country=us / country=in; the database uses USA / India.
+var params = new URLSearchParams(location.search);
+var c = (params.get("country") || "").toLowerCase();
+$("country").value = c === "us" || c === "usa" ? "USA" : c === "in" || c === "india" ? "India" : "";
+$("city").value = params.get("city") || "";
+$("beds").value = params.get("bedrooms") || "";
+
+function money(n, cur, country){
+  return new Intl.NumberFormat(country === "India" ? "en-IN" : "en-US", { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(n);
+}
+
+function card(l){
+  var d = document.createElement("article"); d.className = "card " + l.country;
+  var imgs = (l.listing_images || []).slice().sort(function(a, b){
+    return (b.is_primary - a.is_primary) || (a.display_order - b.display_order);
+  });
+  if(imgs.length){
+    var im = document.createElement("img"); im.src = imgs[0].url; im.alt = l.title; im.loading = "lazy"; d.appendChild(im);
+  } else {
+    var n = document.createElement("div"); n.className = "noimg"; n.textContent = "No photo yet"; d.appendChild(n);
+  }
+  var b = document.createElement("div"); b.className = "body";
+  var p = document.createElement("div"); p.className = "price"; p.textContent = money(l.monthly_rent, l.currency, l.country) + " / month";
+  var h = document.createElement("h2"); h.textContent = l.title;
+  var m = document.createElement("div"); m.className = "meta";
+  var beds = l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed";
+  m.textContent = beds + " \u00B7 " + l.bathrooms + " bath \u00B7 " + l.property_type + " \u00B7 " + l.city + ", " + String(l.state).trim();
+  b.appendChild(p); b.appendChild(h); b.appendChild(m); d.appendChild(b);
+  return d;
+}
+
+async function search(){
+  var q = sb.from("listings")
+    .select("id,title,monthly_rent,currency,bedrooms,bathrooms,property_type,city,state,country,created_at,listing_images(url,is_primary,display_order)")
+    .eq("status", "approved").order("created_at", { ascending: false }).limit(48);
+  if($("country").value) q = q.eq("country", $("country").value);
+  if($("city").value.trim()) q = q.ilike("city", "%" + $("city").value.trim().replace(/[%_,]/g, "") + "%");
+  var bd = $("beds").value;
+  if(bd === "3") q = q.gte("bedrooms", 3); else if(bd !== "") q = q.eq("bedrooms", parseInt(bd, 10));
+  if($("max").value) q = q.lte("monthly_rent", Number($("max").value));
+
+  $("count").textContent = "Searching...";
+  var r = await q;
+  var grid = $("grid"); grid.textContent = "";
+  if(r.error){ $("count").textContent = "Could not load rentals. Please try again."; return; }
+  var rows = r.data || [];
+  if(!rows.length){
+    $("count").textContent = "";
+    var e = document.createElement("div"); e.className = "empty";
+    e.textContent = "No rentals match your search yet. Try a different city or remove a filter.";
+    grid.className = ""; grid.appendChild(e); return;
+  }
+  grid.className = "grid";
+  $("count").textContent = rows.length + (rows.length === 1 ? " rental" : " rentals");
+  rows.forEach(function(l){ grid.appendChild(card(l)); });
+}
+
+$("f").onsubmit = function(e){ e.preventDefault(); search(); };
+search();
+</script>
+</body>
+</html>
