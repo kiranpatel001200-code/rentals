@@ -36,7 +36,6 @@ ol li{margin-bottom:6px}
 <body>
 <a class="logo" href="index.html">RentNest</a>
 <div class="card">
-
 <div id="tabs" class="tabs">
 <button type="button" id="tabLogin" class="on">Log in</button>
 <button type="button" id="tabSignup">Sign up</button>
@@ -49,6 +48,7 @@ ol li{margin-bottom:6px}
 <label for="lPass">Password</label>
 <input id="lPass" type="password" autocomplete="current-password" required>
 <button type="submit" id="lBtn">Log in</button>
+<button type="button" class="link hide" id="resendLogin">Resend verification email</button>
 <button type="button" class="link" id="toForgot">Forgot password?</button>
 </form>
 
@@ -109,11 +109,58 @@ ol li{margin-bottom:6px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
-var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+var sb = supabase.createClient(
+  "https://abppfpgazlngdhrejrog.supabase.co",
+  "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
+);
 var $ = function(id){ return document.getElementById(id); };
 var STEPS = ["stLogin","stSignup","stCheck","stForgot","stReset","stIn"];
 var pendingEmail = "";
 var recovering = false;
+
+/*
+  NEW:
+  Remember the page from which the user opened login/signup.
+  Example:
+  login.html?returnTo=listings.html
+  login.html?returnTo=listing.html?id=123
+*/
+function getReturnTo(){
+  var p = new URLSearchParams(location.search).get("returnTo");
+  if(p){
+    try{
+      p = decodeURIComponent(p);
+    }catch(e){}
+  }
+
+  // Only allow redirects inside this GitHub Pages site.
+  if(p && !/^https:\/\/kiranpatel001200-code\.github\.io\/rentals\//i.test(p)){
+    if(/^\/rentals\//i.test(p)){
+      p = SITE + p.replace(/^\/rentals\//i,"");
+    }else if(!/^https?:\/\//i.test(p)){
+      p = SITE + p.replace(/^\/+/,"");
+    }else{
+      p = SITE + "index.html";
+    }
+  }
+
+  return p || localStorage.getItem("rn_return_to") || (SITE + "index.html");
+}
+
+var returnTo = getReturnTo();
+localStorage.setItem("rn_return_to", returnTo);
+
+function goBackToOrigin(){
+  var target = returnTo || localStorage.getItem("rn_return_to") || (SITE + "index.html");
+
+  // Never redirect outside the RentNest GitHub Pages site.
+  if(!/^https:\/\/kiranpatel001200-code\.github\.io\/rentals\//i.test(target)){
+    target = SITE + "index.html";
+  }
+
+  localStorage.removeItem("rn_return_to");
+  location.replace(target);
+}
 
 function show(step){
   STEPS.forEach(function(s){ $(s).classList.toggle("hide", s !== step); });
@@ -122,7 +169,12 @@ function show(step){
   $("tabSignup").classList.toggle("on", step === "stSignup");
   say("");
 }
-function say(t, k){ $("msg").textContent = t || ""; $("msg").className = k || ""; }
+
+function say(t, k){
+  $("msg").textContent = t || "";
+  $("msg").className = k || "";
+}
+
 function friendly(err){
   var m = (err && err.message) || "Something went wrong.";
   if(/invalid login/i.test(m)) return "Wrong email or password.";
@@ -130,14 +182,18 @@ function friendly(err){
   if(/at least|weak|password should/i.test(m)) return "Choose a stronger password (at least 8 characters).";
   return m;
 }
+
 function busy(btn, on){ $(btn).disabled = on; }
 
 async function showSession(){
   var r = await sb.auth.getSession();
+
   if(r.data.session){
-    $("who").textContent = "Signed in as " + r.data.session.user.email;
-    show("stIn");
-  } else {
+    // NEW:
+    // After successful login/email confirmation, return to the page
+    // where the user originally started login/signup.
+    goBackToOrigin();
+  }else{
     show("stLogin");
   }
 }
@@ -147,104 +203,242 @@ $("tabSignup").onclick = function(){ show("stSignup"); };
 $("toForgot").onclick = function(){ $("fEmail").value = $("lEmail").value; show("stForgot"); };
 $("fBack").onclick = function(){ show("stLogin"); };
 
+$("resendLogin").onclick = async function(){
+  var email = $("lEmail").value.trim();
+
+  if(!email){
+    say("Enter your email address first.", "err");
+    return;
+  }
+
+  busy("resendLogin", true);
+  say("Sending verification email...");
+
+  var res = await sb.auth.resend({
+    type: "signup",
+    email: email,
+    options: {
+      emailRedirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
+    }
+  });
+
+  busy("resendLogin", false);
+  say(
+    res.error ? friendly(res.error) : "Verification email sent again. Check your inbox.",
+    res.error ? "err" : "ok"
+  );
+};
+
 /* Log in */
 $("stLogin").onsubmit = async function(e){
   e.preventDefault();
+
   var email = $("lEmail").value.trim();
-  busy("lBtn", true); say("Logging in...");
-  var res = await sb.auth.signInWithPassword({ email: email, password: $("lPass").value });
+  busy("lBtn", true);
+  say("Logging in...");
+
+  var res = await sb.auth.signInWithPassword({
+    email: email,
+    password: $("lPass").value
+  });
+
   busy("lBtn", false);
+
   if(res.error){
     if(/not confirmed/i.test(res.error.message)){
-      openCheck("signup", email, true);
+      /*
+        Do not open the old "Confirm your email first" screen.
+        Stay on the normal login page and show a resend option.
+      */
+      pendingEmail = email;
+      $("resendLogin").classList.remove("hide");
+      say("Please verify your email first. We have sent a verification email.", "err");
       return;
     }
-    say(friendly(res.error), "err"); return;
+    say(friendly(res.error), "err");
+    return;
   }
+
   $("lPass").value = "";
-  showSession();
+  $("resendLogin").classList.add("hide");
+  goBackToOrigin();
 };
 
 /* Sign up */
 $("stSignup").onsubmit = async function(e){
   e.preventDefault();
+
   var email = $("sEmail").value.trim();
   var p1 = $("sPass").value;
-  if(p1.length < 8){ say("Password must be at least 8 characters.", "err"); return; }
-  if(p1 !== $("sPass2").value){ say("The two passwords do not match.", "err"); return; }
-  busy("sBtn", true); say("Creating your account...");
+
+  if(p1.length < 8){
+    say("Password must be at least 8 characters.", "err");
+    return;
+  }
+
+  if(p1 !== $("sPass2").value){
+    say("The two passwords do not match.", "err");
+    return;
+  }
+
+  busy("sBtn", true);
+  say("Creating your account...");
+
+  /*
+    IMPORTANT:
+    Supabase sends the user back to login.html after email confirmation,
+    and the original page is carried in returnTo.
+  */
+  var confirmationUrl =
+    SITE + "login.html?returnTo=" +
+    encodeURIComponent(returnTo);
+
   var res = await sb.auth.signUp({
-    email: email, password: p1,
+    email: email,
+    password: p1,
     options: {
-      emailRedirectTo: SITE + "index.html",
-      data: { full_name: $("sName").value.trim(), phone: $("sPhone").value.trim() || undefined, role: $("sRole").value }
+      emailRedirectTo: confirmationUrl,
+      data: {
+        full_name: $("sName").value.trim(),
+        phone: $("sPhone").value.trim() || undefined,
+        role: $("sRole").value
+      }
     }
   });
+
   busy("sBtn", false);
-  if(res.error){ say(friendly(res.error), "err"); return; }
+
+  if(res.error){
+    say(friendly(res.error), "err");
+    return;
+  }
+
   if(res.data.user && res.data.user.identities && res.data.user.identities.length === 0){
     say("This email is already registered. Log in, or use Forgot password.", "err");
     return;
   }
-  if(res.data.session){ showSession(); return; }
-  openCheck("signup", email, false);
+
+  /*
+    If Supabase returns a session immediately, the account does not need
+    email confirmation and we can return to the original page now.
+  */
+  if(res.data.session){
+    goBackToOrigin();
+    return;
+  }
+
+  /*
+    Instead of the old "Confirm your email first" page with Gmail buttons,
+    keep the user on the signup/login page and show a simple success message.
+  */
+  show("stSignup");
+  say(
+    "Account created. Please check your email and click the verification link. After verification, you will be returned to the page where you started.",
+    "ok"
+  );
 };
 
-/* "Check your email" screen (signup confirmation and password reset) */
-var checkMode = "signup";
-function openCheck(mode, email, notConfirmed){
-  checkMode = mode; pendingEmail = email;
-  var signup = mode === "signup";
-  $("cTitle").textContent = signup ? "Confirm your email first" : "Check your email";
-  $("cText").textContent = (signup ? (notConfirmed ? "Your email is not confirmed yet. " : "Your account is created. ") : "") + "We sent an email to " + email + ".";
-  var steps = signup ? [
-    "Open your Gmail (or your email app) and find the email titled \"Confirm your email address\". Check Spam if you cannot see it.",
-    "Click \"Confirm email address\" in that email.",
-    "You will be brought back to RentNest, already logged in. If not, come back here and log in with your email and password."
-  ] : [
-    "Open your email and find the password reset email. Check Spam if you cannot see it.",
-    "Click the reset link in it.",
-    "You will come back here to choose a new password."
-  ];
-  var ol = $("cSteps"); ol.textContent = "";
-  steps.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ol.appendChild(li); });
-  $("cGmail").classList.toggle("hide", !/@(gmail|googlemail)\.com$/i.test(email));
-  show("stCheck");
-}
+/* Resend verification email */
 $("cResend").onclick = async function(){
+  if(!pendingEmail){
+    say("Enter your email address first.", "err");
+    return;
+  }
+
   say("Sending...");
-  var res = checkMode === "signup"
-    ? await sb.auth.resend({ type: "signup", email: pendingEmail, options: { emailRedirectTo: SITE + "index.html" } })
-    : await sb.auth.resetPasswordForEmail(pendingEmail, { redirectTo: SITE + "login.html" });
-  say(res.error ? friendly(res.error) : "The email was sent again.", res.error ? "err" : "ok");
+
+  var res = await sb.auth.resend({
+    type: "signup",
+    email: pendingEmail,
+    options: {
+      emailRedirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
+    }
+  });
+
+  say(
+    res.error ? friendly(res.error) : "The verification email was sent again.",
+    res.error ? "err" : "ok"
+  );
 };
-$("cBack").onclick = function(){ show("stLogin"); };
 
 /* Forgot password */
 $("stForgot").onsubmit = async function(e){
   e.preventDefault();
+
   var email = $("fEmail").value.trim();
-  busy("fBtn", true); say("Sending...");
-  var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: SITE + "login.html" });
+  busy("fBtn", true);
+  say("Sending...");
+
+  var res = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: SITE + "login.html?returnTo=" + encodeURIComponent(returnTo)
+  });
+
   busy("fBtn", false);
-  if(res.error){ say(friendly(res.error), "err"); return; }
-  openCheck("reset", email, false);
+
+  if(res.error){
+    say(friendly(res.error), "err");
+    return;
+  }
+
+  $("cTitle").textContent = "Check your email";
+  $("cText").textContent = "We sent a password reset link to " + email + ".";
+  $("cSteps").innerHTML = "";
+  [
+    "Open your email and find the password reset email.",
+    "Click the reset link.",
+    "You will come back here to choose a new password."
+  ].forEach(function(t){
+    var li = document.createElement("li");
+    li.textContent = t;
+    $("cSteps").appendChild(li);
+  });
+
+  $("cGmail").classList.toggle("hide", !/@(gmail|googlemail)\.com$/i.test(email));
+  $("cResend").classList.add("hide");
+  $("cBack").textContent = "Back to log in";
+  show("stCheck");
 };
 
-/* Set new password (from reset link, or from code) */
+/* Back from check screen */
+$("cBack").onclick = function(){
+  $("cResend").classList.remove("hide");
+  show("stLogin");
+};
+
+/* Set new password */
 $("stReset").onsubmit = async function(e){
   e.preventDefault();
+
   var p1 = $("rPass").value;
-  if(p1.length < 8){ say("Password must be at least 8 characters.", "err"); return; }
-  if(p1 !== $("rPass2").value){ say("The two passwords do not match.", "err"); return; }
-  busy("rBtn", true); say("Saving...");
-  var u = await sb.auth.updateUser({ password: p1 });
+
+  if(p1.length < 8){
+    say("Password must be at least 8 characters.", "err");
+    return;
+  }
+
+  if(p1 !== $("rPass2").value){
+    say("The two passwords do not match.", "err");
+    return;
+  }
+
+  busy("rBtn", true);
+  say("Saving...");
+
+  var u = await sb.auth.updateUser({password:p1});
+
   busy("rBtn", false);
-  if(u.error){ say(friendly(u.error), "err"); return; }
+
+  if(u.error){
+    say(friendly(u.error), "err");
+    return;
+  }
+
   recovering = false;
-  $("rPass").value = ""; $("rPass2").value = "";
-  showSession();
-  say("Password saved. You are logged in.", "ok");
+  $("rPass").value = "";
+  $("rPass2").value = "";
+
+  say("Password saved. Returning to the page you started from...", "ok");
+  setTimeout(goBackToOrigin, 300);
 };
 
 /* Logout */
@@ -253,17 +447,40 @@ $("logout").onclick = async function(){
   show("stLogin");
   say("You are logged out. Log in again any time with your email and password.", "ok");
 };
-$("goHome").onclick = function(){ location.href = "index.html"; };
 
-/* Opened from a reset-password email link */
-sb.auth.onAuthStateChange(function(event){
+/* Manual home button */
+$("goHome").onclick = function(){
+  location.href = "index.html";
+};
+
+/* Supabase auth events */
+sb.auth.onAuthStateChange(function(event, session){
   if(event === "PASSWORD_RECOVERY"){
     recovering = true;
     show("stReset");
     say("Choose a new password.", "ok");
+    return;
+  }
+
+  /*
+    Email confirmation normally creates a session.
+    When that happens, immediately send the user back to their
+    original page instead of showing "You are logged in".
+  */
+  if((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session && !recovering){
+    if(location.pathname.endsWith("/login.html") || location.pathname.endsWith("login.html")){
+      setTimeout(goBackToOrigin, 100);
+    }
   }
 });
-if(location.hash.indexOf("type=recovery") === -1){ showSession(); }
+
+/*
+  If the user opens the login page while already authenticated,
+  return them to their original page.
+*/
+if(location.hash.indexOf("type=recovery") === -1){
+  showSession();
+}
 </script>
 </body>
 </html>
