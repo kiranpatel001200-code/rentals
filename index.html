@@ -149,6 +149,9 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
   var link = document.getElementById("authLink");
   sb.auth.getSession().then(function(r){
     if(r.data.session){
+      if(location.hash.indexOf("access_token") !== -1){
+        history.replaceState(null, "", location.pathname + location.search);
+      }
       link.textContent = "Log out";
       link.href = "#";
       link.onclick = function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); };
