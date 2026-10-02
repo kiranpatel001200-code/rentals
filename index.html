@@ -55,7 +55,7 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 <body>
 <header class="top"><div class="wrap">
 <a class="logo" href="index.html">RentNest</a>
-<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a></nav>
+<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="login.html" id="authLink">Log in</a></nav>
 </div></header>
 
 <main>
@@ -142,6 +142,20 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 </main>
 
 <footer><div class="wrap">&copy; RentNest. Rent a home in the United States or India.</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co","sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+  var link = document.getElementById("authLink");
+  sb.auth.getSession().then(function(r){
+    if(r.data.session){
+      link.textContent = "Log out";
+      link.href = "#";
+      link.onclick = function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); };
+    }
+  });
+})();
+</script>
 <script>
 // Add only real reviews here. Example:
 // {country:"US", name:"Name", city:"Austin", stars:5, text:"Review text"}
