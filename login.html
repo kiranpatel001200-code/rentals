@@ -97,6 +97,7 @@ $("send").onclick = async function(){
     email: email,
     options: {
       shouldCreateUser: true,
+      emailRedirectTo: "https://kiranpatel001200-code.github.io/rentals/index.html",
       data: {
         full_name: $("name").value.trim() || undefined,
         phone: $("phone").value.trim() || undefined,
