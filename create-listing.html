@@ -126,12 +126,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 </div>
 </fieldset>
 
-<fieldset>
-<legend>Photos</legend>
-<p class="sub">Up to 8 photos (JPG, PNG or WebP, 5 MB each). The first photo is the cover.</p>
-<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="Property photos">
-</fieldset>
-
 <button type="submit" id="submit">Submit for review</button>
 <div id="msg" role="status" aria-live="polite"></div>
 </form>
@@ -222,13 +216,6 @@ $("f").onsubmit = async function(e){
     if(files[i].size > 5 * 1024 * 1024){ say(files[i].name + " is larger than 5 MB.", "err"); return; }
   }
 
-  var files = Array.prototype.slice.call($("photos").files);
-  if(files.length > 8){ say("Choose at most 8 photos.", "err"); return; }
-  for(var k = 0; k < files.length; k++){
-    if(["image/jpeg","image/png","image/webp"].indexOf(files[k].type) === -1){ say("Photos must be JPG, PNG or WebP.", "err"); return; }
-    if(files[k].size > 5 * 1024 * 1024){ say(files[k].name + " is larger than 5 MB.", "err"); return; }
-  }
-
   $("submit").disabled = true; say("Saving...");
   var id = crypto.randomUUID();
   var listing = {
@@ -295,22 +282,7 @@ $("f").onsubmit = async function(e){
   if(failed){
     say("Your listing was submitted, but " + failed + " photo(s) could not be uploaded. You can add them later.", "err");
   } else {
-    var failed = 0;
-  for(var i = 0; i < files.length; i++){
-    var f = files[i];
-    var ext = f.type === "image/png" ? "png" : f.type === "image/webp" ? "webp" : "jpg";
-    var path = user.id + "/" + id + "/" + (i + 1) + "-" + Date.now() + "." + ext;
-    var up = await sb.storage.from("listing-images").upload(path, f, { contentType: f.type });
-    if(up.error){ failed++; continue; }
-    var pub = sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
-    var row = await sb.from("listing_images").insert({ listing_id: id, url: pub, display_order: i, is_primary: i === 0 });
-    if(row.error){ failed++; }
-  }
-  if(failed){
-    say("Your listing was submitted, but " + failed + " photo(s) failed to upload.", "err");
-  } else {
     say("Your listing was submitted for review. It goes live once approved.", "ok");
-  }
   }
   $("f").reset(); applyCountry(); $("submit").disabled = false;
 };
