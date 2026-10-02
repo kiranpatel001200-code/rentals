@@ -27,6 +27,9 @@ small{color:var(--muted)}
 #msg.err{color:#b3261e}
 #msg.ok{color:#0f6b4f}
 .hide{display:none}
+.btn{display:block;text-align:center;margin-top:18px;padding:12px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border-radius:4px;text-decoration:none}
+ol{padding-left:1.2em;color:var(--muted)}
+ol li{margin-bottom:6px}
 .code{letter-spacing:.4em;font-size:1.4rem;text-align:center}
 </style>
 </head>
@@ -66,14 +69,14 @@ small{color:var(--muted)}
 <button type="submit" id="sBtn">Sign up</button>
 </form>
 
-<form id="stVerify" class="hide">
-<h1>Verify your email</h1>
-<p class="sub" id="vText"></p>
-<label for="vCode">6-digit code</label>
-<input id="vCode" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-<button type="submit" id="vBtn">Verify and continue</button>
-<button type="button" class="link" id="vResend">Send a new code</button>
-</form>
+<div id="stCheck" class="hide">
+<h1 id="cTitle"></h1>
+<p class="sub" id="cText"></p>
+<ol id="cSteps"></ol>
+<a id="cGmail" class="btn hide" href="https://mail.google.com/" target="_blank" rel="noopener">Open Gmail</a>
+<button type="button" id="cResend">Send the email again</button>
+<button type="button" class="link" id="cBack">Back to log in</button>
+</div>
 
 <form id="stForgot" class="hide">
 <h1>Reset your password</h1>
@@ -86,10 +89,6 @@ small{color:var(--muted)}
 
 <form id="stReset" class="hide">
 <h1>Set a new password</h1>
-<div id="rCodeBox" class="hide">
-<label for="rCode">6-digit code from the email</label>
-<input id="rCode" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-</div>
 <label for="rPass">New password <small>(at least 8 characters)</small></label>
 <input id="rPass" type="password" autocomplete="new-password" minlength="8" required>
 <label for="rPass2">Confirm new password</label>
@@ -112,7 +111,7 @@ small{color:var(--muted)}
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var STEPS = ["stLogin","stSignup","stVerify","stForgot","stReset","stIn"];
+var STEPS = ["stLogin","stSignup","stCheck","stForgot","stReset","stIn"];
 var pendingEmail = "";
 var recovering = false;
 
@@ -157,9 +156,7 @@ $("stLogin").onsubmit = async function(e){
   busy("lBtn", false);
   if(res.error){
     if(/not confirmed/i.test(res.error.message)){
-      pendingEmail = email;
-      $("vText").textContent = "Your email is not verified yet. Enter the code we sent to " + email + ", or send a new one.";
-      show("stVerify");
+      openCheck("signup", email, true);
       return;
     }
     say(friendly(res.error), "err"); return;
@@ -190,29 +187,38 @@ $("stSignup").onsubmit = async function(e){
     return;
   }
   if(res.data.session){ showSession(); return; }
-  pendingEmail = email;
-  $("vText").textContent = "We sent an email to " + email + ". Click the link in it, or enter the 6-digit code if the email shows one.";
-  show("stVerify");
+  openCheck("signup", email, false);
 };
 
-/* Verify signup code */
-$("stVerify").onsubmit = async function(e){
-  e.preventDefault();
-  var token = $("vCode").value.trim();
-  if(token.length !== 6){ say("Enter the 6-digit code.", "err"); return; }
-  busy("vBtn", true); say("Checking code...");
-  var res = await sb.auth.verifyOtp({ email: pendingEmail, token: token, type: "signup" });
-  busy("vBtn", false);
-  if(res.error){ say("That code is wrong or has expired. Send a new code.", "err"); return; }
-  $("vCode").value = "";
-  showSession();
-  say("Email verified. You are logged in.", "ok");
-};
-$("vResend").onclick = async function(){
+/* "Check your email" screen (signup confirmation and password reset) */
+var checkMode = "signup";
+function openCheck(mode, email, notConfirmed){
+  checkMode = mode; pendingEmail = email;
+  var signup = mode === "signup";
+  $("cTitle").textContent = signup ? "Confirm your email first" : "Check your email";
+  $("cText").textContent = (signup ? (notConfirmed ? "Your email is not confirmed yet. " : "Your account is created. ") : "") + "We sent an email to " + email + ".";
+  var steps = signup ? [
+    "Open your Gmail (or your email app) and find the email titled \"Confirm your email address\". Check Spam if you cannot see it.",
+    "Click \"Confirm email address\" in that email.",
+    "You will be brought back to RentNest, already logged in. If not, come back here and log in with your email and password."
+  ] : [
+    "Open your email and find the password reset email. Check Spam if you cannot see it.",
+    "Click the reset link in it.",
+    "You will come back here to choose a new password."
+  ];
+  var ol = $("cSteps"); ol.textContent = "";
+  steps.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ol.appendChild(li); });
+  $("cGmail").classList.toggle("hide", !/@(gmail|googlemail)\.com$/i.test(email));
+  show("stCheck");
+}
+$("cResend").onclick = async function(){
   say("Sending...");
-  var res = await sb.auth.resend({ type: "signup", email: pendingEmail, options: { emailRedirectTo: SITE + "index.html" } });
-  say(res.error ? friendly(res.error) : "A new email was sent.", res.error ? "err" : "ok");
+  var res = checkMode === "signup"
+    ? await sb.auth.resend({ type: "signup", email: pendingEmail, options: { emailRedirectTo: SITE + "index.html" } })
+    : await sb.auth.resetPasswordForEmail(pendingEmail, { redirectTo: SITE + "login.html" });
+  say(res.error ? friendly(res.error) : "The email was sent again.", res.error ? "err" : "ok");
 };
+$("cBack").onclick = function(){ show("stLogin"); };
 
 /* Forgot password */
 $("stForgot").onsubmit = async function(e){
@@ -222,10 +228,7 @@ $("stForgot").onsubmit = async function(e){
   var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: SITE + "login.html" });
   busy("fBtn", false);
   if(res.error){ say(friendly(res.error), "err"); return; }
-  pendingEmail = email;
-  $("rCodeBox").classList.remove("hide");
-  show("stReset");
-  say("Check your email. Click the link in it, or enter the code here with your new password.", "ok");
+  openCheck("reset", email, false);
 };
 
 /* Set new password (from reset link, or from code) */
@@ -235,17 +238,11 @@ $("stReset").onsubmit = async function(e){
   if(p1.length < 8){ say("Password must be at least 8 characters.", "err"); return; }
   if(p1 !== $("rPass2").value){ say("The two passwords do not match.", "err"); return; }
   busy("rBtn", true); say("Saving...");
-  if(!$("rCodeBox").classList.contains("hide") && !recovering){
-    var code = $("rCode").value.trim();
-    if(code.length !== 6){ busy("rBtn", false); say("Enter the 6-digit code from the email.", "err"); return; }
-    var v = await sb.auth.verifyOtp({ email: pendingEmail, token: code, type: "recovery" });
-    if(v.error){ busy("rBtn", false); say("That code is wrong or has expired.", "err"); return; }
-  }
   var u = await sb.auth.updateUser({ password: p1 });
   busy("rBtn", false);
   if(u.error){ say(friendly(u.error), "err"); return; }
   recovering = false;
-  $("rPass").value = ""; $("rPass2").value = ""; $("rCode").value = "";
+  $("rPass").value = ""; $("rPass2").value = "";
   showSession();
   say("Password saved. You are logged in.", "ok");
 };
@@ -262,7 +259,6 @@ $("goHome").onclick = function(){ location.href = "index.html"; };
 sb.auth.onAuthStateChange(function(event){
   if(event === "PASSWORD_RECOVERY"){
     recovering = true;
-    $("rCodeBox").classList.add("hide");
     show("stReset");
     say("Choose a new password.", "ok");
   }
