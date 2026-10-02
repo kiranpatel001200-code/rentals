@@ -1,12 +1,321 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>List your property | RentNest</title><meta name="description" content="Create a rental listing and reach renters across the US."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap"><link rel="stylesheet" href="style.css"></head><body data-page="create"><div id="nav"></div>
-<section><div class="wrap"><h1>List your property</h1><p class="note">Fill in the details renters look for first.</p>
-<form class="form" id="create"><label for="title">Listing title</label><input id="title" name="title" required maxlength="90" placeholder="Sunny 2 bedroom near downtown">
-<div class="two"><div><label for="city">City</label><input id="city" name="city" required></div><div><label for="state">State</label><input id="state" name="state" required maxlength="2" placeholder="TX"></div></div>
-<div class="two"><div><label for="zip">ZIP code</label><input id="zip" name="zip" pattern="[0-9]{5}" required></div><div><label for="rent">Monthly rent (USD)</label><input id="rent" name="rent" type="number" min="1" required></div></div>
-<div class="two"><div><label for="beds">Bedrooms</label><select id="beds" name="beds"><option value="0">Studio</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></div><div><label for="baths">Bathrooms</label><input id="baths" name="baths" type="number" min="1" step="0.5" value="1" required></div></div>
-<div class="two"><div><label for="type">Property type</label><select id="type" name="type"><option>Apartment</option><option>House</option><option>Townhome</option><option>Studio</option><option>Condo</option></select></div><div><label for="furnished">Furnished</label><select id="furnished" name="furnished"><option value="no">No</option><option value="yes">Yes</option></select></div></div>
-<label for="available">Available from</label><input id="available" name="available" type="date" required>
-<label for="desc">Description</label><textarea id="desc" name="desc" rows="5" required minlength="60" placeholder="Describe the layout, the neighborhood and what is included."></textarea>
-<label for="amen">Amenities (comma separated)</label><input id="amen" name="amen" placeholder="Laundry, Parking, Pets allowed">
-<p><button>Publish listing</button></p></form></div></section>
-<div id="footer"></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>List your property | RentNest</title>
+<style>
+:root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 20px}
+header{background:var(--white);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;justify-content:space-between;align-items:center;padding-top:14px;padding-bottom:14px}
+.logo{font:700 1.25rem Georgia,serif;text-decoration:none}
+h1{font:700 1.8rem Georgia,serif;margin:28px 0 6px}
+h2{font:700 1.15rem Georgia,serif;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+fieldset{border:1px solid var(--line);background:var(--white);border-radius:6px;padding:18px 20px;margin:0 0 18px}
+legend{font:700 1.05rem Georgia,serif;padding:0 6px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+textarea{min-height:110px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 14px;margin-top:8px}
+.checks label{font-weight:400;margin:0;display:flex;gap:8px;align-items:center}
+.checks input{width:auto}
+small{color:var(--muted)}
+button{padding:12px 22px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
+#msg{margin:14px 0 40px;min-height:1.4em}
+#msg.err{color:#b3261e}
+#msg.ok{color:#0f6b4f}
+.notice{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:22px;margin:28px 0}
+.hide{display:none}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<a class="logo" href="index.html">RentNest</a>
+<a href="login.html" id="authLink">Log in</a>
+</div></header>
+
+<main class="wrap">
+<div id="gate" class="notice hide"></div>
+
+<div id="formArea" class="hide">
+<h1>List your property</h1>
+<p class="sub">Your listing is reviewed before it goes live.</p>
+
+<form id="f" novalidate>
+<fieldset>
+<legend>Location</legend>
+<div class="row">
+<div><label for="country">Country</label>
+<select id="country"><option value="USA">United States</option><option value="India">India</option></select></div>
+<div><label for="state" id="stateLabel">State</label>
+<select id="state"></select></div>
+</div>
+<label for="street">Street address</label>
+<input id="street" autocomplete="street-address">
+<div class="row">
+<div><label for="city">City</label><input id="city"></div>
+<div><label for="zip" id="zipLabel">ZIP code</label><input id="zip" inputmode="numeric"></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Property</legend>
+<label for="title">Title</label>
+<input id="title" maxlength="150" placeholder="Sunny 2-bedroom apartment near the metro">
+<label for="desc">Description</label>
+<textarea id="desc" placeholder="Describe the property, the neighbourhood and what is included."></textarea>
+<div class="row">
+<div><label for="ptype">Property type</label>
+<select id="ptype"><option value="apartment">Apartment</option><option value="house">House</option><option value="condo">Condo</option><option value="townhouse">Townhouse</option><option value="duplex">Duplex</option><option value="studio">Studio</option><option value="room">Room</option></select></div>
+<div><label for="lease">Lease type</label>
+<select id="lease"><option value="yearly">Yearly</option><option value="monthly">Monthly</option><option value="short_term">Short term</option></select></div>
+</div>
+<div class="row">
+<div><label for="beds">Bedrooms</label><input id="beds" type="number" min="0" value="1"></div>
+<div><label for="baths">Bathrooms</label><input id="baths" type="number" min="0" step="0.5" value="1"></div>
+</div>
+<div class="row">
+<div><label for="sqft">Size in square feet <small>(optional)</small></label><input id="sqft" type="number" min="1"></div>
+<div><label for="avail">Available from</label><input id="avail" type="date"></div>
+</div>
+<div class="checks" role="group" aria-label="Amenities">
+<label><input type="checkbox" id="parking">Parking</label>
+<label><input type="checkbox" id="laundry">Laundry</label>
+<label><input type="checkbox" id="ac">Air conditioning</label>
+<label><input type="checkbox" id="heating">Heating</label>
+<label><input type="checkbox" id="pets">Pets allowed</label>
+<label><input type="checkbox" id="smoking">Smoking allowed</label>
+<label><input type="checkbox" id="furnished">Furnished</label>
+<label><input type="checkbox" id="utilities">Utilities included</label>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Photos</legend>
+<label for="photos">Add up to 8 photos <small>(JPG, PNG or WebP, 5 MB each). The first one is the cover photo.</small></label>
+<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+</fieldset>
+
+<fieldset>
+<legend>Rent</legend>
+<div class="row">
+<div><label for="rent">Monthly rent (<span class="cur">$</span>)</label><input id="rent" type="number" min="1" step="any"></div>
+<div><label for="deposit">Security deposit (<span class="cur">$</span>)</label><input id="deposit" type="number" min="0" step="any" value="0"></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Contact details</legend>
+<p class="sub">Renters see these after they unlock your contact.</p>
+<div class="row">
+<div><label for="cname">Contact name</label><input id="cname"></div>
+<div><label for="cphone">Phone</label><input id="cphone" type="tel"></div>
+</div>
+<div class="row">
+<div><label for="cwa">WhatsApp <small>(optional)</small></label><input id="cwa" type="tel"></div>
+<div><label for="cemail">Email</label><input id="cemail" type="email"></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Photos</legend>
+<p class="sub">Up to 8 photos (JPG, PNG or WebP, 5 MB each). The first photo is the cover.</p>
+<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="Property photos">
+</fieldset>
+
+<button type="submit" id="submit">Submit for review</button>
+<div id="msg" role="status" aria-live="polite"></div>
+</form>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb = supabase.createClient(
+  "https://abppfpgazlngdhrejrog.supabase.co",
+  "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
+);
+var $ = function(id){ return document.getElementById(id); };
+var user = null;
+
+function say(text, kind){ $("msg").textContent = text || ""; $("msg").className = kind || ""; }
+function gate(html){
+  var g = $("gate"); g.className = "notice";
+  g.textContent = "";
+  html.forEach(function(part){ g.appendChild(part); });
+  $("formArea").className = "hide";
+}
+function text(t){ var p = document.createElement("p"); p.textContent = t; return p; }
+function linkBtn(label, href){ var a = document.createElement("a"); a.textContent = label; a.href = href; return a; }
+
+async function loadStates(){
+  var country = $("country").value;
+  var res = await sb.from("states").select("name,abbreviation").eq("country", country).order("name");
+  var sel = $("state"); sel.textContent = "";
+  (res.data || []).forEach(function(s){
+    var o = document.createElement("option");
+    o.value = s.abbreviation.trim(); o.textContent = s.name; sel.appendChild(o);
+  });
+}
+function applyCountry(){
+  var india = $("country").value === "India";
+  $("stateLabel").textContent = india ? "State or union territory" : "State";
+  $("zipLabel").textContent = india ? "PIN code (6 digits)" : "ZIP code";
+  $("zip").placeholder = india ? "400001" : "78701";
+  document.querySelectorAll(".cur").forEach(function(e){ e.textContent = india ? "\u20B9" : "$"; });
+  loadStates();
+}
+$("country").onchange = applyCountry;
+
+async function init(){
+  var r = await sb.auth.getSession();
+  if(!r.data.session){
+    gate([text("Log in to list your property."), linkBtn("Go to log in", "login.html")]);
+    return;
+  }
+  user = r.data.session.user;
+  $("authLink").textContent = "Log out";
+  $("authLink").href = "#";
+  $("authLink").onclick = function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); };
+
+  var p = await sb.from("profiles").select("role,full_name,phone,email").eq("id", user.id).maybeSingle();
+  if(!p.data || p.data.role !== "landlord"){
+    gate([text("Only landlord accounts can list properties. Log out and sign up again with \"List my property\" selected, using a different email."), linkBtn("Back to home", "index.html")]);
+    return;
+  }
+  $("cname").value = p.data.full_name || "";
+  $("cphone").value = p.data.phone || "";
+  $("cemail").value = p.data.email || user.email || "";
+  $("gate").className = "hide";
+  $("formArea").className = "";
+  applyCountry();
+}
+
+$("f").onsubmit = async function(e){
+  e.preventDefault();
+  var country = $("country").value;
+  var title = $("title").value.trim(), desc = $("desc").value.trim();
+  var zip = $("zip").value.trim();
+  if(title.length < 5){ say("Title must be at least 5 characters.", "err"); return; }
+  if(desc.length < 20){ say("Description must be at least 20 characters.", "err"); return; }
+  if(!$("street").value.trim() || !$("city").value.trim()){ say("Enter the street address and city.", "err"); return; }
+  var zipOk = country === "USA" ? /^\d{5}(-\d{4})?$/.test(zip) : /^[1-9]\d{5}$/.test(zip);
+  if(!zipOk){ say(country === "USA" ? "Enter a valid 5-digit ZIP code." : "Enter a valid 6-digit PIN code.", "err"); return; }
+  if(!($("rent").value > 0)){ say("Enter the monthly rent.", "err"); return; }
+  if(!$("avail").value){ say("Choose the available-from date.", "err"); return; }
+  if(!$("cname").value.trim() || !$("cphone").value.trim() || !$("cemail").value.trim()){ say("Fill in your contact name, phone and email.", "err"); return; }
+
+  var files = Array.prototype.slice.call($("photos").files);
+  var okTypes = ["image/jpeg", "image/png", "image/webp"];
+  if(files.length > 8){ say("Choose at most 8 photos.", "err"); return; }
+  for(var i = 0; i < files.length; i++){
+    if(okTypes.indexOf(files[i].type) === -1){ say(files[i].name + " must be a JPG, PNG or WebP image.", "err"); return; }
+    if(files[i].size > 5 * 1024 * 1024){ say(files[i].name + " is larger than 5 MB.", "err"); return; }
+  }
+
+  var files = Array.prototype.slice.call($("photos").files);
+  if(files.length > 8){ say("Choose at most 8 photos.", "err"); return; }
+  for(var k = 0; k < files.length; k++){
+    if(["image/jpeg","image/png","image/webp"].indexOf(files[k].type) === -1){ say("Photos must be JPG, PNG or WebP.", "err"); return; }
+    if(files[k].size > 5 * 1024 * 1024){ say(files[k].name + " is larger than 5 MB.", "err"); return; }
+  }
+
+  $("submit").disabled = true; say("Saving...");
+  var id = crypto.randomUUID();
+  var listing = {
+    id: id,
+    landlord_id: user.id,
+    title: title,
+    description: desc,
+    monthly_rent: Number($("rent").value),
+    security_deposit: Number($("deposit").value || 0),
+    bedrooms: parseInt($("beds").value || "0", 10),
+    bathrooms: Number($("baths").value || 0),
+    square_feet: $("sqft").value ? parseInt($("sqft").value, 10) : null,
+    property_type: $("ptype").value,
+    lease_type: $("lease").value,
+    available_date: $("avail").value,
+    street_address: $("street").value.trim(),
+    city: $("city").value.trim(),
+    state: $("state").value,
+    zip_code: zip,
+    country: country,
+    currency: country === "India" ? "INR" : "USD",
+    parking: $("parking").checked,
+    laundry: $("laundry").checked,
+    air_conditioning: $("ac").checked,
+    heating: $("heating").checked,
+    pets_allowed: $("pets").checked,
+    smoking_allowed: $("smoking").checked,
+    furnished: $("furnished").checked,
+    utilities_included: $("utilities").checked,
+    status: "pending"
+  };
+  var a = await sb.from("listings").insert(listing);
+  if(a.error){ $("submit").disabled = false; say(a.error.message, "err"); return; }
+
+  var b = await sb.from("listing_contacts").insert({
+    listing_id: id,
+    contact_name: $("cname").value.trim(),
+    contact_phone: $("cphone").value.trim(),
+    contact_whatsapp: $("cwa").value.trim() || null,
+    contact_email: $("cemail").value.trim()
+  });
+  if(b.error){
+    await sb.from("listings").delete().eq("id", id);
+    $("submit").disabled = false;
+    say("Could not save your contact details: " + b.error.message, "err");
+    return;
+  }
+  var failed = 0;
+  for(var k = 0; k < files.length; k++){
+    say("Uploading photo " + (k + 1) + " of " + files.length + "...");
+    var ext = files[k].type === "image/png" ? "png" : files[k].type === "image/webp" ? "webp" : "jpg";
+    var path = user.id + "/" + id + "/" + k + "-" + Date.now() + "." + ext;
+    var up = await sb.storage.from("listing-images").upload(path, files[k], { contentType: files[k].type });
+    if(up.error){ failed++; continue; }
+    var pub = sb.storage.from("listing-images").getPublicUrl(path);
+    var ins = await sb.from("listing_images").insert({
+      listing_id: id,
+      url: pub.data.publicUrl,
+      display_order: k,
+      is_primary: k === 0
+    });
+    if(ins.error){ failed++; }
+  }
+  if(failed){
+    say("Your listing was submitted, but " + failed + " photo(s) could not be uploaded. You can add them later.", "err");
+  } else {
+    var failed = 0;
+  for(var i = 0; i < files.length; i++){
+    var f = files[i];
+    var ext = f.type === "image/png" ? "png" : f.type === "image/webp" ? "webp" : "jpg";
+    var path = user.id + "/" + id + "/" + (i + 1) + "-" + Date.now() + "." + ext;
+    var up = await sb.storage.from("listing-images").upload(path, f, { contentType: f.type });
+    if(up.error){ failed++; continue; }
+    var pub = sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
+    var row = await sb.from("listing_images").insert({ listing_id: id, url: pub, display_order: i, is_primary: i === 0 });
+    if(row.error){ failed++; }
+  }
+  if(failed){
+    say("Your listing was submitted, but " + failed + " photo(s) failed to upload.", "err");
+  } else {
+    say("Your listing was submitted for review. It goes live once approved.", "ok");
+  }
+  }
+  $("f").reset(); applyCountry(); $("submit").disabled = false;
+};
+
+init();
+</script>
+</body>
+</html>
