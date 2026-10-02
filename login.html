@@ -887,7 +887,7 @@
     var result = await sb.auth.verifyOtp({
       email: pendingEmail,
       token: token,
-      type: "signup"
+      type: "email"
     });
 
     setBusy(verifyOtpButton, false);
