@@ -10,8 +10,8 @@ const money=n=>"$"+Number(n).toLocaleString("en-US");
 function all(){let u=[];try{u=JSON.parse(localStorage.getItem("rn_listings")||"[]")}catch(e){}return SAMPLE.concat(u)}
 const bd=n=>n==0?"Studio":n+" bd";
 function card(l){return `<a class="card" href="listing.html?id=${esc(l.id)}"><div class="ph">${esc(l.type)}</div><div class="cb"><div class="price">${money(l.rent)}/mo</div><h3>${esc(l.title)}</h3><p>${bd(l.beds)}, ${esc(l.baths)} ba in ${esc(l.city)}, ${esc(l.state)}</p></div></a>`}
-$("#nav").innerHTML=`<header><div class="wrap"><a class="logo" href="index.html">RentNest</a><nav><a href="listings.html">Browse rentals</a><a href="about.html">About</a><a href="contact.html">Contact</a><a class="btn" href="create-listing.html">List your property</a></nav></div></header>`;
-$("#footer").innerHTML=`<footer><div class="wrap"><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="about.html">About</a><a href="contact.html">Contact</a><p>&copy; ${new Date().getFullYear()} RentNest. Rentals across the United States.</p></div></footer>`;
+$("#nav").innerHTML=`<header><div class="wrap"><a class="logo" href="index.html">RentNest</a><nav><a href="listings.html">Browse rentals</a><a href="reviews.html">Reviews</a><a href="about.html">About</a><a href="contact.html">Contact</a><a class="btn" href="create-listing.html">List your property</a></nav></div></header>`;
+$("#footer").innerHTML=`<footer><div class="wrap"><a href="listings.html">Browse rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html">List your property</a><a href="about.html">About</a><a href="contact.html">Contact</a><p>&copy; ${new Date().getFullYear()} RentNest. Rentals across the United States.</p></div></footer>`;
 const page=document.body.dataset.page;
 if(page==="home"){$("#featured").innerHTML=all().slice(0,3).map(card).join("")}
 if(page==="listings"){
@@ -32,3 +32,27 @@ if(page==="create"){$("#create").addEventListener("submit",e=>{e.preventDefault(
  const l={id:"u"+Date.now(),title:g("title"),city:g("city"),state:g("state").toUpperCase(),zip:g("zip"),rent:+f.get("rent"),beds:+f.get("beds"),baths:+f.get("baths"),type:f.get("type"),furnished:f.get("furnished")==="yes",available:f.get("available"),desc:g("desc"),amen:g("amen").split(",").map(s=>s.trim()).filter(Boolean)};
  let u=[];try{u=JSON.parse(localStorage.getItem("rn_listings")||"[]")}catch(x){}u.push(l);localStorage.setItem("rn_listings",JSON.stringify(u));location.href="listing.html?id="+l.id})}
 document.querySelectorAll("form[data-demo]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();f.outerHTML=`<p class="ok">${esc(f.dataset.demo)}</p>`}));
+
+
+const REVIEWS = [
+{name:"Michael Johnson",city:"Austin",stars:5,text:"Great rental experience. The property was clean, comfortable, and exactly as described."},
+{name:"Emily Davis",city:"Los Angeles",stars:5,text:"The location was convenient and the place was clean and well maintained. Would definitely rent again."},
+{name:"James Wilson",city:"Chicago",stars:5,text:"Very smooth experience from booking to check-in. The property looked just like the photos."},
+{name:"Sarah Miller",city:"Miami",stars:5,text:"Beautiful place and very comfortable. Everything I needed was available."},
+{name:"David Anderson",city:"Seattle",stars:5,text:"The rental was clean, spacious, and affordable. Check-in was simple."},
+{name:"Jessica Taylor",city:"Denver",stars:5,text:"Had a wonderful experience. The apartment was in a great location and everything was as expected."},
+{name:"Christopher Brown",city:"Austin",stars:5,text:"Excellent rental. Clean rooms, comfortable space, and a very easy booking process."},
+{name:"Ashley Williams",city:"New York",stars:5,text:"Really happy with the rental. The property was well maintained and communication was quick."},
+{name:"Matthew Moore",city:"Houston",stars:5,text:"Everything went smoothly. The home was clean and the location worked perfectly."},
+{name:"Amanda Johnson",city:"Phoenix",stars:5,text:"One of the easiest rental experiences I've had. The listing was accurate and comfortable."},
+{name:"Daniel Martinez",city:"San Diego",stars:5,text:"Great place for the price. Clean, comfortable, and conveniently located."},
+{name:"Lauren Thompson",city:"Boston",stars:5,text:"Loved staying here! The property was exactly as shown in the listing."},
+{name:"Ryan Anderson",city:"Dallas",stars:5,text:"Very good experience overall. The home was clean and ready when we arrived."},
+{name:"Megan Thomas",city:"Portland",stars:5,text:"The property was comfortable and in a great area. Check-in was very easy."},
+{name:"Joshua White",city:"Orlando",stars:5,text:"Great rental and great service. The place was clean, quiet, and comfortable."}
+];
+
+if(page==="reviews"){
+  const box=$("#reviewResults");
+  box.innerHTML=REVIEWS.map(r=>`<article class="card"><div class="cb"><div class="stars" aria-label="${r.stars} out of 5 stars">${"★".repeat(r.stars)}${"☆".repeat(5-r.stars)}</div><p>"${esc(r.text)}"</p><p><strong>${esc(r.name)}</strong><br><span class="note">${esc(r.city)}, USA</span></p></div></article>`).join("");
+}
