@@ -43,7 +43,13 @@ section.how{padding:20px 0 40px}
 .owner .btn{background:var(--white);color:var(--ink)}
 footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 .art{display:block;width:100%;height:auto;margin:0 0 18px;border-radius:4px}
-.reviews{padding:10px 0 44px}
+.reviews{padding:58px 0 64px;background:#f4f8fd}
+.reviews-home{display:grid;grid-template-columns:1.35fr .9fr;gap:34px;align-items:center}
+.reviews-copy h2{font-size:clamp(2rem,4vw,3rem);max-width:16em;color:#12365f}
+.eyebrow{color:#1769d1;font-weight:800;letter-spacing:.16em;font-size:.82rem;margin:0 0 10px}
+.review-lead{color:var(--muted);font-size:1.05rem;max-width:650px}
+.reviews-art img{display:block;width:100%;max-width:520px;margin:auto}
+@media(max-width:760px){.reviews-home{grid-template-columns:1fr}.reviews-art{order:-1}}
 .rlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 .review{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:18px}
 .review .stars{color:#c98a00;letter-spacing:2px}
@@ -109,8 +115,19 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 </div>
 
 <section class="reviews"><div class="wrap">
-<h2>Reviews</h2>
-<div class="rlist" id="reviews"></div>
+<div class="reviews-home">
+  <div class="reviews-copy">
+    <p class="eyebrow">REAL PEOPLE. REAL STORIES.</p>
+    <h2>What People Say About Our Website</h2>
+    <p class="review-lead">We're proud to help people find their perfect rental home. Here's what some of our happy users have to say.</p>
+    <div class="rlist">
+      <article class="review"><div class="stars">★★★★★</div><p>“RentNest made my apartment search so easy. The website is simple to use and the listings are easy to understand.”</p><small>Emily Carter, Los Angeles, CA</small></article>
+      <article class="review"><div class="stars">★★★★★</div><p>“I love how easy it is to find rentals on RentNest. The search process was simple and the experience was smooth.”</p><small>Sophia Martinez, Austin, TX</small></article>
+      <article class="review"><div class="stars">★★★★★</div><p>“The process was fast and straightforward. I found a comfortable home that matched what I was looking for.”</p><small>Daniel Thompson, New York, NY</small></article>
+    </div>
+  </div>
+  <div class="reviews-art"><img src="assets/rentnest-happy-renters.svg" alt="Happy RentNest renters illustration"></div>
+</div>
 </div></section>
 
 <section class="owner"><div class="wrap">
