@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reviews | RentNest</title>
+<meta name="description" content="Reviews and renter experiences from RentNest users.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+.reviews-hero{padding:56px 0 28px}
+.review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:56px}
+.stars{color:#c98a00;letter-spacing:2px;font-size:1.05rem;margin-bottom:8px}
+.review-note{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 28px;color:var(--mut)}
+</style>
+</head>
+<body data-page="reviews">
+<div id="nav"></div>
+<main>
+<section class="reviews-hero"><div class="wrap">
+<h1>Reviews</h1>
+<p class="note">See what renters have shared about their RentNest experience.</p>
+<p class="review-note"><strong>Sample reviews:</strong> The entries below are demonstration content for the website and are not verified customer testimonials.</p>
+</div></section>
+<section><div class="wrap">
+<div id="reviewResults" class="review-grid"></div>
+</div></section>
+</main>
+<div id="footer"></div>
+<script src="app.js"></script>
+</body>
+</html>
