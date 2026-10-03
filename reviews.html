@@ -1,33 +1,134 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Reviews | RentNest</title>
-<meta name="description" content="Reviews and renter experiences from RentNest users.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap">
-<link rel="stylesheet" href="style.css">
+<meta name="description" content="Read reviews from renters and landlords who used RentNest, or share your own experience.">
 <style>
-.reviews-hero{padding:56px 0 28px}
-.review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:56px}
-.stars{color:#c98a00;letter-spacing:2px;font-size:1.05rem;margin-bottom:8px}
-.review-note{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 28px;color:var(--mut)}
+:root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--white:#fff;--star:#c98a00}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+header{background:var(--white);border-bottom:1px solid var(--line)}
+header .wrap{max-width:1040px;display:flex;justify-content:space-between;align-items:center;padding-top:14px;padding-bottom:14px}
+.logo{font:700 1.25rem Georgia,serif;text-decoration:none}
+nav a{margin-left:18px;text-decoration:none;color:var(--muted)}
+nav a.on{color:var(--ink);font-weight:600}
+h1{font:700 1.8rem Georgia,serif;margin:28px 0 4px}
+h2{font:700 1.2rem Georgia,serif;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 18px}
+.stars{color:var(--star);letter-spacing:2px}
+.summary{font-size:1.1rem;margin:0 0 20px}
+.review{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin:0 0 12px}
+.review p{margin:6px 0}
+.review small{color:var(--muted)}
+.empty{background:var(--white);border:1px dashed var(--line);border-radius:6px;padding:22px;color:var(--muted)}
+.box{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:20px 22px;margin:28px 0 48px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+textarea{min-height:120px;resize:vertical}
+button,.btn{display:inline-block;margin-top:14px;padding:11px 20px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;text-decoration:none;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.btn:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
+#note{min-height:1.4em;margin-top:10px}
+#note.err{color:#b3261e}
+#note.ok{color:#0f6b4f}
+small.hint{color:var(--muted);font-weight:400}
+.hide{display:none}
 </style>
 </head>
-<body data-page="reviews">
-<div id="nav"></div>
-<main>
-<section class="reviews-hero"><div class="wrap">
+<body>
+<header><div class="wrap">
+<a class="logo" href="index.html">RentNest</a>
+<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="reviews.html" class="on">Reviews</a><a href="account.html">My account</a></nav>
+</div></header>
+
+<main class="wrap">
 <h1>Reviews</h1>
-<p class="note">See what renters have shared about their RentNest experience.</p>
-<p class="review-note"><strong>Sample reviews:</strong> The entries below are demonstration content for the website and are not verified customer testimonials.</p>
-</div></section>
-<section><div class="wrap">
-<div id="reviewResults" class="review-grid"></div>
-</div></section>
+<p class="sub">Written by people who use RentNest. Every review is checked by our team before it appears.</p>
+<p class="summary" id="summary"></p>
+<div id="list"></div>
+
+<div class="box">
+<h2>Write a review</h2>
+<div id="needLogin" class="hide">
+<p class="sub">Log in or sign up to share your experience. One review per account.</p>
+<a class="btn" href="login.html?next=reviews.html">Log in or sign up</a>
+</div>
+<form id="f" class="hide" novalidate>
+<label for="rating">Your rating</label>
+<select id="rating"><option value="5">5 stars - Excellent</option><option value="4">4 stars - Good</option><option value="3">3 stars - Okay</option><option value="2">2 stars - Poor</option><option value="1">1 star - Bad</option></select>
+<label for="name">Name to show <small class="hint">(first name and last initial, for example Maria G.)</small></label>
+<input id="name" maxlength="40">
+<label for="body">Your review <small class="hint">(20 to 600 characters)</small></label>
+<textarea id="body" maxlength="600"></textarea>
+<button type="submit" id="send">Submit review</button>
+<p id="note" role="status" aria-live="polite"></p>
+</form>
+</div>
 </main>
-<div id="footer"></div>
-<script src="app.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+var $ = function(id){ return document.getElementById(id); };
+function say(t, k){ $("note").textContent = t || ""; $("note").className = k || ""; }
+function stars(n){ return "\u2605".repeat(n) + "\u2606".repeat(5 - n); }
+
+async function load(){
+  var res = await sb.from("reviews").select("display_name,rating,body,created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(50);
+  var list = $("list"); list.textContent = "";
+  var rows = res.data || [];
+  if(res.error){ $("summary").textContent = "Could not load reviews. Please try again."; return; }
+  if(!rows.length){
+    $("summary").textContent = "";
+    var e = document.createElement("p"); e.className = "empty";
+    e.textContent = "No reviews yet. Be the first to share your experience.";
+    list.appendChild(e); return;
+  }
+  var avg = rows.reduce(function(a, r){ return a + r.rating; }, 0) / rows.length;
+  $("summary").textContent = avg.toFixed(1) + " out of 5 from " + rows.length + " review" + (rows.length > 1 ? "s" : "");
+  rows.forEach(function(r){
+    var d = document.createElement("div"); d.className = "review";
+    var s = document.createElement("div"); s.className = "stars"; s.textContent = stars(r.rating);
+    var p = document.createElement("p"); p.textContent = r.body;
+    var m = document.createElement("small");
+    m.textContent = r.display_name + " \u00B7 " + new Date(r.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short" });
+    d.appendChild(s); d.appendChild(p); d.appendChild(m); list.appendChild(d);
+  });
+}
+
+async function init(){
+  var s = await sb.auth.getSession();
+  if(s.data.session){
+    $("f").classList.remove("hide");
+    var p = await sb.from("profiles").select("full_name").eq("id", s.data.session.user.id).maybeSingle();
+    var n = (p.data && p.data.full_name || "").trim().split(/\s+/);
+    if(n[0]){ $("name").value = n.length > 1 ? n[0] + " " + n[n.length - 1].charAt(0).toUpperCase() + "." : n[0]; }
+  } else {
+    $("needLogin").classList.remove("hide");
+  }
+  load();
+}
+
+$("f").onsubmit = async function(e){
+  e.preventDefault();
+  var name = $("name").value.trim(), body = $("body").value.trim();
+  if(name.length < 2){ say("Enter the name to show.", "err"); return; }
+  if(body.length < 20){ say("Please write at least 20 characters.", "err"); return; }
+  $("send").disabled = true; say("Sending...");
+  var res = await sb.from("reviews").insert({ display_name: name, rating: parseInt($("rating").value, 10), body: body });
+  $("send").disabled = false;
+  if(res.error){
+    say(res.error.code === "23505" ? "You have already submitted a review. Thank you!" : "Could not send your review: " + res.error.message, "err");
+    return;
+  }
+  $("body").value = "";
+  say("Thank you! Your review will appear after our team checks it.", "ok");
+};
+init();
+</script>
 </body>
 </html>

@@ -118,7 +118,7 @@ var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
 var STEPS = ["stLogin","stSignup","stCheck","stForgot","stReset","stIn"];
-var PAGES = ["index.html","listings.html","create-listing.html","account.html"];
+var PAGES = ["index.html","listings.html","create-listing.html","account.html","reviews.html"];
 function pageFrom(v){
   v = (v || "").split("#")[0].split("?")[0].split("/").pop();
   if(v === "account") v = "account.html";
