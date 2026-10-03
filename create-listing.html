@@ -40,7 +40,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 <body>
 <header><div class="wrap">
 <a class="logo" href="index.html">RentNest</a>
-<a href="login.html" id="authLink">Log in</a>
+<a href="account.html">My account</a>
 </div></header>
 
 <main class="wrap">
@@ -55,7 +55,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 <legend>Location</legend>
 <div class="row">
 <div><label for="country">Country</label>
-<select id="country"><option value="USA">United States</option><option value="India">India</option></select></div>
+<select id="country"><option value="USA">United States</option></select></div>
 <div><label for="state" id="stateLabel">State</label>
 <select id="state"></select></div>
 </div>
@@ -161,11 +161,9 @@ async function loadStates(){
   });
 }
 function applyCountry(){
-  var india = $("country").value === "India";
-  $("stateLabel").textContent = india ? "State or union territory" : "State";
-  $("zipLabel").textContent = india ? "PIN code (6 digits)" : "ZIP code";
-  $("zip").placeholder = india ? "400001" : "78701";
-  document.querySelectorAll(".cur").forEach(function(e){ e.textContent = india ? "\u20B9" : "$"; });
+  $("stateLabel").textContent = "State";
+  $("zipLabel").textContent = "ZIP code";
+  $("zip").placeholder = "78701";
   loadStates();
 }
 $("country").onchange = applyCountry;
@@ -177,9 +175,6 @@ async function init(){
     return;
   }
   user = r.data.session.user;
-  $("authLink").textContent = "Log out";
-  $("authLink").href = "#";
-  $("authLink").onclick = function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); };
 
   var p = await sb.from("profiles").select("role,full_name,phone,email").eq("id", user.id).maybeSingle();
   if(!p.data || p.data.role !== "landlord"){
@@ -202,8 +197,8 @@ $("f").onsubmit = async function(e){
   if(title.length < 5){ say("Title must be at least 5 characters.", "err"); return; }
   if(desc.length < 20){ say("Description must be at least 20 characters.", "err"); return; }
   if(!$("street").value.trim() || !$("city").value.trim()){ say("Enter the street address and city.", "err"); return; }
-  var zipOk = country === "USA" ? /^\d{5}(-\d{4})?$/.test(zip) : /^[1-9]\d{5}$/.test(zip);
-  if(!zipOk){ say(country === "USA" ? "Enter a valid 5-digit ZIP code." : "Enter a valid 6-digit PIN code.", "err"); return; }
+  var zipOk = /^\d{5}(-\d{4})?$/.test(zip);
+  if(!zipOk){ say("Enter a valid 5-digit ZIP code (like 78701).", "err"); return; }
   if(!($("rent").value > 0)){ say("Enter the monthly rent.", "err"); return; }
   if(!$("avail").value){ say("Choose the available-from date.", "err"); return; }
   if(!$("cname").value.trim() || !$("cphone").value.trim() || !$("cemail").value.trim()){ say("Fill in your contact name, phone and email.", "err"); return; }
@@ -236,7 +231,7 @@ $("f").onsubmit = async function(e){
     state: $("state").value,
     zip_code: zip,
     country: country,
-    currency: country === "India" ? "INR" : "USD",
+    currency: "USD",
     parking: $("parking").checked,
     laundry: $("laundry").checked,
     air_conditioning: $("ac").checked,

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My account | RentNest</title>
+<style>
+:root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:620px;margin:0 auto;padding:0 20px}
+header{background:var(--white);border-bottom:1px solid var(--line)}
+header .wrap{max-width:1040px;display:flex;justify-content:space-between;align-items:center;padding-top:14px;padding-bottom:14px}
+.logo{font:700 1.25rem Georgia,serif;text-decoration:none}
+nav a{margin-left:18px;text-decoration:none;color:var(--muted)}
+nav a.on{color:var(--ink);font-weight:600}
+h1{font:700 1.8rem Georgia,serif;margin:28px 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+section{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:20px 22px;margin:0 0 16px}
+h2{font:700 1.15rem Georgia,serif;margin:0 0 4px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+input[readonly]{background:var(--bg);color:var(--muted)}
+button{margin-top:14px;padding:11px 20px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+button.out{background:none;color:var(--ink);border:1px solid var(--line)}
+input:focus-visible,button:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
+.note{margin:6px 0 0;min-height:1.3em;font-size:.95rem}
+.note.err{color:#b3261e}
+.note.ok{color:#0f6b4f}
+small{color:var(--muted)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<a class="logo" href="index.html">RentNest</a>
+<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="account.html" class="on">My account</a></nav>
+</div></header>
+
+<main class="wrap hide" id="page">
+<h1>My account</h1>
+<p class="sub" id="roleLine"></p>
+
+<section>
+<h2>Profile</h2>
+<form id="fProfile">
+<label for="name">Full name</label>
+<input id="name" autocomplete="name" maxlength="100" required>
+<label for="phone">Phone</label>
+<input id="phone" type="tel" autocomplete="tel" maxlength="30">
+<button type="submit" id="bProfile">Save profile</button>
+<p class="note" id="nProfile" role="status"></p>
+</form>
+</section>
+
+<section>
+<h2>Email</h2>
+<form id="fEmail">
+<label for="email">Current email</label>
+<input id="email" readonly>
+<label for="newEmail">New email</label>
+<input id="newEmail" type="email" autocomplete="email" required>
+<button type="submit" id="bEmail">Change email</button>
+<p class="note" id="nEmail" role="status"></p>
+<small>We send a confirmation link to your email addresses. Your email changes after you confirm.</small>
+</form>
+</section>
+
+<section>
+<h2>Password</h2>
+<form id="fPass">
+<label for="p1">New password <small>(at least 8 characters)</small></label>
+<input id="p1" type="password" autocomplete="new-password" minlength="8" required>
+<label for="p2">Confirm new password</label>
+<input id="p2" type="password" autocomplete="new-password" minlength="8" required>
+<button type="submit" id="bPass">Change password</button>
+<button type="button" class="out" id="bReset">Email me a reset link instead</button>
+<p class="note" id="nPass" role="status"></p>
+</form>
+</section>
+
+<section>
+<h2>Log out</h2>
+<button type="button" class="out" id="logout">Log out</button>
+</section>
+<p style="height:30px"></p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var SITE = "https://kiranpatel001200-code.github.io/rentals/";
+var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+var $ = function(id){ return document.getElementById(id); };
+var user = null;
+
+function note(id, text, kind){ $(id).textContent = text || ""; $(id).className = "note" + (kind ? " " + kind : ""); }
+function friendly(err){
+  var m = (err && err.message) || "Something went wrong.";
+  if(/rate limit|too many|seconds/i.test(m)) return "Too many attempts. Please wait a little and try again.";
+  if(/same password/i.test(m)) return "Your new password must be different from the old one.";
+  if(/reauth|recent/i.test(m)) return "For safety, please log out, log in again, and then retry.";
+  return m;
+}
+
+async function init(){
+  var r = await sb.auth.getSession();
+  if(!r.data.session){ location.replace("login.html?next=account"); return; }
+  user = r.data.session.user;
+  var p = await sb.from("profiles").select("full_name,phone,role").eq("id", user.id).maybeSingle();
+  $("name").value = (p.data && p.data.full_name) || "";
+  $("phone").value = (p.data && p.data.phone) || "";
+  $("email").value = user.email || "";
+  var role = p.data && p.data.role;
+  $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
+  $("page").classList.remove("hide");
+}
+
+$("fProfile").onsubmit = async function(e){
+  e.preventDefault();
+  var name = $("name").value.trim();
+  if(!name){ note("nProfile", "Enter your name.", "err"); return; }
+  $("bProfile").disabled = true; note("nProfile", "Saving...");
+  var res = await sb.from("profiles").update({ full_name: name, phone: $("phone").value.trim() || null }).eq("id", user.id);
+  $("bProfile").disabled = false;
+  note("nProfile", res.error ? friendly(res.error) : "Profile saved.", res.error ? "err" : "ok");
+};
+
+$("fEmail").onsubmit = async function(e){
+  e.preventDefault();
+  var ne = $("newEmail").value.trim();
+  if(ne.toLowerCase() === (user.email || "").toLowerCase()){ note("nEmail", "That is already your email.", "err"); return; }
+  $("bEmail").disabled = true; note("nEmail", "Sending...");
+  var res = await sb.auth.updateUser({ email: ne }, { emailRedirectTo: SITE + "account.html" });
+  $("bEmail").disabled = false;
+  if(res.error){ note("nEmail", friendly(res.error), "err"); return; }
+  $("newEmail").value = "";
+  note("nEmail", "Check your inbox (and spam) and click the confirmation link. If you get two emails, confirm both.", "ok");
+};
+
+$("fPass").onsubmit = async function(e){
+  e.preventDefault();
+  var a = $("p1").value;
+  if(a.length < 8){ note("nPass", "Password must be at least 8 characters.", "err"); return; }
+  if(a !== $("p2").value){ note("nPass", "The two passwords do not match.", "err"); return; }
+  $("bPass").disabled = true; note("nPass", "Saving...");
+  var res = await sb.auth.updateUser({ password: a });
+  $("bPass").disabled = false;
+  if(res.error){ note("nPass", friendly(res.error), "err"); return; }
+  $("p1").value = ""; $("p2").value = "";
+  note("nPass", "Password changed.", "ok");
+};
+$("bReset").onclick = async function(){
+  note("nPass", "Sending...");
+  var res = await sb.auth.resetPasswordForEmail(user.email, { redirectTo: SITE + "login.html" });
+  note("nPass", res.error ? friendly(res.error) : "Reset link sent to " + user.email + ".", res.error ? "err" : "ok");
+};
+
+$("logout").onclick = async function(){ await sb.auth.signOut(); location.href = "login.html"; };
+sb.auth.onAuthStateChange(function(ev, s){ if(ev === "USER_UPDATED" && s){ user = s.user; $("email").value = user.email || ""; } });
+init();
+</script>
+</body>
+</html>

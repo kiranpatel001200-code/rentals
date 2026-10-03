@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RentNest | Rent a home in the US or India</title>
-<meta name="description" content="Search apartments, houses and studios for rent in the United States and India, or list your own property.">
+<title>RentNest | Rent a home anywhere in the US</title>
+<meta name="description" content="Search apartments, houses and studios for rent across the United States, or list your own property.">
 <style>
 :root{--ink:#17202a;--muted:#55606b;--bg:#f7f8f9;--line:#d9dee3;--us:#1d3557;--in:#0f6b4f;--white:#fff}
 *{box-sizing:border-box}
@@ -24,7 +24,7 @@ form.search{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;background:var(
 form.search select,form.search input{flex:1 1 150px;padding:11px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--white)}
 button,.btn{display:inline-block;padding:11px 20px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--ink);border:0;border-radius:4px;text-decoration:none;cursor:pointer}
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #e0a100;outline-offset:2px}
-.countries{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px 0 40px}
+.countries{display:grid;grid-template-columns:1fr;gap:20px;padding:20px 0 40px}
 .country{background:var(--white);border:1px solid var(--line);border-top-width:6px;padding:26px;border-radius:4px}
 .country.us{border-top-color:var(--us)}
 .country.in{border-top-color:var(--in)}
@@ -55,15 +55,14 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 <body>
 <header class="top"><div class="wrap">
 <a class="logo" href="index.html">RentNest</a>
-<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="login.html" id="authLink">Log in</a></nav>
+<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="account.html">My account</a></nav>
 </div></header>
 
 <main>
 <section class="hero"><div class="wrap">
-<h1>Find a place to rent in the US or India.</h1>
-<p>Browse apartments, houses and studios posted directly by landlords. Choose your country, filter by city, bedrooms and monthly rent, then message the landlord from the listing page.</p>
+<h1>Find a place to rent anywhere in the US.</h1>
+<p>Browse apartments, houses and studios posted directly by landlords. Filter by city, state, bedrooms and monthly rent, then message the landlord from the listing page.</p>
 <form class="search" action="listings.html" method="get">
-<select name="country" aria-label="Country"><option value="us">United States</option><option value="in">India</option></select>
 <input name="city" placeholder="City" aria-label="City">
 <select name="bedrooms" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
 <button type="submit">Search rentals</button>
@@ -75,16 +74,16 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 
 <article class="country us" id="usa">
 <svg class="art" viewBox="0 0 400 170" role="img" aria-label="Illustration of a suburban American house with a tree"><rect width="400" height="170" fill="#e6ecf3"/><rect y="140" width="400" height="30" fill="#c9d6c3"/><rect x="120" y="76" width="150" height="66" fill="#fff" stroke="#1d3557" stroke-width="3"/><path d="M108 78 195 28l87 50z" fill="#1d3557"/><rect x="182" y="102" width="26" height="40" fill="#1d3557"/><rect x="134" y="92" width="32" height="26" fill="#bcd0e6" stroke="#1d3557" stroke-width="2"/><rect x="224" y="92" width="32" height="26" fill="#bcd0e6" stroke="#1d3557" stroke-width="2"/><rect x="310" y="104" width="8" height="38" fill="#6b4f2d"/><circle cx="314" cy="92" r="26" fill="#4f8a5b"/></svg>
-<h2>Rentals in the United States</h2>
+<h2>Rent anywhere in the United States</h2>
 <p>Find apartments, townhouses and single-family homes across the US. Rents are listed in US dollars per month, and most landlords offer 12-month leases.</p>
 <h3>Popular cities</h3>
 <div class="cities">
-<a href="listings.html?country=us&amp;city=New+York">New York</a>
-<a href="listings.html?country=us&amp;city=Los+Angeles">Los Angeles</a>
-<a href="listings.html?country=us&amp;city=Chicago">Chicago</a>
-<a href="listings.html?country=us&amp;city=Houston">Houston</a>
-<a href="listings.html?country=us&amp;city=Seattle">Seattle</a>
-<a href="listings.html?country=us&amp;city=Austin">Austin</a>
+<a href="listings.html?city=New+York">New York</a>
+<a href="listings.html?city=Los+Angeles">Los Angeles</a>
+<a href="listings.html?city=Chicago">Chicago</a>
+<a href="listings.html?city=Houston">Houston</a>
+<a href="listings.html?city=Seattle">Seattle</a>
+<a href="listings.html?city=Austin">Austin</a>
 </div>
 <h3>Before you rent</h3>
 <ul>
@@ -92,30 +91,10 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 <li>Landlords often ask for an application, ID and proof of income.</li>
 <li>A security deposit is common. Get the amount and refund terms in writing.</li>
 </ul>
-<p><a class="btn" href="listings.html?country=us">See US rentals</a></p>
+<p><a class="btn" href="listings.html">See US rentals</a></p>
 </article>
 
-<article class="country in" id="india">
-<svg class="art" viewBox="0 0 400 170" role="img" aria-label="Illustration of apartment buildings in an Indian city"><rect width="400" height="170" fill="#e4efe9"/><rect y="146" width="400" height="24" fill="#bfc9c3"/><rect x="60" y="40" width="90" height="106" fill="#fff" stroke="#0f6b4f" stroke-width="3"/><rect x="160" y="70" width="80" height="76" fill="#fff" stroke="#0f6b4f" stroke-width="3"/><rect x="250" y="24" width="90" height="122" fill="#fff" stroke="#0f6b4f" stroke-width="3"/><g fill="#9fd0bb"><rect x="72" y="54" width="18" height="16"/><rect x="120" y="54" width="18" height="16"/><rect x="72" y="86" width="18" height="16"/><rect x="120" y="86" width="18" height="16"/><rect x="172" y="84" width="16" height="14"/><rect x="212" y="84" width="16" height="14"/><rect x="172" y="112" width="16" height="14"/><rect x="212" y="112" width="16" height="14"/><rect x="262" y="38" width="18" height="16"/><rect x="310" y="38" width="18" height="16"/><rect x="262" y="72" width="18" height="16"/><rect x="310" y="72" width="18" height="16"/><rect x="262" y="106" width="18" height="16"/><rect x="310" y="106" width="18" height="16"/></g><rect x="96" y="120" width="18" height="26" fill="#0f6b4f"/><rect x="286" y="122" width="18" height="24" fill="#0f6b4f"/></svg>
-<h2>Rentals in India</h2>
-<p>Find flats, independent houses and studios in major Indian cities. Rents are listed in Indian rupees (₹) per month, and you deal directly with the owner.</p>
-<h3>Popular cities</h3>
-<div class="cities">
-<a href="listings.html?country=in&amp;city=Mumbai">Mumbai</a>
-<a href="listings.html?country=in&amp;city=Delhi">Delhi</a>
-<a href="listings.html?country=in&amp;city=Bengaluru">Bengaluru</a>
-<a href="listings.html?country=in&amp;city=Pune">Pune</a>
-<a href="listings.html?country=in&amp;city=Hyderabad">Hyderabad</a>
-<a href="listings.html?country=in&amp;city=Chennai">Chennai</a>
-</div>
-<h3>Before you rent</h3>
-<ul>
-<li>Check whether the flat is furnished, semi-furnished or unfurnished.</li>
-<li>Ask about maintenance charges and who pays them.</li>
-<li>Rental agreements are often made for 11 months. Read the notice period and deposit refund terms.</li>
-</ul>
-<p><a class="btn" href="listings.html?country=in">See India rentals</a></p>
-</article>
+
 
 </div>
 
@@ -136,27 +115,21 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 
 <section class="owner"><div class="wrap">
 <h2>Own a property?</h2>
-<p>Create a listing in a few minutes and reach renters searching in your city, in the US or India. Add clear photos, the monthly rent and a short description.</p>
+<p>Create a listing in a few minutes and reach renters searching in your city, across the US. Add clear photos, the monthly rent and a short description.</p>
 <a class="btn" href="create-listing.html">List your property</a>
 </div></section>
 </main>
 
-<footer><div class="wrap">&copy; RentNest. Rent a home in the United States or India.</div></footer>
+<footer><div class="wrap">&copy; RentNest. Rent a home in the United States.</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co","sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
-  var link = document.getElementById("authLink");
-  sb.auth.getSession().then(function(r){
-    if(r.data.session){
-      if(location.hash.indexOf("access_token") !== -1){
-        history.replaceState(null, "", location.pathname + location.search);
-      }
-      link.textContent = "Log out";
-      link.href = "#";
-      link.onclick = function(e){ e.preventDefault(); sb.auth.signOut().then(function(){ location.reload(); }); };
-    }
-  });
+  try{
+    var id = localStorage.getItem("rn_sid");
+    if(!id){ id = crypto.randomUUID(); localStorage.setItem("rn_sid", id); }
+    sb.from("site_events").insert({ event_type: "page_view", path: location.pathname, session_id: id }).then(function(){});
+  }catch(e){}
 })();
 </script>
 <script>
