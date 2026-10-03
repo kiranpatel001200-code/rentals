@@ -73,6 +73,11 @@ ol li{margin-bottom:6px}
 <h1 id="cTitle"></h1>
 <p class="sub" id="cText"></p>
 <ol id="cSteps"></ol>
+<div id="cCodeBox" class="hide">
+<label for="cCode">6-digit code</label>
+<input id="cCode" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+<button type="button" id="cVerify">Verify and continue</button>
+</div>
 <a id="cGmail" class="btn hide" href="https://mail.google.com/" target="_blank" rel="noopener">Open Gmail</a>
 <button type="button" id="cResend">Send the email again</button>
 <button type="button" class="link" id="cBack">Back to log in</button>
@@ -113,6 +118,15 @@ var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
 var STEPS = ["stLogin","stSignup","stCheck","stForgot","stReset","stIn"];
+var PAGES = ["index.html","listings.html","create-listing.html","account.html"];
+function pageFrom(v){
+  v = (v || "").split("#")[0].split("?")[0].split("/").pop();
+  if(v === "account") v = "account.html";
+  return PAGES.indexOf(v) !== -1 ? v : "";
+}
+var NEXT = pageFrom(new URLSearchParams(location.search).get("next"))
+  || (document.referrer.indexOf(location.origin) === 0 ? pageFrom(document.referrer) : "")
+  || "index.html";
 var pendingEmail = "";
 var recovering = false;
 
@@ -136,7 +150,7 @@ function busy(btn, on){ $(btn).disabled = on; }
 async function showSession(){
   var r = await sb.auth.getSession();
   if(r.data.session){
-    if(new URLSearchParams(location.search).get("next") === "account"){ location.replace("account.html"); return; }
+    if(new URLSearchParams(location.search).get("next")){ location.replace(NEXT); return; }
     $("who").textContent = "Signed in as " + r.data.session.user.email;
     show("stIn");
   } else {
@@ -164,7 +178,7 @@ $("stLogin").onsubmit = async function(e){
     say(friendly(res.error), "err"); return;
   }
   $("lPass").value = "";
-  showSession();
+  location.replace(NEXT);
 };
 
 /* Sign up */
@@ -178,7 +192,7 @@ $("stSignup").onsubmit = async function(e){
   var res = await sb.auth.signUp({
     email: email, password: p1,
     options: {
-      emailRedirectTo: SITE + "index.html",
+      emailRedirectTo: SITE + NEXT,
       data: { full_name: $("sName").value.trim(), phone: $("sPhone").value.trim() || undefined, role: $("sRole").value }
     }
   });
@@ -188,7 +202,7 @@ $("stSignup").onsubmit = async function(e){
     say("This email is already registered. Log in, or use Forgot password.", "err");
     return;
   }
-  if(res.data.session){ showSession(); return; }
+  if(res.data.session){ location.replace(NEXT); return; }
   openCheck("signup", email, false);
 };
 
@@ -200,9 +214,9 @@ function openCheck(mode, email, notConfirmed){
   $("cTitle").textContent = signup ? "Confirm your email first" : "Check your email";
   $("cText").textContent = (signup ? (notConfirmed ? "Your email is not confirmed yet. " : "Your account is created. ") : "") + "We sent an email to " + email + ".";
   var steps = signup ? [
-    "Open your Gmail (or your email app) and find the email titled \"Confirm your email address\". Check Spam if you cannot see it.",
-    "Click \"Confirm email address\" in that email.",
-    "You will be brought back to RentNest, already logged in. If not, come back here and log in with your email and password."
+    "Open your Gmail (or your email app) and find the email with your 6-digit verification code. Check Spam if you cannot see it.",
+    "Type the 6-digit code below and tap Verify.",
+    "You will be taken back to the page you came from, already logged in."
   ] : [
     "Open your email and find the password reset email. Check Spam if you cannot see it.",
     "Click the reset link in it.",
@@ -211,16 +225,33 @@ function openCheck(mode, email, notConfirmed){
   var ol = $("cSteps"); ol.textContent = "";
   steps.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ol.appendChild(li); });
   $("cGmail").classList.toggle("hide", !/@(gmail|googlemail)\.com$/i.test(email));
+  $("cBack").classList.toggle("hide", signup && !notConfirmed);
+  $("cCodeBox").classList.toggle("hide", !signup);
+  $("cCode").value = "";
   show("stCheck");
+  if(signup){ $("cCode").focus(); }
 }
 $("cResend").onclick = async function(){
   say("Sending...");
   var res = checkMode === "signup"
-    ? await sb.auth.resend({ type: "signup", email: pendingEmail, options: { emailRedirectTo: SITE + "index.html" } })
+    ? await sb.auth.resend({ type: "signup", email: pendingEmail, options: { emailRedirectTo: SITE + NEXT } })
     : await sb.auth.resetPasswordForEmail(pendingEmail, { redirectTo: SITE + "login.html" });
   say(res.error ? friendly(res.error) : "The email was sent again.", res.error ? "err" : "ok");
 };
 $("cBack").onclick = function(){ show("stLogin"); };
+async function verifyCode(){
+  var token = $("cCode").value.replace(/\D/g, "");
+  if(token.length !== 6){ say("Enter the 6-digit code from your email.", "err"); return; }
+  busy("cVerify", true); say("Checking code...");
+  var res = await sb.auth.verifyOtp({ email: pendingEmail, token: token, type: "signup" });
+  busy("cVerify", false);
+  if(res.error){ say("That code is wrong or has expired. Tap \"Send the email again\" to get a new code.", "err"); return; }
+  say("Email verified. Taking you back...", "ok");
+  location.replace(NEXT);
+}
+$("cVerify").onclick = verifyCode;
+$("cCode").oninput = function(){ this.value = this.value.replace(/\D/g, "").slice(0, 6); if(this.value.length === 6){ verifyCode(); } };
+$("cCode").onkeydown = function(e){ if(e.key === "Enter"){ e.preventDefault(); verifyCode(); } };
 
 /* Forgot password */
 $("stForgot").onsubmit = async function(e){
@@ -245,8 +276,7 @@ $("stReset").onsubmit = async function(e){
   if(u.error){ say(friendly(u.error), "err"); return; }
   recovering = false;
   $("rPass").value = ""; $("rPass2").value = "";
-  showSession();
-  say("Password saved. You are logged in.", "ok");
+  location.replace(NEXT);
 };
 
 /* Logout */

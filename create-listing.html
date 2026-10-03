@@ -171,7 +171,7 @@ $("country").onchange = applyCountry;
 async function init(){
   var r = await sb.auth.getSession();
   if(!r.data.session){
-    gate([text("Log in to list your property."), linkBtn("Go to log in", "login.html")]);
+    gate([text("Log in to list your property."), linkBtn("Log in or sign up", "login.html?next=create-listing.html")]);
     return;
   }
   user = r.data.session.user;

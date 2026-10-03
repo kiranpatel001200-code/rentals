@@ -106,7 +106,7 @@ function friendly(err){
 
 async function init(){
   var r = await sb.auth.getSession();
-  if(!r.data.session){ location.replace("login.html?next=account"); return; }
+  if(!r.data.session){ location.replace("login.html?next=account.html"); return; }
   user = r.data.session.user;
   var p = await sb.from("profiles").select("full_name,phone,role").eq("id", user.id).maybeSingle();
   $("name").value = (p.data && p.data.full_name) || "";
