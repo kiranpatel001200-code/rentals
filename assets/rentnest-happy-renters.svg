@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 620">
+<defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity=".12"/></filter></defs>
+<path d="M95 145C120 65 225 30 330 70c115 44 210 130 185 250-23 112-142 210-285 192C98 494 44 320 95 145Z" fill="#e9f2ff"/>
+<g filter="url(#s)"><ellipse cx="355" cy="360" rx="118" ry="180" fill="#fff"/><circle cx="355" cy="195" r="78" fill="#f2c7a5"/><path d="M280 196c2-94 151-111 164-1-32-37-104-37-164 1Z" fill="#55382d"/><path d="M295 225c17 24 48 35 73 28" fill="none" stroke="#6f4033" stroke-width="6" stroke-linecap="round"/><circle cx="328" cy="194" r="6" fill="#253047"/><circle cx="382" cy="194" r="6" fill="#253047"/><path d="M290 270c34 25 96 25 131 0l28 176H260Z" fill="#f2b544"/><path d="M420 420c72-18 110 10 126 66H338Z" fill="#1769d1"/></g>
+<g filter="url(#s)"><ellipse cx="270" cy="480" rx="150" ry="90" fill="#fff"/><circle cx="270" cy="400" r="68" fill="#d99a70"/><path d="M205 405c-9-75 27-112 76-111 54 1 77 48 61 111-25-39-81-54-137 0Z" fill="#2d2523"/><circle cx="245" cy="401" r="5" fill="#253047"/><circle cx="292" cy="401" r="5" fill="#253047"/><path d="M248 431c16 13 35 13 49 0" fill="none" stroke="#6f4033" stroke-width="5" stroke-linecap="round"/><path d="M190 475c43-25 113-25 157 0l35 145H154Z" fill="#1769d1"/></g>
+<path d="M470 90l14 28 31 4-23 21 6 31-28-15-28 15 6-31-23-21 31-4Z" fill="#f2b544"/>
+<text x="390" y="75" font-family="Arial,sans-serif" font-size="25" font-weight="700" fill="#0b5d4b">Happy Renters</text>
+</svg>
