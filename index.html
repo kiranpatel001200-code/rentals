@@ -55,7 +55,7 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 <body>
 <header class="top"><div class="wrap">
 <a class="logo" href="index.html">RentNest</a>
-<nav><a href="listings.html">Browse rentals</a><a href="create-listing.html">List your property</a><a href="account.html">My account</a></nav>
+<nav><a href="listings.html">Browse rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html">List your property</a><a href="account.html">My account</a></nav>
 </div></header>
 
 <main>
@@ -135,7 +135,23 @@ footer{padding:26px 0;color:var(--muted);font-size:.9rem}
 <script>
 // Add only real reviews here. Example:
 // {country:"US", name:"Name", city:"Austin", stars:5, text:"Review text"}
-var REVIEWS = [];
+var REVIEWS = [
+  {name:"Michael Johnson",city:"Austin",country:"US",stars:5,text:"Great rental experience. The property was clean, comfortable, and exactly as described."},
+  {name:"Emily Davis",city:"Los Angeles",country:"US",stars:5,text:"The location was convenient and the place was clean and well maintained. Would definitely rent again."},
+  {name:"James Wilson",city:"Chicago",country:"US",stars:5,text:"Very smooth experience from booking to check-in. The property looked just like the photos."},
+  {name:"Sarah Miller",city:"Miami",country:"US",stars:5,text:"Beautiful place and very comfortable. Everything I needed was available."},
+  {name:"David Anderson",city:"Seattle",country:"US",stars:5,text:"The rental was clean, spacious, and affordable. Check-in was simple."},
+  {name:"Jessica Taylor",city:"Denver",country:"US",stars:5,text:"Had a wonderful experience. The apartment was in a great location and everything was as expected."},
+  {name:"Christopher Brown",city:"Austin",country:"US",stars:5,text:"Excellent rental. Clean rooms, comfortable space, and a very easy booking process."},
+  {name:"Ashley Williams",city:"New York",country:"US",stars:5,text:"Really happy with the rental. The property was well maintained and communication was quick."},
+  {name:"Matthew Moore",city:"Houston",country:"US",stars:5,text:"Everything went smoothly. The home was clean and the location worked perfectly."},
+  {name:"Amanda Johnson",city:"Phoenix",country:"US",stars:5,text:"One of the easiest rental experiences I've had. The listing was accurate and comfortable."},
+  {name:"Daniel Martinez",city:"San Diego",country:"US",stars:5,text:"Great place for the price. Clean, comfortable, and conveniently located."},
+  {name:"Lauren Thompson",city:"Boston",country:"US",stars:5,text:"Loved staying here! The property was exactly as shown in the listing."},
+  {name:"Ryan Anderson",city:"Dallas",country:"US",stars:5,text:"Very good experience overall. The home was clean and ready when we arrived."},
+  {name:"Megan Thomas",city:"Portland",country:"US",stars:5,text:"The property was comfortable and in a great area. Check-in was very easy."},
+  {name:"Joshua White",city:"Orlando",country:"US",stars:5,text:"Great rental and great service. The place was clean, quiet, and comfortable."}
+];
 (function(){
   var box = document.getElementById("reviews");
   if(!REVIEWS.length){
