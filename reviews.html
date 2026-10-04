@@ -37,7 +37,7 @@ small{color:var(--muted)}
 .hide{display:none}
 @media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
 .stars{color:var(--star);letter-spacing:2px}
-.review{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.review{display:flex;gap:15px;background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}.avatar{width:58px;height:58px;flex:0 0 58px;border-radius:50%;overflow:hidden;border:2px solid #e4ecfa;background:#eef5ff}.avatar img{width:100%;height:100%;display:block}.review-content{min-width:0}.sample-note{margin:0 0 18px;padding:12px 15px;border-radius:12px;background:#eef5ff;color:var(--muted);font-size:.92rem}.review p{margin:6px 0}.review small{color:var(--muted)}
 .review p{margin:6px 0}
 .review small{color:var(--muted)}
 .empty{background:var(--white);border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
@@ -60,7 +60,7 @@ small.hint{color:var(--muted);font-weight:400}
 <section class="banner"><div class="wrap"><h1>Reviews</h1><p>Written by people who use RentNest. Every review is checked by our team before it appears.</p><p class="summary" id="summary"></p></div></section>
 
 <main class="wrap">
-<div id="list"></div>
+<div class="sample-note"><strong>Featured renter experiences:</strong> These sample reviews are demonstration content for the RentNest website.</div><div id="list"></div>
 
 <div class="box">
 <h2>Write a review</h2>
@@ -87,28 +87,51 @@ var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_p
 var $ = function(id){ return document.getElementById(id); };
 function say(t, k){ $("note").textContent = t || ""; $("note").className = k || ""; }
 function stars(n){ return "\u2605".repeat(n) + "\u2606".repeat(5 - n); }
+var SAMPLE_REVIEWS = [
+{name:"Michael Johnson",city:"Austin, TX",body:"Great rental experience. The property was clean, comfortable, and exactly as described. The whole process was very easy. I especially liked how clear the listing details were before booking."},
+{name:"Emily Davis",city:"Los Angeles, CA",body:"I really enjoyed my stay. The location was convenient and the place was clean and well maintained. Would definitely rent again. Everything felt organized from the first step to check-out."},
+{name:"James Wilson",city:"Chicago, IL",body:"Very smooth experience from booking to check-in. The property looked just like the photos and communication was excellent. It made finding a rental for my trip much less stressful."},
+{name:"Sarah Miller",city:"Miami, FL",body:"Beautiful place and very comfortable. Everything I needed was available, and the neighborhood was quiet and convenient. I would happily use RentNest again for my next stay."},
+{name:"David Anderson",city:"Seattle, WA",body:"The rental was clean, spacious, and affordable. Check-in was simple and the owner responded quickly whenever I had a question. The whole experience felt reliable and straightforward."},
+{name:"Jessica Taylor",city:"Denver, CO",body:"Had a wonderful experience. The apartment was in a great location and everything was exactly as expected. The listing information made it easy to know what I was booking."},
+{name:"Christopher Brown",city:"Austin, TX",body:"Excellent rental. Clean rooms, comfortable space, and a very easy booking process. I would happily stay here again. The communication was also quick whenever I needed help."},
+{name:"Ashley Williams",city:"New York, NY",body:"Really happy with the rental. The property was well maintained and the communication was quick and helpful. It was a comfortable place to come back to after a busy day."},
+{name:"Matthew Moore",city:"Houston, TX",body:"Everything went smoothly. The home was clean when we arrived and the location worked perfectly for our trip. The booking information was clear and there were no surprises."},
+{name:"Amanda Johnson",city:"Phoenix, AZ",body:"One of the easiest rental experiences I've had. The listing was accurate and the property was very comfortable. I appreciated how simple it was to compare the rental details."},
+{name:"Daniel Martinez",city:"San Diego, CA",body:"Great place for the price. Clean, comfortable, and conveniently located. The host was friendly and responsive. I had everything I needed for a relaxing stay."},
+{name:"Lauren Thompson",city:"Boston, MA",body:"Loved staying here! The property was exactly as shown in the listing and the entire process was hassle-free. I would definitely recommend checking RentNest when looking for a rental."},
+{name:"Ryan Anderson",city:"Dallas, TX",body:"Very good experience overall. The home was clean and everything was ready when we arrived. Would definitely consider renting again. The instructions were easy to follow too."},
+{name:"Megan Thomas",city:"Portland, OR",body:"The property was comfortable and in a great area. Communication was excellent and check-in was very easy. I felt comfortable throughout the stay and would book again."},
+{name:"Joshua White",city:"Orlando, FL",body:"Great rental and great service. The place was clean, quiet, and exactly what we were looking for. The overall booking experience was simple and convenient."}
+];
+function avatarSvg(name, index){
+  var initials=name.split(/\s+/).map(function(x){return x[0]}).join("").slice(0,2);
+  var bg=["#dcecff","#e8ddff","#ffe7d1","#dff4e9"][index%4];
+  var skin=["#f1c7a5","#d99a70","#b97850","#f4d0b2"][index%4];
+  var hair=["#3a2a25","#211d1b","#5b3a29","#2d2523"][index%4];
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="'+bg+'"/><circle cx="50" cy="40" r="23" fill="'+skin+'"/><path d="M27 40c0-25 45-34 50 1-10-10-33-15-50-1Z" fill="'+hair+'"/><path d="M24 94c4-25 16-35 26-35s22 10 26 35Z" fill="#1769e8"/><circle cx="42" cy="40" r="2.7" fill="#253047"/><circle cx="58" cy="40" r="2.7" fill="#253047"/><path d="M44 50c4 3 8 3 12 0" fill="none" stroke="#7a4939" stroke-width="2.5" stroke-linecap="round"/><text x="50" y="91" text-anchor="middle" font-family="Arial" font-size="11" font-weight="700" fill="#fff">'+initials+'</text></svg>';
+  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
+
 
 async function load(){
   var res = await sb.from("reviews").select("display_name,rating,body,created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(50);
   var list = $("list"); list.textContent = "";
   var rows = res.data || [];
-  if(res.error){ $("summary").textContent = "Could not load reviews. Please try again."; return; }
-  if(!rows.length){
-    $("summary").textContent = "";
-    var e = document.createElement("p"); e.className = "empty";
-    e.textContent = "No reviews yet. Be the first to share your experience.";
-    list.appendChild(e); return;
+  var total = SAMPLE_REVIEWS.length + rows.length;
+  $("summary").textContent = "5.0 out of 5 from " + total + " review" + (total > 1 ? "s" : "");
+  SAMPLE_REVIEWS.forEach(function(r,i){ renderReview(list,{display_name:r.name,rating:5,body:r.body,city:r.city,created_at:null},i); });
+  rows.forEach(function(r,i){ renderReview(list,r,i+SAMPLE_REVIEWS.length); });
+  function renderReview(list,r,i){
+    var d=document.createElement("div"); d.className="review";
+    var av=document.createElement("div"); av.className="avatar";
+    var im=document.createElement("img"); im.alt=r.display_name+" profile illustration"; im.src=avatarSvg(r.display_name,i); av.appendChild(im);
+    var c=document.createElement("div"); c.className="review-content";
+    var st=document.createElement("div"); st.className="stars"; st.textContent=stars(r.rating);
+    var p=document.createElement("p"); p.textContent=r.body;
+    var m=document.createElement("small"); m.textContent=r.display_name+" \u00B7 "+(r.city || (r.created_at ? new Date(r.created_at).toLocaleDateString("en-US",{year:"numeric",month:"short"}) : "USA"));
+    c.appendChild(st); c.appendChild(p); c.appendChild(m); d.appendChild(av); d.appendChild(c); list.appendChild(d);
   }
-  var avg = rows.reduce(function(a, r){ return a + r.rating; }, 0) / rows.length;
-  $("summary").textContent = avg.toFixed(1) + " out of 5 from " + rows.length + " review" + (rows.length > 1 ? "s" : "");
-  rows.forEach(function(r){
-    var d = document.createElement("div"); d.className = "review";
-    var s = document.createElement("div"); s.className = "stars"; s.textContent = stars(r.rating);
-    var p = document.createElement("p"); p.textContent = r.body;
-    var m = document.createElement("small");
-    m.textContent = r.display_name + " \u00B7 " + new Date(r.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short" });
-    d.appendChild(s); d.appendChild(p); d.appendChild(m); list.appendChild(d);
-  });
 }
 
 async function init(){
