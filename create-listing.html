@@ -61,6 +61,43 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 .ft-note b{color:#fff}
 .ft-copy{margin:20px 0 0;text-align:center;color:#9fb5d9;font-size:.9rem}
 @media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
+.plus{display:block;width:100%;text-align:center;background:var(--white);border:2px dashed var(--blue);border-radius:20px;padding:44px 20px;cursor:pointer;margin:0;box-shadow:0 10px 30px rgba(11,42,91,.12);color:var(--navy)}
+.plus:hover{background:#eef4ff}
+.plus .pl{display:inline-block;width:76px;height:76px;line-height:70px;border-radius:50%;background:var(--blue);color:var(--white);font:300 3rem system-ui,sans-serif;margin-bottom:12px}
+.plus b{display:block;font:800 1.5rem system-ui,sans-serif}
+.plus small{display:block;color:var(--muted);font-size:1rem;margin-top:4px}
+.progress{height:8px;background:#dbe6f6;border-radius:99px;overflow:hidden;margin:0 0 8px}
+#bar{height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .25s}
+.stepl{margin:0 0 12px;color:var(--muted);font-weight:600;font-size:.9rem}
+.step{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 8px 26px rgba(11,42,91,.09)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.tile{display:block;margin:0;text-align:left;background:var(--white);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:16px}
+.tile i,.am i{font-style:normal}
+.tile i{display:block;font-size:2rem;margin-bottom:4px}
+.tile b{display:block;color:var(--navy)}
+.tile small{color:var(--muted)}
+.tile[aria-pressed="true"]{border-color:var(--blue);background:#eef4ff;box-shadow:0 0 0 3px rgba(23,105,232,.15)}
+.ams{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.am{margin:0;font-weight:500;cursor:pointer}
+.am input{position:absolute;opacity:0;width:1px;height:1px}
+.am span{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--white)}
+.am i{font-size:1.3rem}
+.am input:checked + span{border-color:var(--blue);background:#eef4ff;font-weight:600}
+.am input:focus-visible + span{outline:3px solid #f5b301;outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sum{margin:0 0 14px}
+.sum .r{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.sum dt{color:var(--muted);font-weight:600}
+.sum dd{margin:0;word-break:break-word}
+.note2{color:var(--muted);margin:8px 0 0}
+.wnav{display:flex;gap:10px;justify-content:space-between;margin-top:16px}
+.wnav button{margin-top:0}
+.wnav .ghost{background:var(--white);color:var(--blue);border:1px solid var(--blue)}
+#next,#publish{margin-left:auto}
+#msg{margin:12px 0 30px;min-height:1.4em}
+#msg.err{color:#b3261e}
+#msg.ok{color:#0f6b4f}
+@media(max-width:600px){.row{grid-template-columns:1fr}.sum .r{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -72,41 +109,47 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="on hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1>List your property</h1><p>Add the details and photos. Your listing is reviewed before it goes live.</p></div></section>
+<section class="banner"><div class="wrap"><h1>List your property</h1><p>Add the details in a few easy steps. Your listing is reviewed before it goes live.</p></div></section>
 
 <main class="wrap">
 <div id="gate" class="notice hide"></div>
 
-<div id="formArea" class="hide">
-
-<form id="f" novalidate>
-<fieldset>
-<legend>Location</legend>
-<div class="row">
-<div><label for="country">Country</label>
-<select id="country"><option value="USA">United States</option></select></div>
-<div><label for="state" id="stateLabel">State</label>
-<select id="state"></select></div>
+<div id="start" class="hide">
+<button type="button" class="plus" id="startBtn">
+<span class="pl" aria-hidden="true">+</span>
+<b>List your property</b>
+<small>It takes about 5 minutes. Your listing goes live after a quick review by our team.</small>
+</button>
 </div>
+
+<div id="wizard" class="hide">
+<div class="progress" aria-hidden="true"><div id="bar"></div></div>
+<p class="stepl" id="stepLabel"></p>
+
+<section class="step" data-step="1">
+<h2>What kind of place is it?</h2>
+<p class="sub">Choose the one that fits best.</p>
+<div class="tiles" id="types"></div>
+</section>
+
+<section class="step hide" data-step="2">
+<h2>Where is it?</h2>
+<p class="sub">Renters see the city and state. The full address is shared only with people you approve.</p>
 <label for="street">Street address</label>
 <input id="street" autocomplete="street-address">
 <div class="row">
 <div><label for="city">City</label><input id="city"></div>
-<div><label for="zip" id="zipLabel">ZIP code</label><input id="zip" inputmode="numeric"></div>
+<div><label for="state">State</label><select id="state"></select></div>
 </div>
-</fieldset>
+<label for="zip">ZIP code</label>
+<input id="zip" inputmode="numeric" placeholder="78701" maxlength="10">
+</section>
 
-<fieldset>
-<legend>Property</legend>
-<label for="title">Title</label>
-<input id="title" maxlength="150" placeholder="Sunny 2-bedroom apartment near the metro">
-<label for="desc">Description</label>
-<textarea id="desc" placeholder="Describe the property, the neighbourhood and what is included."></textarea>
+<section class="step hide" data-step="3">
+<h2>Rent and details</h2>
 <div class="row">
-<div><label for="ptype">Property type</label>
-<select id="ptype"><option value="apartment">Apartment</option><option value="house">House</option><option value="condo">Condo</option><option value="townhouse">Townhouse</option><option value="duplex">Duplex</option><option value="studio">Studio</option><option value="room">Room</option></select></div>
-<div><label for="lease">Lease type</label>
-<select id="lease"><option value="yearly">Yearly</option><option value="monthly">Monthly</option><option value="short_term">Short term</option></select></div>
+<div><label for="rent">Monthly rent ($)</label><input id="rent" type="number" min="1" step="any" placeholder="1800"></div>
+<div><label for="deposit">Security deposit ($)</label><input id="deposit" type="number" min="0" step="any" value="0"></div>
 </div>
 <div class="row">
 <div><label for="beds">Bedrooms</label><input id="beds" type="number" min="0" value="1"></div>
@@ -116,50 +159,49 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <div><label for="sqft">Size in square feet <small>(optional)</small></label><input id="sqft" type="number" min="1"></div>
 <div><label for="avail">Available from</label><input id="avail" type="date"></div>
 </div>
-<div class="checks" role="group" aria-label="Amenities">
-<label><input type="checkbox" id="parking">Parking</label>
-<label><input type="checkbox" id="laundry">Laundry</label>
-<label><input type="checkbox" id="ac">Air conditioning</label>
-<label><input type="checkbox" id="heating">Heating</label>
-<label><input type="checkbox" id="pets">Pets allowed</label>
-<label><input type="checkbox" id="smoking">Smoking allowed</label>
-<label><input type="checkbox" id="furnished">Furnished</label>
-<label><input type="checkbox" id="utilities">Utilities included</label>
-</div>
-</fieldset>
+<label for="lease">Lease length</label>
+<select id="lease"><option value="yearly">12 months</option><option value="monthly">Month to month</option><option value="short_term">Short term</option></select>
+<label for="title">Listing title</label>
+<input id="title" maxlength="150">
+<label for="desc">Description <small>(at least 20 characters)</small></label>
+<textarea id="desc" placeholder="Describe the home, the neighborhood, nearby transit and what is included."></textarea>
+</section>
 
-<fieldset>
-<legend>Photos</legend>
-<label for="photos">Add up to 8 photos <small>(JPG, PNG or WebP, 5 MB each). The first one is the cover photo.</small></label>
-<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-</fieldset>
+<section class="step hide" data-step="4">
+<h2>What does it offer?</h2>
+<p class="sub">Select everything that applies. Renters filter by these.</p>
+<div class="ams" id="ams"></div>
+</section>
 
-<fieldset>
-<legend>Rent</legend>
-<div class="row">
-<div><label for="rent">Monthly rent (<span class="cur">$</span>)</label><input id="rent" type="number" min="1" step="any"></div>
-<div><label for="deposit">Security deposit (<span class="cur">$</span>)</label><input id="deposit" type="number" min="0" step="any" value="0"></div>
-</div>
-</fieldset>
+<section class="step hide" data-step="5">
+<h2>Add photos</h2>
+<p class="sub">Up to 8 photos (JPG, PNG or WebP, 5 MB each). The first photo is the cover. Clear, bright photos get more messages.</p>
+<input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="Property photos">
+<p class="sub" id="photoCount" style="margin-top:8px"></p>
+</section>
 
-<fieldset>
-<legend>Contact details</legend>
-<p class="sub">Renters see these after they unlock your contact.</p>
-<div class="row">
-<div><label for="cname">Contact name</label><input id="cname"></div>
-<div><label for="cphone">Phone</label><input id="cphone" type="tel"></div>
-</div>
-<div class="row">
-<div><label for="cwa">WhatsApp <small>(optional)</small></label><input id="cwa" type="tel"></div>
-<div><label for="cemail">Email</label><input id="cemail" type="email"></div>
-</div>
-</fieldset>
+<section class="step hide" data-step="6">
+<h2>Review and publish</h2>
+<dl class="sum" id="sum"></dl>
+<p class="note2" id="contactNote"></p>
+<p class="note2">After you publish, our team reviews your listing and it goes live once approved.</p>
+</section>
 
-<button type="submit" id="submit">Submit for review</button>
-<div id="msg" role="status" aria-live="polite"></div>
-</form>
+<div class="wnav">
+<button type="button" class="ghost" id="back">Back</button>
+<button type="button" id="next">Next</button>
+<button type="button" id="publish" class="hide">Publish my listing</button>
+</div>
+<p id="msg" role="status" aria-live="polite"></p>
+</div>
+
+<div id="done" class="notice hide">
+<h2>Your listing is submitted</h2>
+<p>Thank you! Our team will review it, and it goes live once approved. You can list another property any time.</p>
+<a href="listings.html">Browse rentals</a>
 </div>
 </main>
+
 
 <footer class="site-footer"><div class="wrap">
 <div class="ft-grid">
@@ -192,154 +234,162 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-var sb = supabase.createClient(
-  "https://abppfpgazlngdhrejrog.supabase.co",
-  "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5"
-);
+var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var user = null;
+var user = null, me = { full_name: "", phone: "", email: "" };
+var step = 1, TOTAL = 6, type = "";
+var TYPES = [
+  ["apartment","\uD83C\uDFE2","Apartment","A unit in a building"],
+  ["house","\uD83C\uDFE0","House","The entire place"],
+  ["studio","\uD83D\uDECF\uFE0F","Studio","One open room"],
+  ["condo","\uD83C\uDFD9\uFE0F","Condo","Owned unit, rented out"],
+  ["townhouse","\uD83C\uDFD8\uFE0F","Townhouse","Shared walls, own entrance"],
+  ["duplex","\uD83C\uDFE1","Duplex","Two units, one building"],
+  ["room","\uD83D\uDEAA","Private room","A room in a shared home"]
+];
+/* col = existing true/false column, otherwise stored in the amenities list */
+var AMEN = [
+  ["parking","\uD83C\uDD7F\uFE0F","Parking",1],["laundry","\uD83E\uDDFA","Washer & dryer",1],["air_conditioning","\u2744\uFE0F","Air conditioning",1],["heating","\uD83D\uDD25","Heating",1],
+  ["pets_allowed","\uD83D\uDC3E","Pets allowed",1],["furnished","\uD83D\uDECB\uFE0F","Furnished",1],["utilities_included","\uD83D\uDCA1","Utilities included",1],["smoking_allowed","\uD83D\uDEAC","Smoking allowed",1],
+  ["dishwasher","\uD83C\uDF7D\uFE0F","Dishwasher",0],["wifi","\uD83D\uDCF6","Wi-Fi included",0],["balcony","\uD83C\uDF07","Balcony or patio",0],["yard","\uD83C\uDF3F","Yard",0],
+  ["gym","\uD83C\uDFCB\uFE0F","Gym",0],["pool","\uD83C\uDFCA","Pool",0],["elevator","\uD83D\uDED7","Elevator",0],["garage","\uD83D\uDE97","Garage",0],
+  ["ev_charging","\uD83D\uDD0C","EV charging",0],["storage","\uD83D\uDCE6","Storage",0],["hardwood_floors","\uD83E\uDEB5","Hardwood floors",0],["fireplace","\uD83E\uDEB5","Fireplace",0],
+  ["walk_in_closet","\uD83D\uDC57","Walk-in closet",0],["stainless_appliances","\u2728","Stainless appliances",0],["wheelchair_accessible","\u267F","Wheelchair accessible",0],["security","\uD83D\uDD12","Security or doorman",0]
+];
+function say(t, k){ $("msg").textContent = t || ""; $("msg").className = k || ""; }
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
 
-function say(text, kind){ $("msg").textContent = text || ""; $("msg").className = kind || ""; }
-function gate(html){
-  var g = $("gate"); g.className = "notice";
-  g.textContent = "";
-  html.forEach(function(part){ g.appendChild(part); });
-  $("formArea").className = "hide";
-}
-function text(t){ var p = document.createElement("p"); p.textContent = t; return p; }
-function linkBtn(label, href){ var a = document.createElement("a"); a.textContent = label; a.href = href; return a; }
+/* build tiles */
+TYPES.forEach(function(t){
+  var b = el("button", "tile"); b.type = "button"; b.setAttribute("aria-pressed", "false"); b.dataset.type = t[0];
+  b.appendChild(el("i", "", t[1])); b.appendChild(el("b", "", t[2])); b.appendChild(el("small", "", t[3]));
+  b.onclick = function(){
+    type = t[0];
+    document.querySelectorAll(".tile").forEach(function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    if(type === "studio" || type === "room"){ $("beds").value = 0; }
+    say("");
+  };
+  $("types").appendChild(b);
+});
+AMEN.forEach(function(a){
+  var l = el("label", "am"); var i = el("input"); i.type = "checkbox"; i.value = a[0];
+  var s = el("span"); s.appendChild(el("i", "", a[1])); s.appendChild(document.createTextNode(a[2]));
+  l.appendChild(i); l.appendChild(s); $("ams").appendChild(l);
+});
 
 async function loadStates(){
-  var country = $("country").value;
-  var res = await sb.from("states").select("name,abbreviation").eq("country", country).order("name");
-  var sel = $("state"); sel.textContent = "";
-  (res.data || []).forEach(function(s){
-    var o = document.createElement("option");
-    o.value = s.abbreviation.trim(); o.textContent = s.name; sel.appendChild(o);
+  var r = await sb.from("states").select("name,abbreviation").eq("country", "USA").order("name");
+  (r.data || []).forEach(function(s){
+    var o = el("option", "", s.name); o.value = s.abbreviation.trim(); $("state").appendChild(o);
   });
 }
-function applyCountry(){
-  $("stateLabel").textContent = "State";
-  $("zipLabel").textContent = "ZIP code";
-  $("zip").placeholder = "78701";
-  loadStates();
+function typeLabel(){ var t = TYPES.filter(function(x){ return x[0] === type; })[0]; return t ? t[2] : ""; }
+function stateName(){ var o = $("state").options[$("state").selectedIndex]; return o ? o.textContent : ""; }
+
+function go(n){
+  step = n;
+  document.querySelectorAll(".step").forEach(function(s){ s.classList.toggle("hide", Number(s.dataset.step) !== n); });
+  $("bar").style.width = (n / TOTAL * 100) + "%";
+  $("stepLabel").textContent = "Step " + n + " of " + TOTAL;
+  $("next").classList.toggle("hide", n === TOTAL);
+  $("publish").classList.toggle("hide", n !== TOTAL);
+  if(n === 3 && !$("title").value.trim()){
+    var b = $("beds").value; var c = $("city").value.trim();
+    $("title").value = (b === "0" ? "" : b + " bed ") + typeLabel().toLowerCase() + (c ? " in " + c + ", " + $("state").value : "");
+    $("title").value = $("title").value.charAt(0).toUpperCase() + $("title").value.slice(1);
+  }
+  if(n === 6){ renderSummary(); }
+  say(""); window.scrollTo({ top: 0, behavior: "smooth" });
 }
-$("country").onchange = applyCountry;
-
-async function init(){
-  var r = await sb.auth.getSession();
-  if(!r.data.session){
-    gate([text("Log in to list your property."), linkBtn("Log in or sign up", "login.html?next=create-listing.html")]);
-    return;
+function valid(n){
+  if(n === 1 && !type){ say("Choose the kind of place.", "err"); return false; }
+  if(n === 2){
+    if(!$("street").value.trim() || !$("city").value.trim()){ say("Enter the street address and city.", "err"); return false; }
+    if(!/^\d{5}(-\d{4})?$/.test($("zip").value.trim())){ say("Enter a valid 5-digit ZIP code (like 78701).", "err"); return false; }
   }
-  user = r.data.session.user;
-
-  var p = await sb.from("profiles").select("role,full_name,phone,email").eq("id", user.id).maybeSingle();
-  if(!p.data || p.data.role !== "landlord"){
-    gate([text("Only landlord accounts can list properties. Log out and sign up again with \"List my property\" selected, using a different email."), linkBtn("Back to home", "index.html")]);
-    return;
+  if(n === 3){
+    if(!($("rent").value > 0)){ say("Enter the monthly rent.", "err"); return false; }
+    if(!$("avail").value){ say("Choose the available-from date.", "err"); return false; }
+    if($("title").value.trim().length < 5){ say("The title must be at least 5 characters.", "err"); return false; }
+    if($("desc").value.trim().length < 20){ say("The description must be at least 20 characters.", "err"); return false; }
   }
-  $("cname").value = p.data.full_name || "";
-  $("cphone").value = p.data.phone || "";
-  $("cemail").value = p.data.email || user.email || "";
-  $("gate").className = "hide";
-  $("formArea").className = "";
-  applyCountry();
+  if(n === 5){
+    var f = Array.prototype.slice.call($("photos").files);
+    if(f.length > 8){ say("Choose at most 8 photos.", "err"); return false; }
+    for(var i = 0; i < f.length; i++){
+      if(["image/jpeg","image/png","image/webp"].indexOf(f[i].type) === -1){ say("Photos must be JPG, PNG or WebP.", "err"); return false; }
+      if(f[i].size > 5 * 1024 * 1024){ say(f[i].name + " is larger than 5 MB.", "err"); return false; }
+    }
+  }
+  return true;
 }
+function chosen(){ return Array.prototype.slice.call(document.querySelectorAll("#ams input:checked")).map(function(i){ return i.value; }); }
+function renderSummary(){
+  var d = $("sum"); d.textContent = "";
+  function row(k, v){ var a = el("div", "r"); a.appendChild(el("dt", "", k)); a.appendChild(el("dd", "", v)); d.appendChild(a); }
+  row("Place", typeLabel());
+  row("Address", $("street").value.trim() + ", " + $("city").value.trim() + ", " + $("state").value + " " + $("zip").value.trim());
+  row("Rent", "$" + Number($("rent").value).toLocaleString("en-US") + " per month, deposit $" + Number($("deposit").value || 0).toLocaleString("en-US"));
+  row("Size", ($("beds").value === "0" ? "Studio" : $("beds").value + " bed") + ", " + $("baths").value + " bath");
+  row("Title", $("title").value.trim());
+  var names = AMEN.filter(function(a){ return chosen().indexOf(a[0]) !== -1; }).map(function(a){ return a[2]; });
+  row("Amenities", names.length ? names.join(", ") : "None selected");
+  row("Photos", $("photos").files.length + " selected");
+  $("contactNote").textContent = "Renters who unlock your contact see: " + (me.full_name || "your name") + ", " + me.email + (me.phone ? ", " + me.phone : "") + ". This comes from your account. You can change it in My account.";
+}
+$("next").onclick = function(){ if(valid(step)){ go(step + 1); } };
+$("back").onclick = function(){ if(step === 1){ $("wizard").classList.add("hide"); $("start").classList.remove("hide"); } else { go(step - 1); } };
+$("photos").onchange = function(){ var n = $("photos").files.length; $("photoCount").textContent = n ? n + " photo" + (n > 1 ? "s" : "") + " selected" : ""; };
+$("startBtn").onclick = function(){ $("start").classList.add("hide"); $("wizard").classList.remove("hide"); go(1); };
 
-$("f").onsubmit = async function(e){
-  e.preventDefault();
-  var country = $("country").value;
-  var title = $("title").value.trim(), desc = $("desc").value.trim();
-  var zip = $("zip").value.trim();
-  if(title.length < 5){ say("Title must be at least 5 characters.", "err"); return; }
-  if(desc.length < 20){ say("Description must be at least 20 characters.", "err"); return; }
-  if(!$("street").value.trim() || !$("city").value.trim()){ say("Enter the street address and city.", "err"); return; }
-  var zipOk = /^\d{5}(-\d{4})?$/.test(zip);
-  if(!zipOk){ say("Enter a valid 5-digit ZIP code (like 78701).", "err"); return; }
-  if(!($("rent").value > 0)){ say("Enter the monthly rent.", "err"); return; }
-  if(!$("avail").value){ say("Choose the available-from date.", "err"); return; }
-  if(!$("cname").value.trim() || !$("cphone").value.trim() || !$("cemail").value.trim()){ say("Fill in your contact name, phone and email.", "err"); return; }
-
-  var files = Array.prototype.slice.call($("photos").files);
-  var okTypes = ["image/jpeg", "image/png", "image/webp"];
-  if(files.length > 8){ say("Choose at most 8 photos.", "err"); return; }
-  for(var i = 0; i < files.length; i++){
-    if(okTypes.indexOf(files[i].type) === -1){ say(files[i].name + " must be a JPG, PNG or WebP image.", "err"); return; }
-    if(files[i].size > 5 * 1024 * 1024){ say(files[i].name + " is larger than 5 MB.", "err"); return; }
-  }
-
-  $("submit").disabled = true; say("Saving...");
-  var id = crypto.randomUUID();
-  var listing = {
-    id: id,
-    landlord_id: user.id,
-    title: title,
-    description: desc,
-    monthly_rent: Number($("rent").value),
-    security_deposit: Number($("deposit").value || 0),
-    bedrooms: parseInt($("beds").value || "0", 10),
-    bathrooms: Number($("baths").value || 0),
+$("publish").onclick = async function(){
+  for(var n = 1; n <= 5; n++){ if(!valid(n)){ go(n); return; } }
+  $("publish").disabled = true; say("Publishing...");
+  var id = crypto.randomUUID(), picked = chosen();
+  var row = {
+    id: id, landlord_id: user.id, title: $("title").value.trim(), description: $("desc").value.trim(),
+    monthly_rent: Number($("rent").value), security_deposit: Number($("deposit").value || 0),
+    bedrooms: parseInt($("beds").value || "0", 10), bathrooms: Number($("baths").value || 0),
     square_feet: $("sqft").value ? parseInt($("sqft").value, 10) : null,
-    property_type: $("ptype").value,
-    lease_type: $("lease").value,
-    available_date: $("avail").value,
-    street_address: $("street").value.trim(),
-    city: $("city").value.trim(),
-    state: $("state").value,
-    zip_code: zip,
-    country: country,
-    currency: "USD",
-    parking: $("parking").checked,
-    laundry: $("laundry").checked,
-    air_conditioning: $("ac").checked,
-    heating: $("heating").checked,
-    pets_allowed: $("pets").checked,
-    smoking_allowed: $("smoking").checked,
-    furnished: $("furnished").checked,
-    utilities_included: $("utilities").checked,
-    status: "pending"
+    property_type: type, lease_type: $("lease").value, available_date: $("avail").value,
+    street_address: $("street").value.trim(), city: $("city").value.trim(), state: $("state").value, zip_code: $("zip").value.trim(),
+    country: "USA", currency: "USD", status: "pending",
+    amenities: AMEN.filter(function(a){ return !a[3] && picked.indexOf(a[0]) !== -1; }).map(function(a){ return a[0]; })
   };
-  var a = await sb.from("listings").insert(listing);
-  if(a.error){ $("submit").disabled = false; say(a.error.message, "err"); return; }
-
-  var b = await sb.from("listing_contacts").insert({
-    listing_id: id,
-    contact_name: $("cname").value.trim(),
-    contact_phone: $("cphone").value.trim(),
-    contact_whatsapp: $("cwa").value.trim() || null,
-    contact_email: $("cemail").value.trim()
-  });
-  if(b.error){
-    await sb.from("listings").delete().eq("id", id);
-    $("submit").disabled = false;
-    say("Could not save your contact details: " + b.error.message, "err");
-    return;
-  }
-  var failed = 0;
-  for(var k = 0; k < files.length; k++){
-    say("Uploading photo " + (k + 1) + " of " + files.length + "...");
-    var ext = files[k].type === "image/png" ? "png" : files[k].type === "image/webp" ? "webp" : "jpg";
-    var path = user.id + "/" + id + "/" + k + "-" + Date.now() + "." + ext;
-    var up = await sb.storage.from("listing-images").upload(path, files[k], { contentType: files[k].type });
+  AMEN.forEach(function(a){ if(a[3]){ row[a[0]] = picked.indexOf(a[0]) !== -1; } });
+  var a = await sb.from("listings").insert(row);
+  if(a.error){ $("publish").disabled = false; say(a.error.message, "err"); return; }
+  var b = await sb.from("listing_contacts").insert({ listing_id: id, contact_name: me.full_name || me.email, contact_email: me.email, contact_phone: me.phone || null });
+  if(b.error){ await sb.from("listings").delete().eq("id", id); $("publish").disabled = false; say("Could not save your contact details: " + b.error.message, "err"); return; }
+  var files = Array.prototype.slice.call($("photos").files), failed = 0;
+  for(var i = 0; i < files.length; i++){
+    var f = files[i], ext = f.type === "image/png" ? "png" : f.type === "image/webp" ? "webp" : "jpg";
+    var path = user.id + "/" + id + "/" + (i + 1) + "-" + Date.now() + "." + ext;
+    var up = await sb.storage.from("listing-images").upload(path, f, { contentType: f.type });
     if(up.error){ failed++; continue; }
-    var pub = sb.storage.from("listing-images").getPublicUrl(path);
-    var ins = await sb.from("listing_images").insert({
-      listing_id: id,
-      url: pub.data.publicUrl,
-      display_order: k,
-      is_primary: k === 0
-    });
-    if(ins.error){ failed++; }
+    var url = sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
+    var r = await sb.from("listing_images").insert({ listing_id: id, url: url, display_order: i, is_primary: i === 0 });
+    if(r.error){ failed++; }
   }
-  if(failed){
-    say("Your listing was submitted, but " + failed + " photo(s) could not be uploaded. You can add them later.", "err");
-  } else {
-    say("Your listing was submitted for review. It goes live once approved.", "ok");
-  }
-  $("f").reset(); applyCountry(); $("submit").disabled = false;
+  $("wizard").classList.add("hide"); $("done").classList.remove("hide");
+  if(failed){ $("done").appendChild(el("p", "", failed + " photo(s) could not be uploaded. You can add them later.")); }
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
+function gate(parts){ var g = $("gate"); g.className = "notice"; g.textContent = ""; parts.forEach(function(p){ g.appendChild(p); }); }
+function link(label, href){ var a = el("a", "", label); a.href = href; return a; }
+async function init(){
+  var s = await sb.auth.getSession();
+  if(!s.data.session){ gate([el("p", "", "Log in or sign up to list your property."), link("Log in or sign up", "login.html?next=create-listing.html")]); return; }
+  user = s.data.session.user;
+  var p = await sb.from("profiles").select("role,full_name,phone,email").eq("id", user.id).maybeSingle();
+  if(!p.data || p.data.role !== "landlord"){
+    gate([el("p", "", "Only landlord accounts can list properties. Sign up again with a different email and choose \"List my property\"."), link("Back to home", "index.html")]); return;
+  }
+  me = { full_name: p.data.full_name || "", phone: p.data.phone || "", email: p.data.email || user.email || "" };
+  loadStates();
+  $("start").classList.remove("hide");
+}
 init();
 </script>
 </body>
