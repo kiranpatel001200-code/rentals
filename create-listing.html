@@ -47,6 +47,20 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 .notice{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
 .notice a{display:inline-block;margin-top:6px;padding:11px 24px;background:var(--blue);color:var(--white);border-radius:10px;text-decoration:none;font-weight:600}
 @media(max-width:600px){.row{grid-template-columns:1fr}}
+.site-footer{background:#0b2a5b;color:#c9d7f0;padding:40px 0 26px;margin-top:20px;font-size:.95rem}
+.site-footer .wrap{max-width:1100px}
+.site-footer h3{margin:0 0 10px;color:#fff;font:700 1rem system-ui,sans-serif}
+.site-footer a{color:#c9d7f0;text-decoration:none;display:block;padding:2px 0}
+.site-footer a:hover{color:#fff;text-decoration:underline}
+.ft-grid{display:grid;grid-template-columns:1.4fr 1fr 1.4fr;gap:30px}
+.ft-logo{display:block;color:#fff;font:800 1.5rem system-ui,sans-serif;margin-bottom:6px}
+.site-footer ul{list-style:none;margin:0;padding:0}
+.site-footer li{padding:2px 0 2px 22px;position:relative}
+.site-footer li:before{content:"\2713";position:absolute;left:0;color:#7fd1a4;font-weight:700}
+.ft-note{margin:26px 0 0;padding:14px 16px;background:rgba(255,255,255,.08);border-radius:12px;line-height:1.55}
+.ft-note b{color:#fff}
+.ft-copy{margin:20px 0 0;text-align:center;color:#9fb5d9;font-size:.9rem}
+@media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -146,6 +160,35 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 </form>
 </div>
 </main>
+
+<footer class="site-footer"><div class="wrap">
+<div class="ft-grid">
+<div>
+<b class="ft-logo">RentNest</b>
+<p style="margin:0">Find your perfect rental, directly from landlords. Easy search, clear listings, and rentals across the United States.</p>
+</div>
+<div>
+<h3>Explore</h3>
+<a href="index.html">Home</a>
+<a href="listings.html">Rentals</a>
+<a href="reviews.html">Reviews</a>
+<a href="create-listing.html">List your property</a>
+<a href="login.html">Log in or sign up</a>
+</div>
+<div>
+<h3>Why renters like RentNest</h3>
+<ul>
+<li>Easy to use: search by city, state and bedrooms</li>
+<li>Every listing is reviewed before it goes live</li>
+<li>Landlord contact details are protected until you unlock them</li>
+<li>Accounts are verified by email</li>
+</ul>
+</div>
+</div>
+<p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
+<p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
+</div></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
