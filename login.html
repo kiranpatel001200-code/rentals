@@ -75,7 +75,7 @@ ol li{margin-bottom:6px}
 <ol id="cSteps"></ol>
 <div id="cCodeBox" class="hide">
 <label for="cCode">6-digit code</label>
-<input id="cCode" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+<input id="cCode" class="code" inputmode="numeric" maxlength="10" autocomplete="one-time-code">
 <button type="button" id="cVerify">Verify and continue</button>
 </div>
 <a id="cGmail" class="btn hide" href="https://mail.google.com/" target="_blank" rel="noopener">Open Gmail</a>
@@ -241,7 +241,7 @@ $("cResend").onclick = async function(){
 $("cBack").onclick = function(){ show("stLogin"); };
 async function verifyCode(){
   var token = $("cCode").value.replace(/\D/g, "");
-  if(token.length !== 6){ say("Enter the 6-digit code from your email.", "err"); return; }
+  if(token.length < 6 || token.length > 10){ say("Enter the full code from your email.", "err"); return; }
   busy("cVerify", true); say("Checking code...");
   var res = await sb.auth.verifyOtp({ email: pendingEmail, token: token, type: "signup" });
   busy("cVerify", false);
@@ -250,7 +250,7 @@ async function verifyCode(){
   location.replace(NEXT);
 }
 $("cVerify").onclick = verifyCode;
-$("cCode").oninput = function(){ this.value = this.value.replace(/\D/g, "").slice(0, 6); if(this.value.length === 6){ verifyCode(); } };
+$("cCode").oninput = function(){ this.value = this.value.replace(/\D/g, "").slice(0, 10); };
 $("cCode").onkeydown = function(e){ if(e.key === "Enter"){ e.preventDefault(); verifyCode(); } };
 
 /* Forgot password */

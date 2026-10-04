@@ -65,7 +65,18 @@ footer.band span{color:var(--muted)}
 .hero2 .cards{grid-template-columns:repeat(2,1fr)}
 .hero2 .hr img{width:100%;height:auto;display:block}
 .searchband{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:0}
-@media(max-width:820px){.hero2 .wrap{grid-template-columns:1fr}.hero2 .cards{grid-template-columns:1fr}.hero2 .hr{max-width:340px;margin:0 auto}.hero2 .hl{padding-bottom:10px}.rv-grid{grid-template-columns:1fr}.rv-art{max-width:300px;margin:0 auto;order:-1}.hero .wrap{grid-template-columns:1fr}.art{max-width:360px;margin:0 auto}nav{gap:14px}nav a.hide-sm{display:none}}
+.hero3{background:linear-gradient(135deg,#0b2a5b 0%,#1558c9 62%,#1769e8 100%);color:var(--white);padding:56px 0 54px}
+.hero3 .wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center}
+.hero3 .eyebrow{color:#9cc4ff}
+.hero3 h1{color:var(--white);font-size:clamp(2.2rem,5vw,3.5rem)}
+.hero3 h1 span{color:#9cc4ff}
+.hero3 .lead{color:#d6e5ff}
+.hero3 form.search{border:0;border-radius:18px;box-shadow:0 14px 34px rgba(4,20,52,.35)}
+.hero3 .pop{margin:20px 0 8px;font-weight:600;color:#d6e5ff;font-size:.9rem;text-transform:uppercase;letter-spacing:.1em}
+.hero3 .chips a{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--white)}
+.hero3 .chips a:hover{background:var(--white);color:var(--navy)}
+.hero2{padding-top:30px}
+@media(max-width:820px){.hero3 .wrap{grid-template-columns:1fr}.hero3{padding:38px 0 36px}.hero2 .wrap{grid-template-columns:1fr}.hero2 .cards{grid-template-columns:1fr}.hero2 .hr{max-width:340px;margin:0 auto}.hero2 .hl{padding-bottom:10px}.rv-grid{grid-template-columns:1fr}.rv-art{max-width:300px;margin:0 auto;order:-1}.hero .wrap{grid-template-columns:1fr}.art{max-width:360px;margin:0 auto}nav{gap:14px}nav a.hide-sm{display:none}}
 </style>
 </head>
 <body>
@@ -83,32 +94,23 @@ footer.band span{color:var(--muted)}
 </div></header>
 
 <main>
-<section class="hero2"><div class="wrap">
+<section class="hero3"><div class="wrap">
 <div class="hl">
-<p class="eyebrow">Reviews from our users</p>
-<h1>What people say <span>about our website</span></h1>
-<p class="lead">Reviews are written by people with a RentNest account and checked by our team before they appear.</p>
-<div class="cards" id="reviews"></div>
-<a class="more" href="reviews.html">Read all reviews or write your own &rarr;</a>
-</div>
-<div class="hr"><img src="woman-smiling.webp" alt="" width="800" height="853"></div>
-</div></section>
-
-<section class="block searchband"><div class="wrap">
-<h2>Find a place to rent <span>anywhere in the US</span></h2>
-<p class="sub">Browse apartments, houses and studios posted directly by landlords. Filter by city and bedrooms, then message the landlord from the listing page.</p>
+<p class="eyebrow">Rentals across the USA</p>
+<h1>Find a place to rent <span>anywhere in the US.</span></h1>
+<p class="lead">Browse apartments, houses and studios posted directly by landlords. Filter by city and bedrooms, then message the landlord from the listing page.</p>
 <form class="search" action="listings.html" method="get">
 <input name="city" placeholder="City" aria-label="City">
 <select name="bedrooms" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
 <button type="submit">Search rentals</button>
 </form>
-</div></section>
-
-<section class="block"><div class="wrap">
-<h2>Rent in <span>popular US cities</span></h2>
-<p class="sub">Rents are listed in US dollars per month, and most landlords offer 12-month leases.</p>
+<p class="pop">Popular cities</p>
 <div class="chips">
 <a href="listings.html?city=New+York">New York</a><a href="listings.html?city=Los+Angeles">Los Angeles</a><a href="listings.html?city=Chicago">Chicago</a><a href="listings.html?city=Houston">Houston</a><a href="listings.html?city=Seattle">Seattle</a><a href="listings.html?city=Austin">Austin</a><a href="listings.html?city=Miami">Miami</a><a href="listings.html?city=Denver">Denver</a>
+</div>
+</div>
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 400 320"><path d="M50 90c40-62 160-72 230-32s92 118 44 188-176 84-246 36S10 150 50 90z" fill="#ffffff" fill-opacity=".12"/><path d="M110 170 200 92l90 78v98a10 10 0 0 1-10 10H120a10 10 0 0 1-10-10z" fill="#fff" stroke="#bcd7ff" stroke-width="6" stroke-linejoin="round"/><path d="M200 250c-30-22-46-36-46-54 0-14 11-24 24-24 9 0 17 5 22 13 5-8 13-13 22-13 13 0 24 10 24 24 0 18-16 32-46 54z" fill="#1769e8"/><circle cx="332" cy="74" r="9" fill="#f5b301"/></svg>
 </div>
 </div></section>
 
@@ -119,6 +121,17 @@ footer.band span{color:var(--muted)}
 <div><div class="num">2</div><h3>Contact the landlord</h3><p>Ask questions and book a viewing from the listing page. You deal directly with the landlord.</p></div>
 <div><div class="num">3</div><h3>Move in</h3><p>Agree the lease with the landlord, see the home in person, and collect your keys.</p></div>
 </div>
+</div></section>
+
+<section class="hero2"><div class="wrap">
+<div class="hl">
+<p class="eyebrow">Reviews from our users</p>
+<h2>What people say <span>about our website</span></h2>
+<p class="lead">Reviews are written by people with a RentNest account and checked by our team before they appear.</p>
+<div class="cards" id="reviews"></div>
+<a class="more" href="reviews.html">Read all reviews or write your own &rarr;</a>
+</div>
+<div class="hr"><img src="images/woman-smiling.webp" alt="" width="800" height="853"></div>
 </div></section>
 
 <div class="wrap">
