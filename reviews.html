@@ -37,7 +37,7 @@ small{color:var(--muted)}
 .hide{display:none}
 @media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
 .stars{color:var(--star);letter-spacing:2px}
-.review{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.sample-note{margin:0 0 18px;padding:12px 15px;border-radius:12px;background:#eef5ff;color:var(--muted);font-size:.92rem}.review{display:flex;gap:15px;align-items:flex-start;background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}.avatar{width:58px;height:58px;flex:0 0 58px;border-radius:50%;overflow:hidden;border:2px solid #e4ecfa;background:#eef5ff}.avatar img{width:100%;height:100%;display:block}.review-content{min-width:0}
 .review p{margin:6px 0}
 .review small{color:var(--muted)}
 .empty{background:var(--white);border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
@@ -150,10 +150,10 @@ function avatarSvg(name,i){var bg=["#dcecff","#e8ddff","#ffe7d1","#dff4e9"][i%4]
 
 
 async function load(){
-  var res = await sb.from("reviews").select("display_name,rating,body,created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(50);
+  var res = await sb.from("reviews").select("display_name,rating,body,city,created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(50);
   var list = $("list"); list.textContent = "";
   var rows = res.data || [];
-  $("summary").textContent = "5.0 out of 5 from " + (SAMPLE_REVIEWS.length + rows.length) + " reviews";
+  var total = SAMPLE_REVIEWS.length + rows.length; $("summary").textContent = total + " featured and approved renter reviews";
   SAMPLE_REVIEWS.forEach(function(r,i){renderReview({display_name:r[0],city:r[1],rating:5,body:r[2]},i);});
   rows.forEach(function(r,i){renderReview(r,i+SAMPLE_REVIEWS.length);});
   function renderReview(r,i){
