@@ -98,6 +98,14 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 #msg.err{color:#b3261e}
 #msg.ok{color:#0f6b4f}
 @media(max-width:600px){.row{grid-template-columns:1fr}.sum .r{grid-template-columns:1fr}}
+.exs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.ex{width:110px}
+.ex img{width:110px;height:80px;object-fit:cover;border-radius:10px;display:block}
+.ex.gone img{opacity:.35}
+.rm{margin:6px 0 0;padding:4px 10px;font-size:.85rem;width:100%;background:#fff;color:#b3261e;border:1px solid #e6b9b5}
+.donelinks{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.startlinks{text-align:center;margin:14px 0 0}
+.startlinks a{color:var(--blue);font-weight:600}
 </style>
 </head>
 <body>
@@ -120,6 +128,7 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <b>List your property</b>
 <small>It takes about 5 minutes. Your listing goes live after a quick review by our team.</small>
 </button>
+<p class="startlinks"><a href="my-listings.html">View my listings</a></p>
 </div>
 
 <div id="wizard" class="hide">
@@ -134,9 +143,9 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 
 <section class="step hide" data-step="2">
 <h2>Where is it?</h2>
-<p class="sub">Renters see the city and state. The full address is shared only with people you approve.</p>
+<p class="sub">Enter the full street address with the house number. Renters see it on your listing, so please double-check it.</p>
 <label for="street">Street address</label>
-<input id="street" autocomplete="street-address">
+<input id="street" autocomplete="street-address" placeholder="123 Main St">
 <div class="row">
 <div><label for="city">City</label><input id="city"></div>
 <div><label for="state">State</label><select id="state"></select></div>
@@ -176,6 +185,7 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <section class="step hide" data-step="5">
 <h2>Add photos</h2>
 <p class="sub">Up to 8 photos (JPG, PNG or WebP, 5 MB each). The first photo is the cover. Clear, bright photos get more messages.</p>
+<div class="exs" id="exist"></div>
 <input id="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="Property photos">
 <p class="sub" id="photoCount" style="margin-top:8px"></p>
 </section>
@@ -196,9 +206,9 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 </div>
 
 <div id="done" class="notice hide">
-<h2>Your listing is submitted</h2>
-<p>Thank you! Our team will review it, and it goes live once approved. You can list another property any time.</p>
-<a href="listings.html">Browse rentals</a>
+<h2 id="doneTitle">Your listing is submitted</h2>
+<p id="doneText"></p>
+<div class="donelinks"><a href="my-listings.html">View my listings</a><a href="listings.html">Browse rentals</a></div>
 </div>
 </main>
 
@@ -238,6 +248,7 @@ var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_p
 var $ = function(id){ return document.getElementById(id); };
 var user = null, me = { full_name: "", phone: "", email: "" };
 var step = 1, TOTAL = 6, type = "";
+var editId = null, editing = null, existing = [], removed = {};
 var TYPES = [
   ["apartment","\uD83C\uDFE2","Apartment","A unit in a building"],
   ["house","\uD83C\uDFE0","House","The entire place"],
@@ -304,7 +315,9 @@ function go(n){
 function valid(n){
   if(n === 1 && !type){ say("Choose the kind of place.", "err"); return false; }
   if(n === 2){
-    if(!$("street").value.trim() || !$("city").value.trim()){ say("Enter the street address and city.", "err"); return false; }
+    var st = $("street").value.trim(), ct = $("city").value.trim();
+    if(!/\d/.test(st) || st.length < 5){ say("Enter the full street address with the house number, like 123 Main St.", "err"); return false; }
+    if(ct.length < 3 || !/^[A-Za-z .'\-]+$/.test(ct)){ say("Enter the city name, like San Jose.", "err"); return false; }
     if(!/^\d{5}(-\d{4})?$/.test($("zip").value.trim())){ say("Enter a valid 5-digit ZIP code (like 78701).", "err"); return false; }
   }
   if(n === 3){
@@ -338,43 +351,99 @@ function renderSummary(){
   $("contactNote").textContent = "Renters who unlock your contact see: " + (me.full_name || "your name") + ", " + me.email + (me.phone ? ", " + me.phone : "") + ". This comes from your account. You can change it in My account.";
 }
 $("next").onclick = function(){ if(valid(step)){ go(step + 1); } };
-$("back").onclick = function(){ if(step === 1){ $("wizard").classList.add("hide"); $("start").classList.remove("hide"); } else { go(step - 1); } };
+$("back").onclick = function(){ if(step === 1 && editId){ location.href = "my-listings.html"; return; } if(step === 1){ $("wizard").classList.add("hide"); $("start").classList.remove("hide"); } else { go(step - 1); } };
 $("photos").onchange = function(){ var n = $("photos").files.length; $("photoCount").textContent = n ? n + " photo" + (n > 1 ? "s" : "") + " selected" : ""; };
 $("startBtn").onclick = function(){ $("start").classList.add("hide"); $("wizard").classList.remove("hide"); go(1); };
 
+async function uploadPhotos(id, startAt, firstIsCover){
+  var files = Array.prototype.slice.call($("photos").files), failed = 0;
+  for(var i = 0; i < files.length; i++){
+    var f = files[i], ext = f.type === "image/png" ? "png" : f.type === "image/webp" ? "webp" : "jpg";
+    var path = user.id + "/" + id + "/" + (startAt + i + 1) + "-" + Date.now() + "." + ext;
+    var up = await sb.storage.from("listing-images").upload(path, f, { contentType: f.type });
+    if(up.error){ failed++; continue; }
+    var url = sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
+    var r = await sb.from("listing_images").insert({ listing_id: id, url: url, display_order: startAt + i, is_primary: firstIsCover && i === 0 });
+    if(r.error){ failed++; }
+  }
+  return failed;
+}
+function finish(title, text, failed){
+  $("wizard").classList.add("hide"); $("doneTitle").textContent = title;
+  $("doneText").textContent = text + (failed ? " " + failed + " photo(s) could not be uploaded." : "");
+  $("done").classList.remove("hide"); window.scrollTo({ top: 0, behavior: "smooth" });
+}
 $("publish").onclick = async function(){
   for(var n = 1; n <= 5; n++){ if(!valid(n)){ go(n); return; } }
-  $("publish").disabled = true; say("Publishing...");
-  var id = crypto.randomUUID(), picked = chosen();
-  var row = {
-    id: id, landlord_id: user.id, title: $("title").value.trim(), description: $("desc").value.trim(),
+  $("publish").disabled = true; say(editId ? "Saving..." : "Publishing...");
+  var picked = chosen();
+  var f = {
+    title: $("title").value.trim(), description: $("desc").value.trim(),
     monthly_rent: Number($("rent").value), security_deposit: Number($("deposit").value || 0),
     bedrooms: parseInt($("beds").value || "0", 10), bathrooms: Number($("baths").value || 0),
     square_feet: $("sqft").value ? parseInt($("sqft").value, 10) : null,
     property_type: type, lease_type: $("lease").value, available_date: $("avail").value,
     street_address: $("street").value.trim(), city: $("city").value.trim(), state: $("state").value, zip_code: $("zip").value.trim(),
-    country: "USA", currency: "USD", status: "pending",
     amenities: AMEN.filter(function(a){ return !a[3] && picked.indexOf(a[0]) !== -1; }).map(function(a){ return a[0]; })
   };
-  AMEN.forEach(function(a){ if(a[3]){ row[a[0]] = picked.indexOf(a[0]) !== -1; } });
+  AMEN.forEach(function(a){ if(a[3]){ f[a[0]] = picked.indexOf(a[0]) !== -1; } });
+
+  if(editId){
+    var upd = Object.assign({}, f);
+    if(["draft","rejected","inactive"].indexOf(editing.status) !== -1){ upd.status = "pending"; }
+    var u = await sb.from("listings").update(upd).eq("id", editId);
+    if(u.error){ $("publish").disabled = false; say(u.error.message, "err"); return; }
+    var gone = existing.filter(function(im){ return removed[im.id]; });
+    if(gone.length){
+      var paths = gone.map(function(im){ var p = String(im.url).split("/listing-images/")[1]; return p ? decodeURIComponent(p.split("?")[0]) : null; }).filter(Boolean);
+      if(paths.length){ await sb.storage.from("listing-images").remove(paths); }
+      await sb.from("listing_images").delete().in("id", gone.map(function(im){ return im.id; }));
+    }
+    var keep = existing.filter(function(im){ return !removed[im.id]; });
+    var startAt = keep.reduce(function(m, im){ return Math.max(m, im.display_order + 1); }, 0);
+    var failedE = await uploadPhotos(editId, startAt, keep.length === 0);
+    finish("Changes saved", editing.status === "approved" ? "Your changes are saved. If you changed the listing details, our team reviews them again before they show to renters." : "Your changes are saved. Your listing goes live once our team approves it.", failedE);
+    return;
+  }
+
+  var id = crypto.randomUUID();
+  var row = Object.assign({ id: id, landlord_id: user.id, country: "USA", currency: "USD", status: "pending" }, f);
   var a = await sb.from("listings").insert(row);
   if(a.error){ $("publish").disabled = false; say(a.error.message, "err"); return; }
   var b = await sb.from("listing_contacts").insert({ listing_id: id, contact_name: me.full_name || me.email, contact_email: me.email, contact_phone: me.phone || null });
   if(b.error){ await sb.from("listings").delete().eq("id", id); $("publish").disabled = false; say("Could not save your contact details: " + b.error.message, "err"); return; }
-  var files = Array.prototype.slice.call($("photos").files), failed = 0;
-  for(var i = 0; i < files.length; i++){
-    var f = files[i], ext = f.type === "image/png" ? "png" : f.type === "image/webp" ? "webp" : "jpg";
-    var path = user.id + "/" + id + "/" + (i + 1) + "-" + Date.now() + "." + ext;
-    var up = await sb.storage.from("listing-images").upload(path, f, { contentType: f.type });
-    if(up.error){ failed++; continue; }
-    var url = sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
-    var r = await sb.from("listing_images").insert({ listing_id: id, url: url, display_order: i, is_primary: i === 0 });
-    if(r.error){ failed++; }
-  }
-  $("wizard").classList.add("hide"); $("done").classList.remove("hide");
-  if(failed){ $("done").appendChild(el("p", "", failed + " photo(s) could not be uploaded. You can add them later.")); }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  var failed = await uploadPhotos(id, 0, true);
+  finish("Your listing is submitted", "Thank you! Our team will review it, and it goes live once approved. Until then only you can see it in My listings.", failed);
 };
+
+function renderExisting(){
+  var box = $("exist"); box.textContent = "";
+  existing.forEach(function(im){
+    var w = el("div", "ex" + (removed[im.id] ? " gone" : "")); var i = el("img"); i.src = im.url; i.alt = "";
+    var b = el("button", "rm", removed[im.id] ? "Undo" : "Remove"); b.type = "button";
+    b.onclick = function(){ removed[im.id] = !removed[im.id]; renderExisting(); };
+    w.appendChild(i); w.appendChild(b); box.appendChild(w);
+  });
+}
+async function loadEdit(id){
+  var r = await sb.from("listings").select("*, listing_images(id,url,is_primary,display_order)").eq("id", id).eq("landlord_id", user.id).maybeSingle();
+  if(r.error || !r.data){ gate([el("p", "", "We could not find that listing."), link("My listings", "my-listings.html")]); return; }
+  var l = r.data; editId = id; editing = l;
+  var tile = document.querySelector('.tile[data-type="' + l.property_type + '"]'); if(tile){ tile.click(); }
+  $("street").value = l.street_address; $("city").value = l.city; $("state").value = String(l.state).trim(); $("zip").value = l.zip_code;
+  $("rent").value = l.monthly_rent; $("deposit").value = l.security_deposit; $("beds").value = l.bedrooms; $("baths").value = l.bathrooms;
+  $("sqft").value = l.square_feet || ""; $("avail").value = l.available_date; $("lease").value = l.lease_type; $("title").value = l.title; $("desc").value = l.description;
+  document.querySelectorAll("#ams input").forEach(function(i){
+    var a = AMEN.filter(function(x){ return x[0] === i.value; })[0];
+    i.checked = a[3] ? !!l[a[0]] : (l.amenities || []).indexOf(a[0]) !== -1;
+  });
+  existing = (l.listing_images || []).slice().sort(function(a, b){ return a.display_order - b.display_order; });
+  renderExisting();
+  var h = document.querySelector(".banner h1"); if(h) h.textContent = "Edit your listing";
+  var p = document.querySelector(".banner p"); if(p) p.textContent = "Update the details, then save. Changes to a live listing are reviewed again before they show.";
+  $("publish").textContent = "Save changes";
+  $("wizard").classList.remove("hide"); go(1);
+}
 
 function gate(parts){ var g = $("gate"); g.className = "notice"; g.textContent = ""; parts.forEach(function(p){ g.appendChild(p); }); }
 function link(label, href){ var a = el("a", "", label); a.href = href; return a; }
@@ -387,8 +456,9 @@ async function init(){
     gate([el("p", "", "Only landlord accounts can list properties. Sign up again with a different email and choose \"List my property\"."), link("Back to home", "index.html")]); return;
   }
   me = { full_name: p.data.full_name || "", phone: p.data.phone || "", email: p.data.email || user.email || "" };
-  loadStates();
-  $("start").classList.remove("hide");
+  await loadStates();
+  var eid = new URLSearchParams(location.search).get("edit");
+  if(eid){ await loadEdit(eid); } else { $("start").classList.remove("hide"); }
 }
 init();
 </script>

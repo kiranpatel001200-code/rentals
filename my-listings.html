@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reviews | RentNest</title>
-<meta name="description" content="Read reviews from renters and landlords who used RentNest, or share your own experience.">
+<title>My listings | RentNest</title>
+<meta name="description" content="Manage your RentNest listings.">
 <style>
 :root{--navy:#0b2a5b;--blue:#1769e8;--ink:#1b2a41;--muted:#5b6b82;--bg:#f4f8ff;--line:#dbe6f6;--white:#fff;--star:#f5b301}
 *{box-sizing:border-box}
@@ -60,7 +60,27 @@ small.hint{color:var(--muted);font-weight:400}
 .ft-note b{color:#fff}
 .ft-copy{margin:20px 0 0;text-align:center;color:#9fb5d9;font-size:.9rem}
 @media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
-</style>
+main.wrap{max-width:860px;margin-top:-34px;padding-bottom:20px}
+.notice{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.btnlink,.addbtn{display:inline-block;padding:11px 24px;background:var(--blue);color:#fff;border-radius:10px;text-decoration:none;font-weight:600}
+.addbar{margin-bottom:14px}
+.li{display:flex;gap:16px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.li .th{width:150px;height:112px;flex:none;border-radius:12px;overflow:hidden;background:#e3ebf7;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.li .th img{width:100%;height:100%;object-fit:cover;display:block}
+.bd{flex:1;min-width:0}
+.tp{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tp b{color:var(--navy);font-size:1.05rem}
+.st{font-size:.8rem;font-weight:700;border-radius:99px;padding:2px 12px}
+.st.pend{background:#fff3dc;color:#8a5700}.st.live{background:#e1f5ea;color:#0f6b4f}.st.rej{background:#fde8e6;color:#b3261e}.st.pause{background:#e9eef6;color:#5b6b82}
+.meta{color:var(--muted);font-size:.95rem;margin-top:2px}
+.note3{font-size:.9rem;color:var(--muted);margin-top:4px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.act{margin:0;padding:6px 14px;font:600 .9rem system-ui,sans-serif;color:var(--blue);background:#fff;border:1px solid var(--blue);border-radius:10px;text-decoration:none;cursor:pointer}
+.act.del{color:#b3261e;border-color:#e6b9b5}
+.empty{background:#fff;border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
+#msg{min-height:1.4em;margin:6px 0 20px}
+#msg.err{color:#b3261e}#msg.ok{color:#0f6b4f}
+@media(max-width:600px){.li{flex-direction:column}.li .th{width:100%;height:170px}}</style>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -68,33 +88,18 @@ small.hint{color:var(--muted);font-weight:400}
 <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 21 22 7l16 14v15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round"/><path d="M15 31V19l7 7 7-7v12" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
 <span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
 <nav>
-<a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html" class="on">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
+<a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="on" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1>Reviews</h1><p>Written by people who use RentNest. Every review is checked by our team before it appears.</p><p class="summary" id="summary"></p></div></section>
-
+<section class="banner"><div class="wrap"><h1>My listings</h1><p>Preview, edit, pause or delete your listings.</p></div></section>
 <main class="wrap">
+<div id="gate" class="hide"></div>
+<div id="area" class="hide">
+<div class="addbar"><a class="addbtn" href="create-listing.html">+ List a new property</a></div>
+<p id="msg" role="status" aria-live="polite"></p>
 <div id="list"></div>
-
-<div class="box">
-<h2>Write a review</h2>
-<div id="needLogin" class="hide">
-<p class="sub">Log in or sign up to share your experience. One review per account.</p>
-<a class="btn" href="login.html?next=reviews.html">Log in or sign up</a>
-</div>
-<form id="f" class="hide" novalidate>
-<label for="rating">Your rating</label>
-<select id="rating"><option value="5">5 stars - Excellent</option><option value="4">4 stars - Good</option><option value="3">3 stars - Okay</option><option value="2">2 stars - Poor</option><option value="1">1 star - Bad</option></select>
-<label for="name">Name to show <small class="hint">(first name and last initial, for example Maria G.)</small></label>
-<input id="name" maxlength="40">
-<label for="body">Your review <small class="hint">(20 to 600 characters)</small></label>
-<textarea id="body" maxlength="600"></textarea>
-<button type="submit" id="send">Submit review</button>
-<p id="note" role="status" aria-live="polite"></p>
-</form>
 </div>
 </main>
-
 <footer class="site-footer"><div class="wrap">
 <div class="ft-grid">
 <div>
@@ -124,65 +129,75 @@ small.hint{color:var(--muted);font-weight:400}
 <p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
 <p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
 </div></footer>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-function say(t, k){ $("note").textContent = t || ""; $("note").className = k || ""; }
-function stars(n){ return "\u2605".repeat(n) + "\u2606".repeat(5 - n); }
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+var uid = null;
+var STATUS = {
+  pending: ["Pending review", "pend", "Our team is reviewing it. Only you can see it until it is approved."],
+  approved: ["Live", "live", "Renters can find it in Rentals."],
+  rejected: ["Rejected", "rej", ""],
+  inactive: ["Paused", "pause", "Hidden from renters."],
+  draft: ["Draft", "pause", "Not submitted yet."]
+};
+function say(t, k){ $("msg").textContent = t || ""; $("msg").className = k || ""; }
+function link(label, href, cls){ var a = el("a", cls || "act", label); a.href = href; return a; }
+function act(label, fn, cls){ var b = el("button", cls || "act", label); b.type = "button"; b.onclick = fn; return b; }
 
-async function load(){
-  var res = await sb.from("reviews").select("display_name,rating,body,created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(50);
-  var list = $("list"); list.textContent = "";
-  var rows = res.data || [];
-  if(res.error){ $("summary").textContent = "Could not load reviews. Please try again."; return; }
-  if(!rows.length){
-    $("summary").textContent = "";
-    var e = document.createElement("p"); e.className = "empty";
-    e.textContent = "No reviews yet. Be the first to share your experience.";
-    list.appendChild(e); return;
-  }
-  var avg = rows.reduce(function(a, r){ return a + r.rating; }, 0) / rows.length;
-  $("summary").textContent = avg.toFixed(1) + " out of 5 from " + rows.length + " review" + (rows.length > 1 ? "s" : "");
-  rows.forEach(function(r){
-    var d = document.createElement("div"); d.className = "review";
-    var s = document.createElement("div"); s.className = "stars"; s.textContent = stars(r.rating);
-    var p = document.createElement("p"); p.textContent = r.body;
-    var m = document.createElement("small");
-    m.textContent = r.display_name + " \u00B7 " + new Date(r.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short" });
-    d.appendChild(s); d.appendChild(p); d.appendChild(m); list.appendChild(d);
-  });
+async function setStatus(id, status){
+  say("Saving...");
+  var r = await sb.from("listings").update({ status: status }).eq("id", id);
+  if(r.error){ say(r.error.message, "err"); return; }
+  say(status === "inactive" ? "Listing paused." : "Submitted for review.", "ok"); load();
 }
-
+async function remove(l){
+  if(!window.confirm("Delete \"" + l.title + "\"? This cannot be undone.")) return;
+  say("Deleting...");
+  var paths = (l.listing_images || []).map(function(im){ var p = String(im.url).split("/listing-images/")[1]; return p ? decodeURIComponent(p.split("?")[0]) : null; }).filter(Boolean);
+  if(paths.length){ await sb.storage.from("listing-images").remove(paths); }
+  var r = await sb.from("listings").delete().eq("id", l.id);
+  if(r.error){ say(r.error.message, "err"); return; }
+  say("Listing deleted.", "ok"); load();
+}
+function item(l){
+  var s = STATUS[l.status] || [l.status, "pause", ""];
+  var d = el("div", "li");
+  var imgs = (l.listing_images || []).slice().sort(function(x, y){ return (y.is_primary - x.is_primary) || (x.display_order - y.display_order); });
+  var t = el("div", "th"); if(imgs.length){ var i = el("img"); i.src = imgs[0].url; i.alt = ""; t.appendChild(i); } else { t.textContent = "No photo"; }
+  d.appendChild(t);
+  var b = el("div", "bd");
+  var top = el("div", "tp"); top.appendChild(el("b", "", l.title)); top.appendChild(el("span", "st " + s[1], s[0])); b.appendChild(top);
+  b.appendChild(el("div", "meta", l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo"));
+  var note = l.status === "rejected" ? "Rejected" + (l.rejection_reason ? ": " + l.rejection_reason : ". Edit the listing and submit it again.") : s[2];
+  if(note){ b.appendChild(el("div", "note3", note)); }
+  var a = el("div", "acts");
+  a.appendChild(link("Preview", "listing.html?id=" + encodeURIComponent(l.id)));
+  a.appendChild(link("Edit", "create-listing.html?edit=" + encodeURIComponent(l.id)));
+  if(l.status === "approved"){ a.appendChild(act("Pause", function(){ setStatus(l.id, "inactive"); })); }
+  if(l.status === "inactive" || l.status === "rejected" || l.status === "draft"){ a.appendChild(act("Submit for review", function(){ setStatus(l.id, "pending"); })); }
+  a.appendChild(act("Delete", function(){ remove(l); }, "act del"));
+  b.appendChild(a); d.appendChild(b);
+  return d;
+}
+async function load(){
+  var r = await sb.from("listings").select("id,title,status,street_address,city,state,zip_code,monthly_rent,rejection_reason,listing_images(url,is_primary,display_order)").eq("landlord_id", uid).order("created_at", { ascending: false });
+  var list = $("list"); list.textContent = "";
+  if(r.error){ say("Could not load your listings. Please try again.", "err"); return; }
+  var rows = r.data || [];
+  if(!rows.length){ list.appendChild(el("p", "empty", "You have not listed a property yet. Tap the button above to add your first listing.")); return; }
+  rows.forEach(function(l){ list.appendChild(item(l)); });
+}
 async function init(){
   var s = await sb.auth.getSession();
-  if(s.data.session){
-    $("f").classList.remove("hide");
-    var p = await sb.from("profiles").select("full_name").eq("id", s.data.session.user.id).maybeSingle();
-    var n = (p.data && p.data.full_name || "").trim().split(/\s+/);
-    if(n[0]){ $("name").value = n.length > 1 ? n[0] + " " + n[n.length - 1].charAt(0).toUpperCase() + "." : n[0]; }
-  } else {
-    $("needLogin").classList.remove("hide");
+  if(!s.data.session){
+    var g = $("gate"); g.className = "notice"; g.appendChild(el("p", "", "Log in to see your listings.")); g.appendChild(link("Log in or sign up", "login.html?next=my-listings.html", "btnlink")); return;
   }
+  uid = s.data.session.user.id;
+  $("area").classList.remove("hide");
   load();
 }
-
-$("f").onsubmit = async function(e){
-  e.preventDefault();
-  var name = $("name").value.trim(), body = $("body").value.trim();
-  if(name.length < 2){ say("Enter the name to show.", "err"); return; }
-  if(body.length < 20){ say("Please write at least 20 characters.", "err"); return; }
-  $("send").disabled = true; say("Sending...");
-  var res = await sb.from("reviews").insert({ display_name: name, rating: parseInt($("rating").value, 10), body: body });
-  $("send").disabled = false;
-  if(res.error){
-    say(res.error.code === "23505" ? "You have already submitted a review. Thank you!" : "Could not send your review: " + res.error.message, "err");
-    return;
-  }
-  $("body").value = "";
-  say("Thank you! Your review will appear after our team checks it.", "ok");
-};
 init();
 </script>
 </body>

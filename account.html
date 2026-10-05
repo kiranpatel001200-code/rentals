@@ -107,6 +107,10 @@ small{color:var(--muted)}
 <p class="note" id="nPass" role="status"></p>
 </section>
 
+<section class="card hide" id="cListings">
+<div class="head"><h2>My listings</h2><a href="my-listings.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">View my listings</a></div>
+</section>
+
 <section class="card">
 <div class="head"><h2>Log out</h2><button type="button" class="danger" id="logout">Log out</button></div>
 </section>
@@ -150,6 +154,7 @@ async function init(){
   var role = p.data && p.data.role;
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
+  if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
   $("page").classList.remove("hide");
 }
 

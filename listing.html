@@ -1,3 +1,226 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rental details | RentNest</title><meta name="description" content="Rental listing details and landlord contact."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap"><link rel="stylesheet" href="style.css"></head><body data-page="detail"><div id="nav"></div>
-<section><div class="wrap"><div class="detail" id="detail"></div></div></section>
-<div id="footer"></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rental details | RentNest</title>
+<meta name="description" content="Rental details on RentNest.">
+<style>
+:root{--navy:#0b2a5b;--blue:#1769e8;--ink:#1b2a41;--muted:#5b6b82;--bg:#f4f8ff;--line:#dbe6f6;--white:#fff;--star:#f5b301}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:0 22px}
+header.top{background:var(--white);box-shadow:0 1px 0 var(--line)}
+header.top .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand b{display:block;font:800 1.45rem/1.1 system-ui,sans-serif;color:var(--blue);letter-spacing:-.5px}
+.brand small{display:block;color:var(--muted);font-size:.78rem}
+nav{display:flex;align-items:center;gap:26px}
+nav a{text-decoration:none;color:var(--ink);font-weight:500;padding:6px 0;border-bottom:3px solid transparent}
+nav a.on{color:var(--blue);border-bottom-color:var(--blue)}
+nav a.pill{background:var(--blue);color:var(--white);padding:10px 22px;border-radius:99px;border:0;font-weight:600}
+.banner{background:linear-gradient(135deg,#0b2a5b 0%,#1558c9 62%,#1769e8 100%);color:var(--white);padding:34px 0 66px}
+.banner h1{font:800 clamp(1.8rem,4vw,2.6rem)/1.1 system-ui,sans-serif;margin:0 0 8px;letter-spacing:-.8px}
+.banner p{margin:0 0 6px;color:#d6e5ff;max-width:40em}
+.banner .summary{color:var(--white);font-weight:700;font-size:1.1rem}
+main.wrap{max-width:760px;margin-top:-34px;padding-bottom:40px}
+h2{font:800 1.2rem/1.2 system-ui,sans-serif;color:var(--navy);margin:0 0 6px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:11px 12px;font:inherit;border:1px solid var(--line);border-radius:10px;background:var(--white)}
+textarea{min-height:110px;resize:vertical}
+button,.btn{display:inline-block;margin-top:14px;padding:11px 24px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--blue);border:0;border-radius:10px;text-decoration:none;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f5b301;outline-offset:2px}
+small{color:var(--muted)}
+.sub{color:var(--muted);margin:0 0 12px}
+.hide{display:none}
+@media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
+.stars{color:var(--star);letter-spacing:2px}
+.review{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.review p{margin:6px 0}
+.review small{color:var(--muted)}
+.empty{background:var(--white);border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:26px 0 48px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+#note{min-height:1.4em;margin-top:10px}
+#note.err{color:#b3261e}
+#note.ok{color:#0f6b4f}
+small.hint{color:var(--muted);font-weight:400}
+.site-footer{background:#0b2a5b;color:#c9d7f0;padding:40px 0 26px;margin-top:20px;font-size:.95rem}
+.site-footer .wrap{max-width:1100px}
+.site-footer h3{margin:0 0 10px;color:#fff;font:700 1rem system-ui,sans-serif}
+.site-footer a{color:#c9d7f0;text-decoration:none;display:block;padding:2px 0}
+.site-footer a:hover{color:#fff;text-decoration:underline}
+.ft-grid{display:grid;grid-template-columns:1.4fr 1fr 1.4fr;gap:30px}
+.ft-logo{display:block;color:#fff;font:800 1.5rem system-ui,sans-serif;margin-bottom:6px}
+.site-footer ul{list-style:none;margin:0;padding:0}
+.site-footer li{padding:2px 0 2px 22px;position:relative}
+.site-footer li:before{content:"\2713";position:absolute;left:0;color:#7fd1a4;font-weight:700}
+.ft-note{margin:26px 0 0;padding:14px 16px;background:rgba(255,255,255,.08);border-radius:12px;line-height:1.55}
+.ft-note b{color:#fff}
+.ft-copy{margin:20px 0 0;text-align:center;color:#9fb5d9;font-size:.9rem}
+@media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
+main.wrap{max-width:1000px;margin-top:-34px;padding-bottom:20px}
+.obar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;background:#fff7e0;border:1px solid #f1d98a;color:#6b4d00;border-radius:14px;padding:12px 16px;margin-bottom:14px}
+.obar a{color:var(--blue);font-weight:600;text-decoration:none;border:1px solid var(--blue);border-radius:10px;padding:5px 14px;background:#fff}
+#detail{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 10px 30px rgba(11,42,91,.12)}
+#mainImg{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:#e3ebf7;display:block}
+#noimg{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#e3ebf7;border-radius:14px;color:var(--muted)}
+#thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.th{margin:0;padding:0;width:72px;height:54px;border:2px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer}
+.th img{width:100%;height:100%;object-fit:cover;display:block}
+.price{font:800 1.6rem system-ui,sans-serif;color:var(--blue);margin:0}
+#ttl{font:800 1.4rem/1.25 system-ui,sans-serif;color:var(--navy);margin:2px 0 4px}
+#addr{margin:0 0 4px;color:var(--ink)}
+#facts{margin:0 0 12px;color:var(--muted);font-weight:600}
+h3{font:800 1rem system-ui,sans-serif;color:var(--navy);margin:18px 0 6px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.kv span{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#f4f8ff;border-radius:99px;padding:5px 12px;margin:0 6px 8px 0;font-size:.95rem}
+.chip i{font-style:normal}
+@media(max-width:820px){#detail{grid-template-columns:1fr}}</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<a class="brand" href="index.html" aria-label="RentNest home">
+<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 21 22 7l16 14v15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round"/><path d="M15 31V19l7 7 7-7v12" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
+<nav>
+<a href="index.html">Home</a><a href="listings.html" class="on">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
+</nav>
+</div></header>
+<section class="banner"><div class="wrap"><h1>Rental details</h1><p>See the photos, price, address and amenities.</p></div></section>
+<main class="wrap">
+<div id="ownerBar" class="obar hide"></div>
+<div id="missing" class="hide" style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px"><h2>Listing not found</h2><p class="sub">This listing is not available. It may have been removed or is not live yet.</p><a href="listings.html" style="color:var(--blue);font-weight:600">Browse rentals</a></div>
+<article id="detail" class="hide">
+<div><img id="mainImg" alt=""><div id="noimg" class="hide">No photos added</div><div id="thumbs"></div></div>
+<div>
+<p class="price" id="price"></p>
+<h2 id="ttl"></h2>
+<p id="addr"></p>
+<p id="facts"></p>
+<div id="kv"></div>
+<h3>Description</h3><p id="descr" style="margin:0"></p>
+<h3>Amenities</h3><div id="amlist"></div>
+<h3>Contact</h3><div id="contact"></div>
+</div>
+</article>
+</main>
+<footer class="site-footer"><div class="wrap">
+<div class="ft-grid">
+<div>
+<b class="ft-logo">RentNest</b>
+<p style="margin:0">Find your perfect rental, directly from landlords. Easy search, clear listings, and rentals across the United States.</p>
+</div>
+<div>
+<h3>Explore</h3>
+<a href="index.html">Home</a>
+<a href="listings.html">Rentals</a>
+<a href="reviews.html">Reviews</a>
+<a href="create-listing.html">List your property</a>
+<a href="my-listings.html">My listings</a>
+<a href="login.html">Log in or sign up</a>
+</div>
+<div>
+<h3>Why renters like RentNest</h3>
+<ul>
+<li>Easy to use: search by city, state and bedrooms</li>
+<li>Every listing is reviewed before it goes live</li>
+<li>Landlord contact details are protected until you unlock them</li>
+<li>Accounts are verified by email</li>
+</ul>
+</div>
+</div>
+<p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
+<p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
+</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+var $ = function(id){ return document.getElementById(id); };
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+var STATUS = { pending: "Pending review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
+var AM = {
+  parking:["\uD83C\uDD7F\uFE0F","Parking"], laundry:["\uD83E\uDDFA","Washer & dryer"], air_conditioning:["\u2744\uFE0F","Air conditioning"], heating:["\uD83D\uDD25","Heating"],
+  pets_allowed:["\uD83D\uDC3E","Pets allowed"], furnished:["\uD83D\uDECB\uFE0F","Furnished"], utilities_included:["\uD83D\uDCA1","Utilities included"], smoking_allowed:["\uD83D\uDEAC","Smoking allowed"],
+  dishwasher:["\uD83C\uDF7D\uFE0F","Dishwasher"], wifi:["\uD83D\uDCF6","Wi-Fi included"], balcony:["\uD83C\uDF07","Balcony or patio"], yard:["\uD83C\uDF3F","Yard"],
+  gym:["\uD83C\uDFCB\uFE0F","Gym"], pool:["\uD83C\uDFCA","Pool"], elevator:["\uD83D\uDED7","Elevator"], garage:["\uD83D\uDE97","Garage"],
+  ev_charging:["\uD83D\uDD0C","EV charging"], storage:["\uD83D\uDCE6","Storage"], hardwood_floors:["\uD83E\uDEB5","Hardwood floors"], fireplace:["\uD83E\uDEB5","Fireplace"],
+  walk_in_closet:["\uD83D\uDC57","Walk-in closet"], stainless_appliances:["\u2728","Stainless appliances"], wheelchair_accessible:["\u267F","Wheelchair accessible"], security:["\uD83D\uDD12","Security or doorman"]
+};
+var BOOLS = ["parking","laundry","air_conditioning","heating","pets_allowed","furnished","utilities_included","smoking_allowed"];
+var LEASE = { yearly: "12 months", monthly: "Month to month", short_term: "Short term" };
+
+function missing(){ $("missing").classList.remove("hide"); }
+async function init(){
+  var id = new URLSearchParams(location.search).get("id");
+  if(!id){ missing(); return; }
+  var s = await sb.auth.getSession();
+  var uid = s.data.session ? s.data.session.user.id : null;
+  var r = await sb.from("listings").select("*, listing_images(url,is_primary,display_order)").eq("id", id).maybeSingle();
+  if(r.error || !r.data){ missing(); return; }
+  var l = r.data, mine = uid && l.landlord_id === uid;
+
+  if(mine || l.status !== "approved"){
+    var bar = $("ownerBar"); bar.classList.remove("hide");
+    var msg = mine ? "This is how renters will see your listing. Status: " + (STATUS[l.status] || l.status) + "." : "Admin view. Status: " + (STATUS[l.status] || l.status) + ".";
+    if(l.status === "pending"){ msg += " It is not visible to renters until our team approves it."; }
+    if(l.status === "rejected" && l.rejection_reason){ msg += " Reason: " + l.rejection_reason; }
+    bar.appendChild(el("span", "", msg));
+    if(mine){
+      var e = el("a", "", "Edit listing"); e.href = "create-listing.html?edit=" + encodeURIComponent(l.id); bar.appendChild(e);
+      var m = el("a", "", "My listings"); m.href = "my-listings.html"; bar.appendChild(m);
+    }
+  }
+
+  var imgs = (l.listing_images || []).slice().sort(function(x, y){ return (y.is_primary - x.is_primary) || (x.display_order - y.display_order); });
+  var main = $("mainImg");
+  if(imgs.length){
+    main.src = imgs[0].url; main.alt = l.title;
+    if(imgs.length > 1){
+      imgs.forEach(function(im, i){
+        var b = el("button", "th"); b.type = "button"; b.setAttribute("aria-label", "Show photo " + (i + 1));
+        var t = el("img"); t.src = im.url; t.alt = ""; b.appendChild(t);
+        b.onclick = function(){ main.src = im.url; };
+        $("thumbs").appendChild(b);
+      });
+    }
+  } else { main.classList.add("hide"); $("noimg").classList.remove("hide"); }
+
+  document.title = l.title + " | RentNest";
+  $("price").textContent = "$" + Number(l.monthly_rent).toLocaleString("en-US") + " / month";
+  $("ttl").textContent = l.title;
+  $("addr").textContent = l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code;
+  var facts = [(l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed"), l.bathrooms + " bath"];
+  if(l.square_feet){ facts.push(Number(l.square_feet).toLocaleString("en-US") + " sq ft"); }
+  facts.push(String(l.property_type).charAt(0).toUpperCase() + String(l.property_type).slice(1));
+  $("facts").textContent = facts.join("  \u00B7  ");
+  $("descr").textContent = l.description;
+  var rows = [["Available from", new Date(l.available_date + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })], ["Lease", LEASE[l.lease_type] || l.lease_type], ["Security deposit", "$" + Number(l.security_deposit).toLocaleString("en-US")]];
+  rows.forEach(function(x){ var d = el("div", "kv"); d.appendChild(el("span", "", x[0])); d.appendChild(el("b", "", x[1])); $("kv").appendChild(d); });
+
+  var keys = BOOLS.filter(function(k){ return l[k]; }).concat(l.amenities || []);
+  if(!keys.length){ $("amlist").appendChild(el("p", "sub", "No amenities listed.")); }
+  keys.forEach(function(k){
+    if(!AM[k]) return;
+    var c = el("span", "chip"); c.appendChild(el("i", "", AM[k][0])); c.appendChild(document.createTextNode(AM[k][1])); $("amlist").appendChild(c);
+  });
+
+  var c = await sb.from("listing_contacts").select("contact_name,contact_email,contact_phone,contact_whatsapp").eq("listing_id", l.id).maybeSingle();
+  var box = $("contact");
+  if(c.data){
+    box.appendChild(el("p", "", mine ? "Your contact details (from your account):" : "Contact the landlord:"));
+    [["Name", c.data.contact_name], ["Email", c.data.contact_email], ["Phone", c.data.contact_phone], ["WhatsApp", c.data.contact_whatsapp]].forEach(function(x){
+      if(!x[1]) return; var d = el("div", "kv"); d.appendChild(el("span", "", x[0])); d.appendChild(el("b", "", x[1])); box.appendChild(d);
+    });
+  } else {
+    box.appendChild(el("p", "sub", "The landlord's contact details are protected. Log in to see what is available for this listing."));
+  }
+  $("detail").classList.remove("hide");
+}
+init();
+</script>
+</body>
+</html>
