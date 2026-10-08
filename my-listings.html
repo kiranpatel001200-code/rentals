@@ -91,7 +91,7 @@ main.wrap{max-width:860px;margin-top:-34px;padding-bottom:20px}
 <a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="on" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1>My listings</h1><p>Preview, edit, pause or delete your listings.</p></div></section>
+<section class="banner"><div class="wrap"><h1>My listings</h1><p>Preview, edit, pause or delete your listings. Live listings are visible to everyone.</p></div></section>
 <main class="wrap">
 <div id="gate" class="hide"></div>
 <div id="area" class="hide">
@@ -119,13 +119,14 @@ main.wrap{max-width:860px;margin-top:-34px;padding-bottom:20px}
 <h3>Why renters like RentNest</h3>
 <ul>
 <li>Easy to use: search by city, state and bedrooms</li>
-<li>Every listing is reviewed before it goes live</li>
+<li>Report any listing that looks suspicious and we look into it</li>
 <li>Landlord contact details are protected until you unlock them</li>
 <li>Accounts are verified by email</li>
 </ul>
 </div>
 </div>
 <p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Equal Housing Opportunity.</b> RentNest supports the Fair Housing Act. Listings may not discriminate based on race, color, religion, sex, disability, familial status or national origin.</p>
 <p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
 <p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
 </div></footer>
@@ -136,8 +137,8 @@ var $ = function(id){ return document.getElementById(id); };
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
 var uid = null;
 var STATUS = {
-  pending: ["Pending review", "pend", "Our team is reviewing it. Only you can see it until it is approved."],
-  approved: ["Live", "live", "Renters can find it in Rentals."],
+  pending: ["In review", "pend", "Our team is looking at it. Only you can see it for now."],
+  approved: ["Live", "live", "Everyone can find it in Rentals."],
   rejected: ["Rejected", "rej", ""],
   inactive: ["Paused", "pause", "Hidden from renters."],
   draft: ["Draft", "pause", "Not submitted yet."]
@@ -150,7 +151,7 @@ async function setStatus(id, status){
   say("Saving...");
   var r = await sb.from("listings").update({ status: status }).eq("id", id);
   if(r.error){ say(r.error.message, "err"); return; }
-  say(status === "inactive" ? "Listing paused." : "Submitted for review.", "ok"); load();
+  say(status === "inactive" ? "Listing paused." : status === "approved" ? "Your listing is live." : "Sent for review.", "ok"); load();
 }
 async function remove(l){
   if(!window.confirm("Delete \"" + l.title + "\"? This cannot be undone.")) return;
@@ -170,13 +171,14 @@ function item(l){
   var b = el("div", "bd");
   var top = el("div", "tp"); top.appendChild(el("b", "", l.title)); top.appendChild(el("span", "st " + s[1], s[0])); b.appendChild(top);
   b.appendChild(el("div", "meta", l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo"));
-  var note = l.status === "rejected" ? "Rejected" + (l.rejection_reason ? ": " + l.rejection_reason : ". Edit the listing and submit it again.") : s[2];
+  var note = l.status === "rejected" ? "Rejected" + (l.rejection_reason ? ": " + l.rejection_reason : ". Edit the listing and request a review.") : s[2];
   if(note){ b.appendChild(el("div", "note3", note)); }
   var a = el("div", "acts");
   a.appendChild(link("Preview", "listing.html?id=" + encodeURIComponent(l.id)));
   a.appendChild(link("Edit", "create-listing.html?edit=" + encodeURIComponent(l.id)));
   if(l.status === "approved"){ a.appendChild(act("Pause", function(){ setStatus(l.id, "inactive"); })); }
-  if(l.status === "inactive" || l.status === "rejected" || l.status === "draft"){ a.appendChild(act("Submit for review", function(){ setStatus(l.id, "pending"); })); }
+  if(l.status === "inactive" || l.status === "draft"){ a.appendChild(act("Make it live", function(){ setStatus(l.id, "approved"); })); }
+  if(l.status === "rejected"){ a.appendChild(act("Request review", function(){ setStatus(l.id, "pending"); })); }
   a.appendChild(act("Delete", function(){ remove(l); }, "act del"));
   b.appendChild(a); d.appendChild(b);
   return d;

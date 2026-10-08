@@ -81,6 +81,7 @@ form button{margin-top:0}
 <input id="city" placeholder="City, ZIP code or address" aria-label="City, ZIP code or address">
 <select id="state" aria-label="State"><option value="">Any state</option></select>
 <select id="beds" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
+<select id="sort" aria-label="Sort by"><option value="new">Newest first</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select>
 <button type="submit">Search</button>
 </form>
 <p id="count" role="status" aria-live="polite"></p>
@@ -106,13 +107,14 @@ form button{margin-top:0}
 <h3>Why renters like RentNest</h3>
 <ul>
 <li>Easy to use: search by city, state and bedrooms</li>
-<li>Every listing is reviewed before it goes live</li>
+<li>Report any listing that looks suspicious and we look into it</li>
 <li>Landlord contact details are protected until you unlock them</li>
 <li>Accounts are verified by email</li>
 </ul>
 </div>
 </div>
 <p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Equal Housing Opportunity.</b> RentNest supports the Fair Housing Act. Listings may not discriminate based on race, color, religion, sex, disability, familial status or national origin.</p>
 <p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
 <p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
 </div></footer>
@@ -130,8 +132,12 @@ var qs = new URLSearchParams(location.search);
 $("city").value = qs.get("q") || qs.get("city") || "";
 $("beds").value = qs.get("bedrooms") || "";
 var wantState = (qs.get("state") || "").toUpperCase();
-var STATUS = { pending: "Pending review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
+var STATUS = { pending: "In review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
 
+function ago(d){
+  var days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+  return days <= 0 ? "Listed today" : days === 1 ? "Listed yesterday" : days < 30 ? "Listed " + days + " days ago" : "";
+}
 function money(n){ return "$" + Number(n).toLocaleString("en-US") + "/mo"; }
 function card(l){
   var a = el("a", "card"); a.href = "listing.html?id=" + encodeURIComponent(l.id);
@@ -147,6 +153,7 @@ function card(l){
   b.appendChild(el("div", "price", money(l.monthly_rent)));
   b.appendChild(el("h2", "", l.title));
   b.appendChild(el("div", "meta", (l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed") + ", " + l.bathrooms + " bath \u00B7 " + l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code));
+  var when = ago(l.created_at); if(when){ b.appendChild(el("div", "meta", when)); }
   a.appendChild(b);
   return a;
 }
@@ -155,8 +162,10 @@ async function load(logIt){
   var text = $("city").value.trim().replace(/[%,()*"\\]/g, "");
   var st = $("state").value, beds = $("beds").value;
   var q = sb.from("listings")
-    .select("id,title,monthly_rent,bedrooms,bathrooms,city,state,street_address,zip_code,status,landlord_id,listing_images(url,is_primary,display_order)")
-    .order("created_at", { ascending: false }).limit(60);
+    .select("id,title,monthly_rent,bedrooms,bathrooms,city,state,street_address,zip_code,status,landlord_id,created_at,listing_images(url,is_primary,display_order)")
+    .limit(60);
+  var so = $("sort").value;
+  q = so === "low" ? q.order("monthly_rent", { ascending: true }) : so === "high" ? q.order("monthly_rent", { ascending: false }) : q.order("created_at", { ascending: false });
   if(st) q = q.eq("state", st);
   if(text) q = q.or("city.ilike.%" + text + "%,street_address.ilike.%" + text + "%,zip_code.ilike.%" + text + "%,title.ilike.%" + text + "%");
   if(beds === "3") q = q.gte("bedrooms", 3); else if(beds !== "") q = q.eq("bedrooms", parseInt(beds, 10));

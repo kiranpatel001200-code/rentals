@@ -103,6 +103,8 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 .ex img{width:110px;height:80px;object-fit:cover;border-radius:10px;display:block}
 .ex.gone img{opacity:.35}
 .rm{margin:6px 0 0;padding:4px 10px;font-size:.85rem;width:100%;background:#fff;color:#b3261e;border:1px solid #e6b9b5}
+.agree{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:16px 0 4px}
+.agree input{width:auto;margin-top:5px}
 .donelinks{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
 .startlinks{text-align:center;margin:14px 0 0}
 .startlinks a{color:var(--blue);font-weight:600}
@@ -117,7 +119,7 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="on hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1>List your property</h1><p>Add the details in a few easy steps. Your listing is reviewed before it goes live.</p></div></section>
+<section class="banner"><div class="wrap"><h1>List your property</h1><p>Add the details in a few easy steps. Your listing goes live as soon as you publish.</p></div></section>
 
 <main class="wrap">
 <div id="gate" class="notice hide"></div>
@@ -126,7 +128,7 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <button type="button" class="plus" id="startBtn">
 <span class="pl" aria-hidden="true">+</span>
 <b>List your property</b>
-<small>It takes about 5 minutes. Your listing goes live after a quick review by our team.</small>
+<small>It takes about 5 minutes. Your listing goes live as soon as you publish.</small>
 </button>
 <p class="startlinks"><a href="my-listings.html">View my listings</a></p>
 </div>
@@ -194,7 +196,8 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <h2>Review and publish</h2>
 <dl class="sum" id="sum"></dl>
 <p class="note2" id="contactNote"></p>
-<p class="note2">After you publish, our team reviews your listing and it goes live once approved.</p>
+<label class="agree"><input type="checkbox" id="agree"><span>I own this property or I am allowed to rent it out. My listing follows the Fair Housing Act and does not discriminate against anyone.</span></label>
+<p class="note2">Your listing goes live as soon as you publish. You can edit, pause or delete it any time from My listings.</p>
 </section>
 
 <div class="wnav">
@@ -208,7 +211,7 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <div id="done" class="notice hide">
 <h2 id="doneTitle">Your listing is submitted</h2>
 <p id="doneText"></p>
-<div class="donelinks"><a href="my-listings.html">View my listings</a><a href="listings.html">Browse rentals</a></div>
+<div class="donelinks"><a id="viewLink" class="hide" href="#">View your listing</a><a href="my-listings.html">View my listings</a><a href="listings.html">Browse rentals</a></div>
 </div>
 </main>
 
@@ -231,13 +234,14 @@ legend{font:800 1.1rem system-ui,sans-serif;color:var(--navy);padding:0 6px}
 <h3>Why renters like RentNest</h3>
 <ul>
 <li>Easy to use: search by city, state and bedrooms</li>
-<li>Every listing is reviewed before it goes live</li>
+<li>Report any listing that looks suspicious and we look into it</li>
 <li>Landlord contact details are protected until you unlock them</li>
 <li>Accounts are verified by email</li>
 </ul>
 </div>
 </div>
 <p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Equal Housing Opportunity.</b> RentNest supports the Fair Housing Act. Listings may not discriminate based on race, color, religion, sex, disability, familial status or national origin.</p>
 <p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
 <p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
 </div></footer>
@@ -368,13 +372,15 @@ async function uploadPhotos(id, startAt, firstIsCover){
   }
   return failed;
 }
-function finish(title, text, failed){
+function finish(title, text, failed, viewId){
+  if(viewId){ $("viewLink").href = "listing.html?id=" + encodeURIComponent(viewId); $("viewLink").classList.remove("hide"); }
   $("wizard").classList.add("hide"); $("doneTitle").textContent = title;
   $("doneText").textContent = text + (failed ? " " + failed + " photo(s) could not be uploaded." : "");
   $("done").classList.remove("hide"); window.scrollTo({ top: 0, behavior: "smooth" });
 }
 $("publish").onclick = async function(){
   for(var n = 1; n <= 5; n++){ if(!valid(n)){ go(n); return; } }
+  if(!$("agree").checked){ go(6); say("Please confirm the statement above the Publish button.", "err"); return; }
   $("publish").disabled = true; say(editId ? "Saving..." : "Publishing...");
   var picked = chosen();
   var f = {
@@ -390,7 +396,7 @@ $("publish").onclick = async function(){
 
   if(editId){
     var upd = Object.assign({}, f);
-    if(["draft","rejected","inactive"].indexOf(editing.status) !== -1){ upd.status = "pending"; }
+    if(editing.status === "rejected"){ upd.status = "pending"; }
     var u = await sb.from("listings").update(upd).eq("id", editId);
     if(u.error){ $("publish").disabled = false; say(u.error.message, "err"); return; }
     var gone = existing.filter(function(im){ return removed[im.id]; });
@@ -402,18 +408,18 @@ $("publish").onclick = async function(){
     var keep = existing.filter(function(im){ return !removed[im.id]; });
     var startAt = keep.reduce(function(m, im){ return Math.max(m, im.display_order + 1); }, 0);
     var failedE = await uploadPhotos(editId, startAt, keep.length === 0);
-    finish("Changes saved", editing.status === "approved" ? "Your changes are saved. If you changed the listing details, our team reviews them again before they show to renters." : "Your changes are saved. Your listing goes live once our team approves it.", failedE);
+    finish("Changes saved", editing.status === "rejected" ? "Your changes are saved and sent to our team for review." : editing.status === "inactive" ? "Your changes are saved. Your listing is paused. Tap Make it live in My listings when you are ready." : "Your changes are saved and are live right away.", failedE, editId);
     return;
   }
 
   var id = crypto.randomUUID();
-  var row = Object.assign({ id: id, landlord_id: user.id, country: "USA", currency: "USD", status: "pending" }, f);
+  var row = Object.assign({ id: id, landlord_id: user.id, country: "USA", currency: "USD", status: "approved" }, f);
   var a = await sb.from("listings").insert(row);
   if(a.error){ $("publish").disabled = false; say(a.error.message, "err"); return; }
   var b = await sb.from("listing_contacts").insert({ listing_id: id, contact_name: me.full_name || me.email, contact_email: me.email, contact_phone: me.phone || null });
   if(b.error){ await sb.from("listings").delete().eq("id", id); $("publish").disabled = false; say("Could not save your contact details: " + b.error.message, "err"); return; }
   var failed = await uploadPhotos(id, 0, true);
-  finish("Your listing is submitted", "Thank you! Our team will review it, and it goes live once approved. Until then only you can see it in My listings.", failed);
+  finish("Your listing is live!", "Renters can now find it in Rentals. You can edit, pause or delete it any time from My listings.", failed, id);
 };
 
 function renderExisting(){
@@ -440,8 +446,8 @@ async function loadEdit(id){
   existing = (l.listing_images || []).slice().sort(function(a, b){ return a.display_order - b.display_order; });
   renderExisting();
   var h = document.querySelector(".banner h1"); if(h) h.textContent = "Edit your listing";
-  var p = document.querySelector(".banner p"); if(p) p.textContent = "Update the details, then save. Changes to a live listing are reviewed again before they show.";
-  $("publish").textContent = "Save changes";
+  var p = document.querySelector(".banner p"); if(p) p.textContent = "Update the details, then save. Your changes show right away.";
+  $("publish").textContent = "Save changes"; $("agree").checked = true;
   $("wizard").classList.remove("hide"); go(1);
 }
 

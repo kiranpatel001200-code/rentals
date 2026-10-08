@@ -78,6 +78,13 @@ h3{font:800 1rem system-ui,sans-serif;color:var(--navy);margin:18px 0 6px}
 .kv span{color:var(--muted)}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#f4f8ff;border-radius:99px;padding:5px 12px;margin:0 6px 8px 0;font-size:.95rem}
 .chip i{font-style:normal}
+.tips{margin:0;padding-left:1.2em;color:var(--muted)}
+.rep{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.rep summary{cursor:pointer;color:#b3261e;font-weight:600}
+.rep select,.rep textarea{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:10px}
+.rep textarea{min-height:80px}
+#repMsg{min-height:1.3em;margin:8px 0 0}
+#repMsg.err{color:#b3261e}#repMsg.ok{color:#0f6b4f}
 @media(max-width:820px){#detail{grid-template-columns:1fr}}</style>
 </head>
 <body>
@@ -99,11 +106,24 @@ h3{font:800 1rem system-ui,sans-serif;color:var(--navy);margin:18px 0 6px}
 <p class="price" id="price"></p>
 <h2 id="ttl"></h2>
 <p id="addr"></p>
+<p id="posted" class="sub" style="margin:0 0 4px;font-size:.9rem"></p>
 <p id="facts"></p>
 <div id="kv"></div>
 <h3>Description</h3><p id="descr" style="margin:0"></p>
 <h3>Amenities</h3><div id="amlist"></div>
 <h3>Contact</h3><div id="contact"></div>
+<h3>Rent safely</h3>
+<ul class="tips"><li>See the home in person before you pay anything.</li><li>Never wire money, send gift cards or pay with crypto.</li><li>Read the lease before you sign it.</li><li>Be careful if the rent looks too good to be true.</li></ul>
+<details id="rep" class="rep"><summary>Report this listing</summary>
+<form id="repForm">
+<label for="repReason">Reason</label>
+<select id="repReason"><option value="scam">Looks like a scam</option><option value="fraud">Fake or fraudulent listing</option><option value="spam">Spam</option><option value="duplicate_listing">Duplicate listing</option><option value="inappropriate_content">Inappropriate content</option><option value="other">Other</option></select>
+<label for="repText">Details (optional)</label>
+<textarea id="repText" maxlength="500"></textarea>
+<button type="submit" id="repBtn">Send report</button>
+<p id="repMsg" role="status"></p>
+</form>
+</details>
 </div>
 </article>
 </main>
@@ -126,13 +146,14 @@ h3{font:800 1rem system-ui,sans-serif;color:var(--navy);margin:18px 0 6px}
 <h3>Why renters like RentNest</h3>
 <ul>
 <li>Easy to use: search by city, state and bedrooms</li>
-<li>Every listing is reviewed before it goes live</li>
+<li>Report any listing that looks suspicious and we look into it</li>
 <li>Landlord contact details are protected until you unlock them</li>
 <li>Accounts are verified by email</li>
 </ul>
 </div>
 </div>
 <p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Equal Housing Opportunity.</b> RentNest supports the Fair Housing Act. Listings may not discriminate based on race, color, religion, sex, disability, familial status or national origin.</p>
 <p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
 <p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
 </div></footer>
@@ -141,7 +162,7 @@ h3{font:800 1rem system-ui,sans-serif;color:var(--navy);margin:18px 0 6px}
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
-var STATUS = { pending: "Pending review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
+var STATUS = { pending: "In review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
 var AM = {
   parking:["\uD83C\uDD7F\uFE0F","Parking"], laundry:["\uD83E\uDDFA","Washer & dryer"], air_conditioning:["\u2744\uFE0F","Air conditioning"], heating:["\uD83D\uDD25","Heating"],
   pets_allowed:["\uD83D\uDC3E","Pets allowed"], furnished:["\uD83D\uDECB\uFE0F","Furnished"], utilities_included:["\uD83D\uDCA1","Utilities included"], smoking_allowed:["\uD83D\uDEAC","Smoking allowed"],
@@ -153,6 +174,10 @@ var AM = {
 var BOOLS = ["parking","laundry","air_conditioning","heating","pets_allowed","furnished","utilities_included","smoking_allowed"];
 var LEASE = { yearly: "12 months", monthly: "Month to month", short_term: "Short term" };
 
+function ago(d){
+  var days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+  return days <= 0 ? "today" : days === 1 ? "yesterday" : days < 30 ? days + " days ago" : new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
 function missing(){ $("missing").classList.remove("hide"); }
 async function init(){
   var id = new URLSearchParams(location.search).get("id");
@@ -165,8 +190,10 @@ async function init(){
 
   if(mine || l.status !== "approved"){
     var bar = $("ownerBar"); bar.classList.remove("hide");
-    var msg = mine ? "This is how renters will see your listing. Status: " + (STATUS[l.status] || l.status) + "." : "Admin view. Status: " + (STATUS[l.status] || l.status) + ".";
-    if(l.status === "pending"){ msg += " It is not visible to renters until our team approves it."; }
+    var msg = mine ? "This is how renters see your listing. Status: " + (STATUS[l.status] || l.status) + "." : "Admin view. Status: " + (STATUS[l.status] || l.status) + ".";
+    if(l.status === "pending"){ msg += " Only you can see it until our team looks at it."; }
+    if(l.status === "inactive"){ msg += " It is hidden from renters. Make it live from My listings."; }
+    if(l.status === "approved"){ msg += " Everyone can see it in Rentals."; }
     if(l.status === "rejected" && l.rejection_reason){ msg += " Reason: " + l.rejection_reason; }
     bar.appendChild(el("span", "", msg));
     if(mine){
@@ -192,6 +219,7 @@ async function init(){
   document.title = l.title + " | RentNest";
   $("price").textContent = "$" + Number(l.monthly_rent).toLocaleString("en-US") + " / month";
   $("ttl").textContent = l.title;
+  $("posted").textContent = "Listed " + ago(l.created_at);
   $("addr").textContent = l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code;
   var facts = [(l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed"), l.bathrooms + " bath"];
   if(l.square_feet){ facts.push(Number(l.square_feet).toLocaleString("en-US") + " sq ft"); }
@@ -219,6 +247,17 @@ async function init(){
     box.appendChild(el("p", "sub", "The landlord's contact details are protected. Log in to see what is available for this listing."));
   }
   $("detail").classList.remove("hide");
+  if(mine){ $("rep").classList.add("hide"); }
+  $("repForm").onsubmit = async function(e){
+    e.preventDefault();
+    var m = $("repMsg");
+    if(!uid){ m.className = "err"; m.textContent = "Please log in to report a listing."; return; }
+    $("repBtn").disabled = true; m.className = ""; m.textContent = "Sending...";
+    var rr = await sb.from("listing_reports").insert({ listing_id: l.id, reporter_id: uid, reason: $("repReason").value, description: $("repText").value.trim() || null });
+    $("repBtn").disabled = false;
+    if(rr.error){ m.className = "err"; m.textContent = rr.error.code === "23505" ? "You already reported this listing. Thank you." : "Could not send the report: " + rr.error.message; return; }
+    m.className = "ok"; m.textContent = "Thank you. We will look into it.";
+  };
 }
 init();
 </script>
