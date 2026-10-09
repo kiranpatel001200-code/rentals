@@ -3,8 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RentNest | Rent a home anywhere in the US</title>
-<meta name="description" content="Search apartments, houses and studios for rent across the United States, or list your own property.">
+<title>RentNest | Apartments, Houses, Studios and Rooms for Rent in the USA</title>
+<meta name="description" content="Find apartments, houses, studios, condos and rooms for rent across the USA. Search by city, ZIP code or address, rent directly from landlords, or list your rental for free.">
+<meta name="keywords" content="apartments for rent, houses for rent, studio apartments for rent, rooms for rent, pet friendly rentals, rentals by owner, rent directly from landlord, USA rentals, list my rental">
+<link rel="canonical" href="https://kiranpatel001200-code.github.io/rentals/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RentNest">
+<meta property="og:title" content="RentNest | Apartments, Houses and Rooms for Rent in the USA">
+<meta property="og:description" content="Search rentals by city, ZIP code or address and message landlords directly. List your property in minutes.">
+<meta property="og:url" content="https://kiranpatel001200-code.github.io/rentals/">
+<meta name="twitter:card" content="summary">
 <style>
 :root{--navy:#0b2a5b;--blue:#1769e8;--ink:#1b2a41;--muted:#5b6b82;--bg:#f4f8ff;--line:#dbe6f6;--white:#fff;--star:#f5b301}
 *{box-sizing:border-box}
@@ -91,14 +99,44 @@ footer.band span{color:var(--muted)}
 .ft-note b{color:#fff}
 .ft-copy{margin:20px 0 0;text-align:center;color:#9fb5d9;font-size:.9rem}
 @media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
+.menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
+body{overflow-wrap:break-word}
+img,svg{max-width:100%}
+@media(max-width:760px){
+header.top .wrap{flex-wrap:wrap}
+.menu{display:block}
+header.top nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:0;padding:6px 0 4px}
+header.top nav.open{display:flex}
+header.top nav a{padding:13px 4px;border-bottom:1px solid var(--line)}
+header.top nav a.hide-sm{display:block}
+header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;border:0}
+.banner{padding:26px 0 56px}
+}
+.eyebrow.dark{color:var(--blue)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.tcard{display:block;background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;box-shadow:0 4px 14px rgba(11,42,91,.05)}
+.tcard:hover{border-color:var(--blue);box-shadow:0 8px 22px rgba(11,42,91,.12)}
+.tcard i{display:block;font-style:normal;font-size:2rem;margin-bottom:4px}
+.tcard b{display:block;color:var(--navy);font-size:1.05rem}
+.tcard span{color:var(--muted);font-size:.93rem}
+.block.alt{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.plinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:4px 24px}
+.plinks a{color:var(--blue);text-decoration:none;padding:6px 0;font-weight:500}
+.plinks a:hover{text-decoration:underline}
+.faq details{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:10px}
+.faq summary{cursor:pointer;font-weight:700;color:var(--navy)}
+.faq p{margin:8px 0 0;color:var(--muted)}
 </style>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebSite", "name": "RentNest", "url": "https://kiranpatel001200-code.github.io/rentals/", "potentialAction": {"@type": "SearchAction", "target": "https://kiranpatel001200-code.github.io/rentals/listings.html?q={search_term_string}", "query-input": "required name=search_term_string"}}, {"@context": "https://schema.org", "@type": "Organization", "name": "RentNest", "url": "https://kiranpatel001200-code.github.io/rentals/"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I find a rental on RentNest?", "acceptedAnswer": {"@type": "Answer", "text": "Type a city, ZIP code or address, then filter by state, property type and bedrooms. Open a listing to see photos, rent, amenities and the address, and send the landlord a message."}}, {"@type": "Question", "name": "Is RentNest only for the United States?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. RentNest is for renters and landlords in the USA, and every rent is shown in US dollars per month."}}, {"@type": "Question", "name": "How do I list my property for rent?", "acceptedAnswer": {"@type": "Answer", "text": "Create a free landlord account, tap List your property, and answer a few easy steps: type of place, address, rent, amenities and photos. Your listing goes live as soon as you publish, and you can edit, pause or delete it any time."}}, {"@type": "Question", "name": "How do I stay safe from rental scams?", "acceptedAnswer": {"@type": "Answer", "text": "See the home in person before you pay anything, read the lease before you sign, and never wire money or send gift cards to someone you have not met. Report any listing that looks suspicious. No website can promise that every listing is perfect, so always check for yourself."}}]}]</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
 <a class="brand" href="index.html" aria-label="RentNest home">
 <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 21 22 7l16 14v15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round"/><path d="M15 31V19l7 7 7-7v12" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
 <span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
-<nav>
+<button type="button" class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+<nav id="nav">
 <a href="index.html" class="on">Home</a>
 <a href="listings.html">Rentals</a>
 <a href="reviews.html">Reviews</a>
@@ -112,7 +150,7 @@ footer.band span{color:var(--muted)}
 <div class="hl">
 <p class="eyebrow">Rentals across the USA</p>
 <h1>Find a place to rent <span>anywhere in the US.</span></h1>
-<p class="lead">Browse apartments, houses and studios posted directly by landlords. Filter by city and bedrooms, then message the landlord from the listing page.</p>
+<p class="lead">Search apartments, houses, studios, condos and rooms for rent across the USA. Rent directly from landlords, filter by city, ZIP code, bedrooms and price, and message the landlord from the listing page.</p>
 <form class="search" action="listings.html" method="get">
 <input name="city" placeholder="City" aria-label="City">
 <select name="bedrooms" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
@@ -127,6 +165,20 @@ footer.band span{color:var(--muted)}
 <svg viewBox="0 0 400 320"><path d="M50 90c40-62 160-72 230-32s92 118 44 188-176 84-246 36S10 150 50 90z" fill="#ffffff" fill-opacity=".12"/><path d="M110 170 200 92l90 78v98a10 10 0 0 1-10 10H120a10 10 0 0 1-10-10z" fill="#fff" stroke="#bcd7ff" stroke-width="6" stroke-linejoin="round"/><path d="M200 250c-30-22-46-36-46-54 0-14 11-24 24-24 9 0 17 5 22 13 5-8 13-13 22-13 13 0 24 10 24 24 0 18-16 32-46 54z" fill="#1769e8"/><circle cx="332" cy="74" r="9" fill="#f5b301"/></svg>
 </div>
 </div></section>
+
+<section class="block"><div class="wrap">
+<p class="eyebrow dark">Browse by type</p>
+<h2>Apartments, houses and rooms <span>for rent in the USA</span></h2>
+<p class="sub">Whatever you are looking for, from a cozy studio to a family house, start with the kind of place you want.</p>
+<div class="tgrid"><a class="tcard" href="listings.html?type=apartment"><i>🏢</i><b>Apartments for rent</b><span>Find apartments in your city</span></a><a class="tcard" href="listings.html?type=house"><i>🏠</i><b>Houses for rent</b><span>Entire homes with space to spread out</span></a><a class="tcard" href="listings.html?type=studio"><i>🛏️</i><b>Studios for rent</b><span>Compact, affordable, easy to move into</span></a><a class="tcard" href="listings.html?type=room"><i>🚪</i><b>Rooms for rent</b><span>Private rooms in shared homes</span></a><a class="tcard" href="listings.html?type=condo"><i>🏙️</i><b>Condos for rent</b><span>Condo living for less</span></a><a class="tcard" href="listings.html?type=townhouse"><i>🏘️</i><b>Townhouses for rent</b><span>Your own entrance and extra room</span></a></div>
+</div></section>
+
+<section class="block alt"><div class="wrap">
+<h2>Popular rental <span>searches</span></h2>
+<p class="sub">Jump straight to the cities where renters are looking.</p>
+<div class="plinks"><a href="listings.html?q=New+York&amp;type=apartment">Apartments for rent in New York, NY</a><a href="listings.html?q=Los+Angeles&amp;type=apartment">Apartments for rent in Los Angeles, CA</a><a href="listings.html?q=Chicago&amp;type=apartment">Apartments for rent in Chicago, IL</a><a href="listings.html?q=Houston&amp;type=apartment">Apartments for rent in Houston, TX</a><a href="listings.html?q=Austin&amp;type=apartment">Apartments for rent in Austin, TX</a><a href="listings.html?q=Seattle&amp;type=apartment">Apartments for rent in Seattle, WA</a><a href="listings.html?q=Miami&amp;type=apartment">Apartments for rent in Miami, FL</a><a href="listings.html?q=Denver&amp;type=apartment">Apartments for rent in Denver, CO</a><a href="listings.html?q=San+Jose&amp;type=apartment">Apartments for rent in San Jose, CA</a><a href="listings.html?q=Atlanta&amp;type=apartment">Apartments for rent in Atlanta, GA</a><a href="listings.html?q=Phoenix&amp;type=apartment">Apartments for rent in Phoenix, AZ</a><a href="listings.html?q=Boston&amp;type=apartment">Apartments for rent in Boston, MA</a><a href="listings.html?type=house">Houses for rent near you</a><a href="listings.html?q=pet">Pet friendly rentals</a><a href="listings.html?type=studio">Studio apartments for rent</a><a href="listings.html?type=room">Rooms for rent by owner</a></div>
+</div></section>
+
 
 <section class="block"><div class="wrap">
 <h2>How it <span>works</span></h2>
@@ -146,6 +198,11 @@ footer.band span{color:var(--muted)}
 <a class="more" href="reviews.html">Read all reviews or write your own &rarr;</a>
 </div>
 <div class="hr"><img src="images/woman-smiling.webp" alt="" width="800" height="853"></div>
+</div></section>
+
+<section class="block"><div class="wrap">
+<h2>Renting on RentNest: <span>common questions</span></h2>
+<div class="faq"><details><summary>How do I find a rental on RentNest?</summary><p>Type a city, ZIP code or address, then filter by state, property type and bedrooms. Open a listing to see photos, rent, amenities and the address, and send the landlord a message.</p></details><details><summary>Is RentNest only for the United States?</summary><p>Yes. RentNest is for renters and landlords in the USA, and every rent is shown in US dollars per month.</p></details><details><summary>How do I list my property for rent?</summary><p>Create a free landlord account, tap List your property, and answer a few easy steps: type of place, address, rent, amenities and photos. Your listing goes live as soon as you publish, and you can edit, pause or delete it any time.</p></details><details><summary>How do I stay safe from rental scams?</summary><p>See the home in person before you pay anything, read the lease before you sign, and never wire money or send gift cards to someone you have not met. Report any listing that looks suspicious. No website can promise that every listing is perfect, so always check for yourself.</p></details></div>
 </div></section>
 
 <div class="wrap">
@@ -169,6 +226,7 @@ footer.band span{color:var(--muted)}
 <a href="reviews.html">Reviews</a>
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
+<a href="messages.html">Messages</a>
 <a href="login.html">Log in or sign up</a>
 </div>
 <div>
@@ -219,5 +277,6 @@ footer.band span{color:var(--muted)}
   });
 })();
 </script>
+<script>(function(){var b=document.getElementById("menuBtn"),n=document.getElementById("nav");if(b&&n){b.onclick=function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false");};}})();</script>
 </body>
 </html>

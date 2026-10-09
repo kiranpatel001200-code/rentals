@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /rentals/account.html
+Disallow: /rentals/messages.html
+Disallow: /rentals/my-listings.html
+Disallow: /rentals/admin.html
+
+Sitemap: https://kiranpatel001200-code.github.io/rentals/sitemap.xml

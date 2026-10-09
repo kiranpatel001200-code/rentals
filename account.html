@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My account | RentNest</title>
 <style>
@@ -41,8 +42,22 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #f5b3
 .note.err{color:#b3261e}
 .note.ok{color:#0f6b4f}
 small{color:var(--muted)}
-.hide{display:none}
+.hide{display:none!important}
 @media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
+.menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
+body{overflow-wrap:break-word}
+img,svg{max-width:100%}
+@media(max-width:760px){
+header.top .wrap{flex-wrap:wrap}
+.menu{display:block}
+header.top nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:0;padding:6px 0 4px}
+header.top nav.open{display:flex}
+header.top nav a{padding:13px 4px;border-bottom:1px solid var(--line)}
+header.top nav a.hide-sm{display:block}
+header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;border:0}
+.banner{padding:26px 0 56px}
+}
 </style>
 </head>
 <body>
@@ -50,7 +65,8 @@ small{color:var(--muted)}
 <a class="brand" href="index.html" aria-label="RentNest home">
 <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 21 22 7l16 14v15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round"/><path d="M15 31V19l7 7 7-7v12" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
 <span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
-<nav>
+<button type="button" class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+<nav id="nav">
 <a href="index.html">Home</a>
 <a href="listings.html">Rentals</a>
 <a href="reviews.html">Reviews</a>
@@ -107,6 +123,14 @@ small{color:var(--muted)}
 <p class="note" id="nPass" role="status"></p>
 </section>
 
+<section class="card hide" id="cAdmin">
+<div class="head"><h2>Admin</h2><a href="admin.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">Open admin</a></div>
+</section>
+
+<section class="card" id="cMessages">
+<div class="head"><h2>Messages</h2><a href="messages.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">Open messages</a></div>
+</section>
+
 <section class="card hide" id="cListings">
 <div class="head"><h2>My listings</h2><a href="my-listings.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">View my listings</a></div>
 </section>
@@ -155,6 +179,7 @@ async function init(){
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
   if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
+  if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
   $("page").classList.remove("hide");
 }
 
@@ -217,5 +242,6 @@ $("logout").onclick = async function(){ await sb.auth.signOut(); location.href =
 sb.auth.onAuthStateChange(function(ev, s){ if(ev === "USER_UPDATED" && s){ user = s.user; paint(); } });
 init();
 </script>
+<script>(function(){var b=document.getElementById("menuBtn"),n=document.getElementById("nav");if(b&&n){b.onclick=function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false");};}})();</script>
 </body>
 </html>

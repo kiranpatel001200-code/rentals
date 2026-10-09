@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin | RentNest</title>
+<style>
+:root{--navy:#0b2a5b;--blue:#1769e8;--ink:#1b2a41;--muted:#5b6b82;--bg:#f4f8ff;--line:#dbe6f6;--white:#fff;--star:#f5b301}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:0 22px}
+header.top{background:var(--white);box-shadow:0 1px 0 var(--line)}
+header.top .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand b{display:block;font:800 1.45rem/1.1 system-ui,sans-serif;color:var(--blue);letter-spacing:-.5px}
+.brand small{display:block;color:var(--muted);font-size:.78rem}
+nav{display:flex;align-items:center;gap:26px}
+nav a{text-decoration:none;color:var(--ink);font-weight:500;padding:6px 0;border-bottom:3px solid transparent}
+nav a.on{color:var(--blue);border-bottom-color:var(--blue)}
+nav a.pill{background:var(--blue);color:var(--white);padding:10px 22px;border-radius:99px;border:0;font-weight:600}
+.banner{background:linear-gradient(135deg,#0b2a5b 0%,#1558c9 62%,#1769e8 100%);color:var(--white);padding:34px 0 66px}
+.banner h1{font:800 clamp(1.8rem,4vw,2.6rem)/1.1 system-ui,sans-serif;margin:0 0 8px;letter-spacing:-.8px}
+.banner p{margin:0 0 6px;color:#d6e5ff;max-width:40em}
+.banner .summary{color:var(--white);font-weight:700;font-size:1.1rem}
+main.wrap{max-width:760px;margin-top:-34px;padding-bottom:40px}
+h2{font:800 1.2rem/1.2 system-ui,sans-serif;color:var(--navy);margin:0 0 6px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:11px 12px;font:inherit;border:1px solid var(--line);border-radius:10px;background:var(--white)}
+textarea{min-height:110px;resize:vertical}
+button,.btn{display:inline-block;margin-top:14px;padding:11px 24px;font:600 1rem system-ui,sans-serif;color:var(--white);background:var(--blue);border:0;border-radius:10px;text-decoration:none;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f5b301;outline-offset:2px}
+small{color:var(--muted)}
+.sub{color:var(--muted);margin:0 0 12px}
+.hide{display:none!important}
+@media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
+.stars{color:var(--star);letter-spacing:2px}
+.review{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.review p{margin:6px 0}
+.review small{color:var(--muted)}
+.empty{background:var(--white);border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:26px 0 48px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+#note{min-height:1.4em;margin-top:10px}
+#note.err{color:#b3261e}
+#note.ok{color:#0f6b4f}
+small.hint{color:var(--muted);font-weight:400}
+.site-footer{background:#0b2a5b;color:#c9d7f0;padding:40px 0 26px;margin-top:20px;font-size:.95rem}
+.site-footer .wrap{max-width:1100px}
+.site-footer h3{margin:0 0 10px;color:#fff;font:700 1rem system-ui,sans-serif}
+.site-footer a{color:#c9d7f0;text-decoration:none;display:block;padding:2px 0}
+.site-footer a:hover{color:#fff;text-decoration:underline}
+.ft-grid{display:grid;grid-template-columns:1.4fr 1fr 1.4fr;gap:30px}
+.ft-logo{display:block;color:#fff;font:800 1.5rem system-ui,sans-serif;margin-bottom:6px}
+.site-footer ul{list-style:none;margin:0;padding:0}
+.site-footer li{padding:2px 0 2px 22px;position:relative}
+.site-footer li:before{content:"\2713";position:absolute;left:0;color:#7fd1a4;font-weight:700}
+.ft-note{margin:26px 0 0;padding:14px 16px;background:rgba(255,255,255,.08);border-radius:12px;line-height:1.55}
+.ft-note b{color:#fff}
+.ft-copy{margin:20px 0 0;text-align:center;color:#9fb5d9;font-size:.9rem}
+@media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
+.menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
+body{overflow-wrap:break-word}
+img,svg{max-width:100%}
+@media(max-width:760px){
+header.top .wrap{flex-wrap:wrap}
+.menu{display:block}
+header.top nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:0;padding:6px 0 4px}
+header.top nav.open{display:flex}
+header.top nav a{padding:13px 4px;border-bottom:1px solid var(--line)}
+header.top nav a.hide-sm{display:block}
+header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;border:0}
+.banner{padding:26px 0 56px}
+}
+main.wrap{max-width:900px;margin-top:-34px;padding-bottom:20px}
+.notice{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.btnlink{display:inline-block;padding:11px 24px;background:var(--blue);color:#fff;border-radius:10px;text-decoration:none;font-weight:600}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{margin:0;background:#fff;color:var(--blue);border:1px solid var(--blue);padding:9px 20px}
+.tab.on{background:var(--blue);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;box-shadow:0 4px 14px rgba(11,42,91,.05)}
+.stat b{display:block;font:800 1.7rem system-ui,sans-serif;color:var(--blue)}
+.stat span{color:var(--muted);font-size:.9rem}
+.line{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.it{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-bottom:12px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
+.tp{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tp b,.lk{color:var(--navy);font-weight:700}
+.st{font-size:.8rem;font-weight:700;border-radius:99px;padding:2px 12px;background:#e9eef6;color:#5b6b82}
+.st.pend{background:#fff3dc;color:#8a5700}.st.live{background:#e1f5ea;color:#0f6b4f}.st.rej{background:#fde8e6;color:#b3261e}
+.meta{color:var(--muted);font-size:.92rem;margin-top:2px;word-break:break-word}
+.body{margin:8px 0;white-space:pre-wrap}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.act{margin:0;padding:6px 14px;font:600 .9rem system-ui,sans-serif;color:var(--blue);background:#fff;border:1px solid var(--blue);border-radius:10px;cursor:pointer}
+.act.del{color:#b3261e;border-color:#e6b9b5}
+.sf{display:flex;gap:8px;margin-bottom:12px}
+.sf input{flex:1;padding:10px;font:inherit;border:1px solid var(--line);border-radius:10px}
+.sf .act{margin:0}
+.empty{background:#fff;border:1px dashed var(--line);border-radius:16px;padding:20px;color:var(--muted)}
+#msg{min-height:1.3em;margin:0 0 10px}#msg.err{color:#b3261e}#msg.ok{color:#0f6b4f}
+.menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
+body{overflow-wrap:break-word}
+img,svg{max-width:100%}
+@media(max-width:760px){
+header.top .wrap{flex-wrap:wrap}
+.menu{display:block}
+header.top nav{display:none;width:100%;flex-direction:column;align-items:stretch;gap:0;padding:6px 0 4px}
+header.top nav.open{display:flex}
+header.top nav a{padding:13px 4px;border-bottom:1px solid var(--line)}
+header.top nav a.hide-sm{display:block}
+header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;border:0}
+.banner{padding:26px 0 56px}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<a class="brand" href="index.html" aria-label="RentNest home">
+<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M6 21 22 7l16 14v15a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round"/><path d="M15 31V19l7 7 7-7v12" fill="none" stroke="#1769e8" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
+<button type="button" class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+<nav id="nav">
+<a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
+</nav>
+</div></header>
+<section class="banner"><div class="wrap"><h1>Admin</h1><p>Listings, reports, users and traffic in one place.</p></div></section>
+<main class="wrap">
+<div id="gate" class="hide"></div>
+<div id="area" class="hide">
+<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="users">Users</button></div>
+<p id="msg" role="status"></p>
+<div id="list"></div>
+</div>
+</main>
+<footer class="site-footer"><div class="wrap">
+<div class="ft-grid">
+<div>
+<b class="ft-logo">RentNest</b>
+<p style="margin:0">Find your perfect rental, directly from landlords. Easy search, clear listings, and rentals across the United States.</p>
+</div>
+<div>
+<h3>Explore</h3>
+<a href="index.html">Home</a>
+<a href="listings.html">Rentals</a>
+<a href="reviews.html">Reviews</a>
+<a href="create-listing.html">List your property</a>
+<a href="my-listings.html">My listings</a>
+<a href="messages.html">Messages</a>
+<a href="login.html">Log in or sign up</a>
+</div>
+<div>
+<h3>Why renters like RentNest</h3>
+<ul>
+<li>Easy to use: search by city, state and bedrooms</li>
+<li>Report any listing that looks suspicious and we look into it</li>
+<li>Landlord contact details are protected until you unlock them</li>
+<li>Accounts are verified by email</li>
+</ul>
+</div>
+</div>
+<p class="ft-note"><b>For people in the United States only.</b> RentNest is for renters and landlords in the USA, and all rents are in US dollars.</p>
+<p class="ft-note"><b>Equal Housing Opportunity.</b> RentNest supports the Fair Housing Act. Listings may not discriminate based on race, color, religion, sex, disability, familial status or national origin.</p>
+<p class="ft-note"><b>Stay safe when you rent.</b> We review listings, but no website can promise that every listing is perfect. Always see the home in person, read the lease before you sign, and never send money to someone you have not met. If something feels wrong, walk away.</p>
+<p class="ft-copy">&copy; 2026 RentNest &middot; Better Homes. Happier Lives.</p>
+</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+var $ = function(id){ return document.getElementById(id); };
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+var uid = null, tab = "overview";
+function say(t, k){ $("msg").textContent = t || ""; $("msg").className = k || ""; }
+function when(d){ return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }); }
+function btn(label, fn, cls){ var b = el("button", "act" + (cls ? " " + cls : ""), label); b.type = "button"; b.onclick = fn; return b; }
+function link(label, href){ var a = el("a", "lk", label); a.href = href; return a; }
+function chip(text, cls){ return el("span", "st " + (cls || ""), text); }
+
+/* ---------- overview ---------- */
+async function overview(box){
+  var q = function(t, f){ return f(sb.from(t).select("id", { count: "exact", head: true })); };
+  var r = await Promise.all([
+    q("profiles", function(x){ return x; }), q("inquiries", function(x){ return x; }), q("contact_passes", function(x){ return x; }),
+    q("listing_reports", function(x){ return x.eq("status", "pending"); }),
+    sb.from("listings").select("status"),
+    sb.from("daily_traffic").select("*").limit(7), sb.from("top_searches").select("*").limit(10)
+  ]);
+  var st = {}; (r[4].data || []).forEach(function(l){ st[l.status] = (st[l.status] || 0) + 1; });
+  var cards = [["Users", r[0].count], ["Live listings", st.approved || 0], ["Taken down", st.rejected || 0], ["Messages sent", r[1].count], ["Contact Passes", r[2].count], ["Open reports", r[3].count]];
+  var g = el("div", "stats"); cards.forEach(function(c){ var d = el("div", "stat"); d.appendChild(el("b", "", String(c[1] == null ? 0 : c[1]))); d.appendChild(el("span", "", c[0])); g.appendChild(d); }); box.appendChild(g);
+  box.appendChild(el("h2", "", "Last 7 days"));
+  var t = r[5].data || [];
+  if(!t.length){ box.appendChild(el("p", "empty", "No visits recorded yet.")); }
+  t.forEach(function(x){ var d = el("div", "line"); d.appendChild(el("span", "", when(x.day + "T00:00:00"))); d.appendChild(el("b", "", x.visitors + " visitors, " + x.page_views + " page views, " + x.searches + " searches")); box.appendChild(d); });
+  box.appendChild(el("h2", "", "Top searches"));
+  var s = r[6].data || [];
+  if(!s.length){ box.appendChild(el("p", "empty", "No searches yet.")); }
+  s.forEach(function(x){ var d = el("div", "line"); d.appendChild(el("span", "", x.city + (x.state ? ", " + x.state : ""))); d.appendChild(el("b", "", x.searches + " searches, " + x.unique_visitors + " visitors")); box.appendChild(d); });
+}
+
+/* ---------- listings ---------- */
+async function setListing(id, patch, okText){
+  var r = await sb.from("listings").update(patch).eq("id", id);
+  if(r.error){ say(r.error.message, "err"); return false; } say(okText, "ok"); render(); return true;
+}
+async function listings(box){
+  var r = await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,rejection_reason").order("created_at", { ascending: false }).limit(100);
+  var rows = r.data || [];
+  var ids = rows.map(function(x){ return x.landlord_id; });
+  var p = ids.length ? await sb.from("profiles").select("id,email").in("id", ids) : { data: [] };
+  var email = {}; (p.data || []).forEach(function(x){ email[x.id] = x.email; });
+  if(!rows.length){ box.appendChild(el("p", "empty", "No listings yet.")); return; }
+  rows.forEach(function(l){
+    var d = el("div", "it"); var tp = el("div", "tp");
+    tp.appendChild(link(l.title, "listing.html?id=" + encodeURIComponent(l.id)));
+    tp.appendChild(chip(l.status === "approved" ? "Live" : l.status === "rejected" ? "Taken down" : l.status, l.status === "approved" ? "live" : l.status === "rejected" ? "rej" : "pend")); d.appendChild(tp);
+    d.appendChild(el("div", "meta", (email[l.landlord_id] || "unknown owner") + "  \u00B7  " + l.city + ", " + String(l.state).trim() + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo  \u00B7  " + when(l.created_at)));
+    if(l.rejection_reason){ d.appendChild(el("div", "meta", "Reason: " + l.rejection_reason)); }
+    var a = el("div", "acts");
+    if(l.status !== "rejected"){ a.appendChild(btn("Take down", function(){ var why = window.prompt("Reason (the owner can see it):", "Removed by RentNest."); if(why !== null){ setListing(l.id, { status: "rejected", rejection_reason: why || "Removed by RentNest." }, "Listing taken down."); } }, "del")); }
+    if(l.status !== "approved"){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
+    a.appendChild(btn("Delete", async function(){ if(!window.confirm("Delete \"" + l.title + "\" for good?")) return; var x = await sb.from("listings").delete().eq("id", l.id); if(x.error){ say(x.error.message, "err"); } else { say("Deleted.", "ok"); render(); } }, "del"));
+    d.appendChild(a); box.appendChild(d);
+  });
+}
+
+/* ---------- reports ---------- */
+async function reports(box){
+  var r = await sb.from("listing_reports").select("id,listing_id,reason,description,status,created_at").order("created_at", { ascending: false }).limit(100);
+  var rows = r.data || [];
+  if(!rows.length){ box.appendChild(el("p", "empty", "No reports. Good news.")); return; }
+  var ids = rows.map(function(x){ return x.listing_id; });
+  var t = await sb.from("listings").select("id,title,status").in("id", ids);
+  var info = {}; (t.data || []).forEach(function(x){ info[x.id] = x; });
+  async function close(rep, status, takedown){
+    if(takedown){ var u = await sb.from("listings").update({ status: "rejected", rejection_reason: "Removed after a report." }).eq("id", rep.listing_id); if(u.error){ say(u.error.message, "err"); return; } }
+    var x = await sb.from("listing_reports").update({ status: status, reviewed_by: uid, reviewed_at: new Date().toISOString() }).eq("id", rep.id);
+    if(x.error){ say(x.error.message, "err"); return; } say("Report updated.", "ok"); render();
+  }
+  rows.forEach(function(rep){
+    var l = info[rep.listing_id]; var d = el("div", "it"); var tp = el("div", "tp");
+    tp.appendChild(l ? link(l.title, "listing.html?id=" + encodeURIComponent(l.id)) : el("b", "", "Deleted listing"));
+    tp.appendChild(chip(String(rep.reason).replace(/_/g, " "), "rej")); tp.appendChild(chip(rep.status, rep.status === "pending" ? "pend" : "")); d.appendChild(tp);
+    d.appendChild(el("div", "meta", when(rep.created_at) + (l ? "  \u00B7  listing is " + (l.status === "approved" ? "live" : l.status) : "")));
+    if(rep.description){ d.appendChild(el("p", "body", rep.description)); }
+    if(rep.status === "pending" || rep.status === "reviewed"){
+      var a = el("div", "acts");
+      if(l && l.status === "approved"){ a.appendChild(btn("Take down listing", function(){ close(rep, "resolved", true); }, "del")); }
+      a.appendChild(btn("Mark resolved", function(){ close(rep, "resolved", false); }));
+      a.appendChild(btn("Dismiss", function(){ close(rep, "dismissed", false); }));
+      d.appendChild(a);
+    }
+    box.appendChild(d);
+  });
+}
+
+/* ---------- users ---------- */
+async function users(box){
+  var f = el("form", "sf"); var i = el("input"); i.placeholder = "Search by email"; i.id = "uq"; i.value = window.__uq || ""; var b = el("button", "act", "Search"); b.type = "submit"; f.appendChild(i); f.appendChild(b);
+  f.onsubmit = function(e){ e.preventDefault(); window.__uq = i.value.trim().replace(/[%,()*"\\]/g, ""); render(); }; box.appendChild(f);
+  var q = sb.from("profiles").select("id,email,full_name,role,created_at").order("created_at", { ascending: false }).limit(30);
+  if(window.__uq){ q = q.ilike("email", "%" + window.__uq + "%"); }
+  var r = await q; var rows = r.data || [];
+  var ps = rows.length ? await sb.from("contact_passes").select("user_id,expires_at,source").in("user_id", rows.map(function(x){ return x.id; })) : { data: [] };
+  var pass = {}; (ps.data || []).forEach(function(x){ pass[x.user_id] = x; });
+  if(!rows.length){ box.appendChild(el("p", "empty", "No users found.")); return; }
+  async function grant(u, days){
+    var exp = days ? new Date(Date.now() + days * 86400000).toISOString() : null;
+    var x = await sb.from("contact_passes").upsert({ user_id: u.id, granted_at: new Date().toISOString(), expires_at: exp, source: "admin" });
+    if(x.error){ say(x.error.message, "err"); return; } say("Contact Pass saved.", "ok"); render();
+  }
+  rows.forEach(function(u){
+    var d = el("div", "it"); var tp = el("div", "tp"); tp.appendChild(el("b", "", u.full_name || "(no name)")); tp.appendChild(chip(u.role, u.role === "admin" ? "live" : "")); d.appendChild(tp);
+    d.appendChild(el("div", "meta", u.email + "  \u00B7  joined " + when(u.created_at)));
+    var p = pass[u.id], active = p && (!p.expires_at || new Date(p.expires_at) > new Date());
+    d.appendChild(el("div", "meta", active ? "Contact Pass: active " + (p.expires_at ? "until " + when(p.expires_at) : "(no end date)") : "Contact Pass: none"));
+    var a = el("div", "acts");
+    a.appendChild(btn("Give 1 year", function(){ grant(u, 365); })); a.appendChild(btn("Give no end date", function(){ grant(u, 0); }));
+    if(p){ a.appendChild(btn("Remove pass", async function(){ var x = await sb.from("contact_passes").delete().eq("user_id", u.id); if(x.error){ say(x.error.message, "err"); } else { say("Pass removed.", "ok"); render(); } }, "del")); }
+    d.appendChild(a); box.appendChild(d);
+  });
+}
+
+async function render(){
+  document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("on", t.dataset.tab === tab); });
+  var box = $("list"); box.textContent = "";
+  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "reports") await reports(box); else await users(box);
+}
+async function init(){
+  var s = await sb.auth.getSession();
+  var g = $("gate");
+  if(!s.data.session){ g.className = "notice"; g.appendChild(el("p", "", "Log in with your admin account.")); var a = el("a", "btnlink", "Log in"); a.href = "login.html?next=admin.html"; g.appendChild(a); return; }
+  uid = s.data.session.user.id;
+  var p = await sb.from("profiles").select("role").eq("id", uid).maybeSingle();
+  if(!p.data || p.data.role !== "admin"){ g.className = "notice"; g.appendChild(el("p", "", "This page is for RentNest admins only.")); return; }
+  document.querySelectorAll(".tab").forEach(function(t){ t.onclick = function(){ tab = t.dataset.tab; say(""); render(); }; });
+  $("area").classList.remove("hide"); render();
+}
+init();
+</script>
+<script>(function(){var b=document.getElementById("menuBtn"),n=document.getElementById("nav");if(b&&n){b.onclick=function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false");};}})();</script>
+</body>
+</html>
