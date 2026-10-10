@@ -77,6 +77,9 @@ header.top nav a.hide-sm{display:block}
 header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;border:0}
 .banner{padding:26px 0 56px}
 }
+.sugg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chipbtn{margin:0;padding:8px 16px;background:#fff;color:var(--blue);border:1px solid var(--blue);border-radius:99px;font:600 .92rem system-ui,sans-serif;cursor:pointer}
+.chipbtn:hover{background:#eef4ff}
 </style>
 </head>
 <body>
@@ -89,11 +92,12 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <a href="index.html">Home</a><a href="listings.html" class="on">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1>Rentals in the United States</h1><p>Browse apartments, houses and studios posted directly by landlords.</p></div></section>
+<section class="banner"><div class="wrap"><h1 id="pageTitle">Rentals in the United States</h1><p>Browse apartments, houses and studios posted directly by landlords.</p></div></section>
 
 <main class="wrap">
 <form id="f">
-<input id="city" placeholder="City, ZIP code or address" aria-label="City, ZIP code or address">
+<input id="city" list="places" placeholder="City, neighborhood, ZIP or address" aria-label="City, neighborhood, ZIP or address" autocomplete="off">
+<datalist id="places"></datalist>
 <select id="state" aria-label="State"><option value="">Any state</option></select>
 <select id="ptype" aria-label="Property type"><option value="">Any type</option><option value="apartment">Apartment</option><option value="house">House</option><option value="studio">Studio</option><option value="condo">Condo</option><option value="townhouse">Townhouse</option><option value="duplex">Duplex</option><option value="room">Private room</option></select>
 <select id="beds" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
@@ -118,6 +122,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
 <a href="messages.html">Messages</a>
+<a href="sitemap.html">Sitemap</a>
 <a href="login.html">Log in or sign up</a>
 </div>
 <div>
@@ -137,22 +142,61 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 </div></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="places.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var uid = null;
+var uid = null, stateDirty = false;
 function sid(){ try{ var s = localStorage.getItem("rn_sid"); if(!s){ s = crypto.randomUUID(); localStorage.setItem("rn_sid", s); } return s; }catch(e){ return null; } }
 function track(type, extra){ try{ sb.from("site_events").insert(Object.assign({ event_type: type, path: location.pathname, session_id: sid() }, extra || {})).then(function(){}); }catch(e){} }
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
-
-var qs = new URLSearchParams(location.search);
-$("city").value = qs.get("q") || qs.get("city") || "";
-$("beds").value = qs.get("bedrooms") || "";
-$("ptype").value = qs.get("type") || "";
-var wantState = (qs.get("state") || "").toUpperCase();
 var PH = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><rect width="300" height="200" fill="#e3ebf7"/><path d="M95 110 150 62l55 48v45a5 5 0 0 1-5 5H100a5 5 0 0 1-5-5z" fill="#fff" stroke="#1769e8" stroke-width="5" stroke-linejoin="round"/><text x="150" y="182" font-family="Arial" font-size="14" text-anchor="middle" fill="#5b6b82">No photo yet</text></svg>');
-var STATUS = { pending: "In review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
+var STATUS = { pending: "In review", approved: "Live", rejected: "Taken down", inactive: "Paused", draft: "Draft" };
 
+/* ---------- places: states, cities, neighborhoods ---------- */
+var BY_ABBR = {}, BY_NAME = {};
+PLACES.states.forEach(function(s){ BY_ABBR[s.a] = s; BY_NAME[s.n.toLowerCase()] = s; });
+function stateOf(s){
+  var k = String(s).toLowerCase().replace(/\./g, "").trim();
+  if(BY_NAME[k]) return BY_NAME[k].a;
+  var u = String(s).trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(u) && BY_ABBR[u] ? u : "";
+}
+/* "San Jose CA", "San Diego, CA", "Mission District, San Francisco, CA", "95112", "123 Main St, Austin, TX", "Texas" */
+function parseQuery(raw){
+  var t = String(raw || "").trim().replace(/\s+/g, " "), out = { zip: "", state: "", hood: "", city: "", street: "", free: "" };
+  if(!t) return out;
+  var z = t.match(/^(\d{5})(?:-\d{4})?$/); if(z){ out.zip = z[1]; return out; }
+  var tail = t.match(/\b(\d{5})(?:-\d{4})?$/);
+  if(tail){ out.zip = tail[1]; t = t.slice(0, tail.index).replace(/[,\s]+$/, ""); }
+  var parts = t.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+  if(parts.length >= 2){
+    var st = stateOf(parts[parts.length - 1]); if(st){ out.state = st; parts.pop(); }
+  } else if(parts.length === 1){
+    var one = parts[0], whole = stateOf(one);
+    if(whole && one.toLowerCase() !== "new york"){ out.state = whole; parts = []; }
+    else {
+      var tok = one.split(" ");
+      for(var n = Math.min(3, tok.length - 1); n >= 1; n--){
+        var s2 = stateOf(tok.slice(-n).join(" "));
+        if(s2){ out.state = s2; parts = [tok.slice(0, -n).join(" ")]; break; }
+      }
+    }
+  }
+  if(parts.length === 1){ if(/\d/.test(parts[0]) && /[A-Za-z]/.test(parts[0])) out.street = parts[0]; else out.free = parts[0]; }
+  else if(parts.length >= 2){ if(/\d/.test(parts[0])){ out.street = parts[0]; out.city = parts[1]; } else { out.hood = parts[0]; out.city = parts[1]; } }
+  return out;
+}
+function safe(x){ return String(x).replace(/[%,()*"\\]/g, "").trim(); }
+function fillSuggestions(){
+  var dl = $("places"), frag = document.createDocumentFragment();
+  PLACES.states.forEach(function(s){ s.c.forEach(function(c){ var o = document.createElement("option"); o.value = c + ", " + s.a; frag.appendChild(o); }); });
+  Object.keys(PLACES.hoods).forEach(function(k){ PLACES.hoods[k].forEach(function(h){ var o = document.createElement("option"); o.value = h + ", " + k; frag.appendChild(o); }); });
+  dl.appendChild(frag);
+  var sel = $("state"); PLACES.states.slice().sort(function(a, b){ return a.n < b.n ? -1 : 1; }).forEach(function(s){ var o = el("option", "", s.n); o.value = s.a; sel.appendChild(o); });
+}
+
+/* ---------- cards ---------- */
 function ago(d){
   var days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
   return days <= 0 ? "Listed today" : days === 1 ? "Listed yesterday" : days < 30 ? "Listed " + days + " days ago" : "";
@@ -161,9 +205,7 @@ function money(n){ return "$" + Number(n).toLocaleString("en-US") + "/mo"; }
 function card(l){
   var a = el("a", "card"); a.href = "listing.html?id=" + encodeURIComponent(l.id);
   var imgs = (l.listing_images || []).slice().sort(function(x, y){ return (y.is_primary - x.is_primary) || (x.display_order - y.display_order); });
-  var img = el("img", "ph"); img.loading = "lazy"; img.alt = l.title;
-  img.src = imgs.length ? imgs[0].url : PH;
-  a.appendChild(img);
+  var img = el("img", "ph"); img.loading = "lazy"; img.alt = l.title; img.src = imgs.length ? imgs[0].url : PH; a.appendChild(img);
   if(l.status !== "approved"){
     var mine = uid && l.landlord_id === uid;
     a.appendChild(el("span", "badge", (mine ? "Your listing: " : "Admin view: ") + (STATUS[l.status] || l.status) + (mine ? ". Only you can see it." : "")));
@@ -171,49 +213,75 @@ function card(l){
   var b = el("div", "body");
   b.appendChild(el("div", "price", money(l.monthly_rent)));
   b.appendChild(el("h2", "", l.title));
-  b.appendChild(el("div", "meta", (l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed") + ", " + l.bathrooms + " bath \u00B7 " + l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code));
+  b.appendChild(el("div", "meta", (l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed") + ", " + l.bathrooms + " bath \u00B7 " + (l.neighborhood ? l.neighborhood + ", " : "") + l.city + ", " + String(l.state).trim() + " " + l.zip_code));
   var when = ago(l.created_at); if(when){ b.appendChild(el("div", "meta", when)); }
-  a.appendChild(b);
-  return a;
+  a.appendChild(b); return a;
 }
 
-async function load(logIt){
-  var text = $("city").value.trim().replace(/[%,()*"\\]/g, "");
-  var st = $("state").value, beds = $("beds").value;
-  var q = sb.from("listings")
-    .select("id,title,monthly_rent,bedrooms,bathrooms,city,state,street_address,zip_code,status,landlord_id,created_at,listing_images(url,is_primary,display_order)")
-    .limit(60);
-  var so = $("sort").value;
-  q = so === "low" ? q.order("monthly_rent", { ascending: true }) : so === "high" ? q.order("monthly_rent", { ascending: false }) : q.order("created_at", { ascending: false });
+/* ---------- search ---------- */
+function readUrl(){
+  var qs = new URLSearchParams(location.search);
+  $("city").value = qs.get("q") || qs.get("city") || "";
+  $("state").value = (qs.get("state") || "").toUpperCase(); stateDirty = !!qs.get("state");
+  $("beds").value = qs.get("bedrooms") || ""; $("ptype").value = qs.get("type") || ""; $("sort").value = qs.get("sort") || "new";
+  return !!(qs.get("q") || qs.get("city") || qs.get("state") || qs.get("bedrooms") || qs.get("type"));
+}
+function searchFor(text){ $("city").value = text; stateDirty = false; $("state").value = ""; run(true, true); }
+function emptyBox(label, st){
+  var d = el("div", "empty");
+  d.appendChild(el("p", "", "No rentals found for " + label + " yet. New listings are added all the time."));
+  var row = el("div", "sugg");
+  if(st){ var b = el("button", "chipbtn", "See all rentals in " + BY_ABBR[st].n); b.type = "button"; b.onclick = function(){ searchFor(BY_ABBR[st].n); }; row.appendChild(b);
+    BY_ABBR[st].c.slice(0, 6).forEach(function(c){ var x = el("button", "chipbtn", c); x.type = "button"; x.onclick = function(){ searchFor(c + ", " + st); }; row.appendChild(x); }); }
+  var all = el("button", "chipbtn", "Search all of the USA"); all.type = "button"; all.onclick = function(){ searchFor(""); }; row.appendChild(all);
+  d.appendChild(row); return d;
+}
+async function run(logIt, push){
+  var text = $("city").value.trim(), p = parseQuery(text);
+  var st = p.state || (stateDirty ? $("state").value : "");
+  stateDirty = false; $("state").value = st;
+  if(p.state && !p.zip && !p.street && (p.city || p.free)){ text = [p.hood, p.city || p.free, p.state].filter(Boolean).join(", "); $("city").value = text; }
+  var beds = $("beds").value, ptype = $("ptype").value, sort = $("sort").value;
+
+  var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,status,landlord_id,created_at,listing_images(url,is_primary,display_order)").limit(60);
   if(st) q = q.eq("state", st);
-  if($("ptype").value) q = q.eq("property_type", $("ptype").value);
-  if(text) q = q.or("city.ilike.%" + text + "%,street_address.ilike.%" + text + "%,zip_code.ilike.%" + text + "%,title.ilike.%" + text + "%");
+  if(p.zip) q = q.ilike("zip_code", p.zip + "%");
+  if(p.city) q = q.ilike("city", "%" + safe(p.city) + "%");
+  if(p.street) q = q.ilike("street_address", "%" + safe(p.street) + "%");
+  if(p.hood){ var h = safe(p.hood); q = q.or("neighborhood.ilike.%" + h + "%,title.ilike.%" + h + "%"); }
+  else if(p.free){ var f = safe(p.free); q = q.or("city.ilike.%" + f + "%,neighborhood.ilike.%" + f + "%,street_address.ilike.%" + f + "%,title.ilike.%" + f + "%"); }
+  if(ptype) q = q.eq("property_type", ptype);
   if(beds === "3") q = q.gte("bedrooms", 3); else if(beds !== "") q = q.eq("bedrooms", parseInt(beds, 10));
+  q = sort === "low" ? q.order("monthly_rent", { ascending: true }) : sort === "high" ? q.order("monthly_rent", { ascending: false }) : q.order("created_at", { ascending: false });
+
+  var label = p.zip ? "ZIP code " + p.zip : [p.hood, p.city || p.free || p.street].filter(Boolean).join(", ") + ((p.city || p.free || p.street || p.hood) && st ? ", " : "") + (st ? BY_ABBR[st].n : "");
+  if(!label) label = "the United States";
+  var title = "Rentals in " + label;
+  $("pageTitle").textContent = title; document.title = title + " | RentNest";
+
+  if(push){
+    var u = new URLSearchParams();
+    if(text) u.set("q", text); if(st && !p.state) u.set("state", st);
+    if(ptype) u.set("type", ptype); if(beds !== "") u.set("bedrooms", beds); if(sort !== "new") u.set("sort", sort);
+    history.pushState(null, "", "listings.html" + (u.toString() ? "?" + u.toString() : ""));
+  }
   var res = await q;
   var grid = $("grid"); grid.textContent = "";
   if(res.error){ $("count").textContent = "Could not load rentals. Please try again."; return; }
   var rows = res.data || [];
   if(logIt){ track("search", { city: text ? text.slice(0, 80) : null, state: st || null, bedrooms: beds === "" ? null : Math.min(parseInt(beds, 10), 10), results_count: rows.length }); }
-  $("count").textContent = rows.length ? rows.length + " rental" + (rows.length > 1 ? "s" : "") + " found" : "";
-  if(!rows.length){
-    var e = el("p", "empty", "No rentals match your search yet. Try a different city, ZIP code or address, or check back soon.");
-    grid.className = ""; grid.appendChild(e); return;
-  }
-  grid.className = "grid";
-  rows.forEach(function(l){ grid.appendChild(card(l)); });
+  $("count").textContent = rows.length ? rows.length + " rental" + (rows.length > 1 ? "s" : "") + " in " + label : "";
+  if(!rows.length){ grid.className = ""; grid.appendChild(emptyBox(label, st)); return; }
+  grid.className = "grid"; rows.forEach(function(l){ grid.appendChild(card(l)); });
 }
 
+$("state").onchange = function(){ stateDirty = true; };
+$("f").onsubmit = function(e){ e.preventDefault(); run(true, true); };
+window.addEventListener("popstate", function(){ readUrl(); run(false, false); });
 (async function(){
-  var s = await sb.auth.getSession();
-  uid = s.data.session ? s.data.session.user.id : null;
-  var r = await sb.from("states").select("abbreviation,name").eq("country", "USA").order("name");
-  (r.data || []).forEach(function(x){ var o = el("option", "", x.name); o.value = x.abbreviation.trim(); $("state").appendChild(o); });
-  $("state").value = wantState;
-  var fromLink = !!(qs.get("q") || qs.get("city") || qs.get("bedrooms") || qs.get("state") || qs.get("type"));
-  track("page_view");
-  load(fromLink);
+  var s = await sb.auth.getSession(); uid = s.data.session ? s.data.session.user.id : null;
+  fillSuggestions(); var fromLink = readUrl(); track("page_view"); run(fromLink, false);
 })();
-$("f").onsubmit = function(e){ e.preventDefault(); load(true); };
 </script>
 <script>(function(){var b=document.getElementById("menuBtn"),n=document.getElementById("nav");if(b&&n){b.onclick=function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false");};}})();</script>
 </body>

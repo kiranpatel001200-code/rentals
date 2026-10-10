@@ -169,6 +169,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
 <a href="messages.html">Messages</a>
+<a href="sitemap.html">Sitemap</a>
 <a href="login.html">Log in or sign up</a>
 </div>
 <div>
@@ -293,6 +294,7 @@ async function init(){
   var facts = [(l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed"), l.bathrooms + " bath"];
   if(l.square_feet){ facts.push(Number(l.square_feet).toLocaleString("en-US") + " sq ft"); }
   facts.push(String(l.property_type).charAt(0).toUpperCase() + String(l.property_type).slice(1));
+  if(l.neighborhood){ facts.push(l.neighborhood); }
   $("facts").textContent = facts.join("  \u00B7  ");
   $("descr").textContent = l.description;
   var rows = [["Available from", new Date(l.available_date + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })], ["Lease", LEASE[l.lease_type] || l.lease_type], ["Security deposit", "$" + Number(l.security_deposit).toLocaleString("en-US")]];

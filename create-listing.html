@@ -164,9 +164,12 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <label for="street">Street address</label>
 <input id="street" autocomplete="street-address" placeholder="123 Main St">
 <div class="row">
-<div><label for="city">City</label><input id="city"></div>
+<div><label for="city">City</label><input id="city" list="citylist" autocomplete="off"></div>
 <div><label for="state">State</label><select id="state"></select></div>
 </div>
+<label for="hood">Neighborhood <small>(optional, helps renters find you)</small></label>
+<input id="hood" list="hoodlist" maxlength="60" placeholder="Mission District" autocomplete="off">
+<datalist id="citylist"></datalist><datalist id="hoodlist"></datalist>
 <label for="zip">ZIP code</label>
 <input id="zip" inputmode="numeric" placeholder="78701" maxlength="10">
 </section>
@@ -245,6 +248,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
 <a href="messages.html">Messages</a>
+<a href="sitemap.html">Sitemap</a>
 <a href="login.html">Log in or sign up</a>
 </div>
 <div>
@@ -264,6 +268,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 </div></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="places.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
@@ -315,6 +320,16 @@ async function loadStates(){
     var o = el("option", "", s.name); o.value = s.abbreviation.trim(); $("state").appendChild(o);
   });
 }
+function refreshLists(){
+  var st = $("state").value, city = $("city").value.trim();
+  var S = PLACES.states.filter(function(x){ return x.a === st; })[0];
+  var cl = $("citylist"); cl.textContent = "";
+  (S ? S.c : []).forEach(function(n){ var o = document.createElement("option"); o.value = n; cl.appendChild(o); });
+  var hl = $("hoodlist"); hl.textContent = "";
+  var key = Object.keys(PLACES.hoods).filter(function(k){ return k.toLowerCase() === (city + ", " + st).toLowerCase(); })[0];
+  (key ? PLACES.hoods[key] : []).forEach(function(n){ var o = document.createElement("option"); o.value = n; hl.appendChild(o); });
+}
+$("state").addEventListener("change", refreshLists); $("city").addEventListener("input", refreshLists);
 function typeLabel(){ var t = TYPES.filter(function(x){ return x[0] === type; })[0]; return t ? t[2] : ""; }
 function stateName(){ var o = $("state").options[$("state").selectedIndex]; return o ? o.textContent : ""; }
 
@@ -365,7 +380,7 @@ function renderSummary(){
   var d = $("sum"); d.textContent = "";
   function row(k, v){ var a = el("div", "r"); a.appendChild(el("dt", "", k)); a.appendChild(el("dd", "", v)); d.appendChild(a); }
   row("Place", typeLabel());
-  row("Address", $("street").value.trim() + ", " + $("city").value.trim() + ", " + $("state").value + " " + $("zip").value.trim());
+  row("Address", $("street").value.trim() + ", " + ($("hood").value.trim() ? $("hood").value.trim() + ", " : "") + $("city").value.trim() + ", " + $("state").value + " " + $("zip").value.trim());
   row("Rent", "$" + Number($("rent").value).toLocaleString("en-US") + " per month, deposit $" + Number($("deposit").value || 0).toLocaleString("en-US"));
   row("Size", ($("beds").value === "0" ? "Studio" : $("beds").value + " bed") + ", " + $("baths").value + " bath");
   row("Title", $("title").value.trim());
@@ -409,7 +424,7 @@ $("publish").onclick = async function(){
     bedrooms: parseInt($("beds").value || "0", 10), bathrooms: Number($("baths").value || 0),
     square_feet: $("sqft").value ? parseInt($("sqft").value, 10) : null,
     property_type: type, lease_type: $("lease").value, available_date: $("avail").value,
-    street_address: $("street").value.trim(), city: $("city").value.trim(), state: $("state").value, zip_code: $("zip").value.trim(),
+    street_address: $("street").value.trim(), city: $("city").value.trim(), neighborhood: $("hood").value.trim() || null, state: $("state").value, zip_code: $("zip").value.trim(),
     amenities: AMEN.filter(function(a){ return !a[3] && picked.indexOf(a[0]) !== -1; }).map(function(a){ return a[0]; })
   };
   AMEN.forEach(function(a){ if(a[3]){ f[a[0]] = picked.indexOf(a[0]) !== -1; } });
@@ -456,13 +471,14 @@ async function loadEdit(id){
   if(r.error || !r.data){ gate([el("p", "", "We could not find that listing."), link("My listings", "my-listings.html")]); return; }
   var l = r.data; editId = id; editing = l; titleTouched = true;
   var tile = document.querySelector('.tile[data-type="' + l.property_type + '"]'); if(tile){ tile.click(); }
-  $("street").value = l.street_address; $("city").value = l.city; $("state").value = String(l.state).trim(); $("zip").value = l.zip_code;
+  $("street").value = l.street_address; $("city").value = l.city; $("hood").value = l.neighborhood || ""; $("state").value = String(l.state).trim(); $("zip").value = l.zip_code;
   $("rent").value = l.monthly_rent; $("deposit").value = l.security_deposit; $("beds").value = l.bedrooms; $("baths").value = l.bathrooms;
   $("sqft").value = l.square_feet || ""; $("avail").value = l.available_date; $("lease").value = l.lease_type; $("title").value = l.title; $("desc").value = l.description;
   document.querySelectorAll("#ams input").forEach(function(i){
     var a = AMEN.filter(function(x){ return x[0] === i.value; })[0];
     i.checked = a[3] ? !!l[a[0]] : (l.amenities || []).indexOf(a[0]) !== -1;
   });
+  refreshLists();
   existing = (l.listing_images || []).slice().sort(function(a, b){ return a.display_order - b.display_order; });
   renderExisting();
   var h = document.querySelector(".banner h1"); if(h) h.textContent = "Edit your listing";
@@ -482,7 +498,7 @@ async function init(){
     gate([el("p", "", "Only landlord accounts can list properties. Sign up again with a different email and choose \"List my property\"."), link("Back to home", "index.html")]); return;
   }
   me = { full_name: p.data.full_name || "", phone: p.data.phone || "", email: p.data.email || user.email || "" };
-  await loadStates();
+  await loadStates(); refreshLists();
   var eid = new URLSearchParams(location.search).get("edit");
   if(eid){ await loadEdit(eid); } else { $("start").classList.remove("hide"); }
 }
