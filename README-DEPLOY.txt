@@ -1,0 +1,26 @@
+RENTNEST - COMPLETE SITE PACKAGE (everything built so far, in one folder)
+
+HOW TO PUT IT ON GITHUB (website, no tokens needed)
+1. Unzip this folder.
+2. Open https://github.com/kiranpatel001200-code/rentals
+3. Add file > Upload files. Drag in ALL files and the "images" folder. Same names replace the old files.
+4. Choose "Create a new branch" > Propose changes > Create pull request > Merge (or commit to main).
+5. Wait 1-2 minutes, then press Ctrl+Shift+R on the site.
+
+ONE-TIME SETTINGS (only you can do these)
+- site-config.js        : put your support email and your state.
+- pass.js               : put your PayPal Client ID in clientId (public). Price text must match the secrets below.
+- Supabase > Edge Functions > Secrets:
+    PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_ENV (sandbox first, then live)   [Contact Pass payments]
+    PASS_PRICE (default 4.99), PASS_DAYS (default 365)
+    RESEND_API_KEY, RESEND_FROM                                              [new-message emails]
+- Supabase > Authentication > URL Configuration: Site URL + Redirect URLs for the GitHub Pages address.
+- First admin (run once in the Supabase SQL Editor):
+    update public.profiles set role = 'admin' where email = 'YOUR@EMAIL';
+- Google Search Console: submit sitemap.xml.
+
+CONTACT PASS RULES (enforced on the server)
+- Email must be verified before paying.
+- A user with an active pass cannot pay again. The pay button only appears after the pass has expired.
+- The expiry date is shown in My account, Messages and on listings.
+- All purchases are final (non-refundable) and do not renew automatically.
