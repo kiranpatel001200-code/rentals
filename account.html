@@ -43,6 +43,13 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #f5b3
 .note.ok{color:#0f6b4f}
 small{color:var(--muted)}
 .hide{display:none!important}
+.pass{background:#eef4ff;border:1px solid #bcd3fb;border-radius:14px;padding:14px 16px;margin-top:12px}
+.pass b{color:var(--navy)}
+.pass p{margin:4px 0 0}
+.pass button{margin-top:10px;background:var(--blue);color:#fff}
+.passfine{font-size:.85rem;color:var(--muted)}
+.passfine a,.pass a{color:var(--blue)}
+.passnote{min-height:1.2em;color:#6b4d00;font-weight:600}
 @media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
 .menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
 .menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
@@ -127,6 +134,12 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div class="head"><h2>Admin</h2><a href="admin.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">Open admin</a></div>
 </section>
 
+<section class="card" id="cPass">
+<div class="head"><h2>Contact Pass</h2></div>
+<p class="row" id="passStatus" style="margin:8px 0 0">Loading...</p>
+<div id="passBody"></div>
+</section>
+
 <section class="card" id="cMessages">
 <div class="head"><h2>Messages</h2><a href="messages.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">Open messages</a></div>
 </section>
@@ -141,6 +154,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="pass.js"></script>
 <script>
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
@@ -181,6 +195,12 @@ async function init(){
   if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
   if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
   $("page").classList.remove("hide");
+  showPass();
+}
+async function showPass(){
+  var info = await passInfo();
+  $("passStatus").textContent = passStatusText(info);
+  if(!info.active){ $("passBody").appendChild(passBox(function(){ location.reload(); })); }
 }
 
 /* Profile */
