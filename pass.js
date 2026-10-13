@@ -46,7 +46,7 @@ function passBox(onDone){
   return d;
 }
 function buildPay(d, onDone){
-  d.appendChild(passEl("p", "", "See phone numbers and emails in your messages and on listings. " + PASS.price + ", " + PASS.term + ". Unlimited contacts, no extra payment for each message or listing."));
+  d.appendChild(passEl("p", "", "Read the messages you receive and see phone numbers and emails. " + PASS.price + ", " + PASS.term + ". Unlimited contacts, no extra payment for each message or listing."));
   var fine = passEl("p", "passfine", "All purchases are final and non-refundable. The pass does not renew automatically. By paying you agree to the ");
   var ta = passEl("a", "", "Terms of Service"); ta.href = "terms.html"; ta.target = "_blank"; fine.appendChild(ta); fine.appendChild(document.createTextNode("."));
   d.appendChild(fine);

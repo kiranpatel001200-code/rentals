@@ -24,3 +24,8 @@ CONTACT PASS RULES (enforced on the server)
 - A user with an active pass cannot pay again. The pay button only appears after the pass has expired.
 - The expiry date is shown in My account, Messages and on listings.
 - All purchases are final (non-refundable) and do not renew automatically.
+
+MESSAGES (enforced in the database)
+- Anyone logged in sees "Messages" in the header with an unread count. The count is stored in the database, so it survives refreshes.
+- Receivers see who wrote (name and verified email badge) but the text, phone and email stay locked until they have an active Contact Pass.
+- A message turns to "read" only when its receiver opens it with an active pass. Sending a message is free.
