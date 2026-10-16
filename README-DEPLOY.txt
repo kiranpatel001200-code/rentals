@@ -29,3 +29,10 @@ MESSAGES (enforced in the database)
 - Anyone logged in sees "Messages" in the header with an unread count. The count is stored in the database, so it survives refreshes.
 - Receivers see who wrote (name and verified email badge) but the text, phone and email stay locked until they have an active Contact Pass.
 - A message turns to "read" only when its receiver opens it with an active pass. Sending a message is free.
+
+TESTING PREMIUM WITHOUT PAYPAL
+- Supabase > Table Editor > premium_grants > Insert row: email = the user's email, days = 365 (0 = no end date).
+  The user becomes premium straight away (same as a paid Contact Pass). It also works if the email signs up later.
+- To test "expired": set expires_at to a past date. The pay button should appear again.
+- Delete the row and the pass is removed.
+- Before you go live, keep this table EMPTY (every row gives a free pass). Real payments use PayPal.
