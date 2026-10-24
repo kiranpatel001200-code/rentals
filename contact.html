@@ -148,8 +148,8 @@ footer{background:#0b2a5b;color:#c9d7f0;padding:28px 0}
     var email = document.getElementById("e").value.trim();
     var topic = document.getElementById("s").value;
     var message = document.getElementById("m").value.trim();
-    if(fullName.length < 2 || fullName.length > 100 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || message.length < 10 || message.length > 2000){
-      status.textContent = "Please check the name, email and message length, then try again.";
+    if(fullName.length < 2 || fullName.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 10 || message.length > 2000){
+      status.textContent = "Please enter a name (2–100 characters), a valid email address, and a message between 10 and 2,000 characters.";
       status.className = "status err";
       return;
     }
