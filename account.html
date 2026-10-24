@@ -137,7 +137,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 </section>
 
 <section class="card" id="cPassCard">
-<div class="head"><h2>Contact Pass</h2></div>
+<div class="head"><h2>Renter Contact Pass</h2></div>
 <p class="row" id="passStatus" style="margin:8px 0 0">Loading...</p>
 <div id="passBody"></div>
 </section>
@@ -202,7 +202,24 @@ async function init(){
 async function showPass(){
   var info = await passInfo();
   $("passStatus").textContent = passStatusText(info);
-  if(!info.active){ $("passBody").appendChild(passBox(function(){ location.reload(); })); }
+  if(info.active){
+    var usage = await sb.rpc("my_contact_usage");
+    if(!usage.error){
+      var used = Math.max(0, Number(usage.data) || 0);
+      var line = document.createElement("p");
+      line.className = "passfine";
+      line.textContent = "This pass unlocks up to 3 different listing contact details per pass period. Used: " + Math.min(used, 3) + "/3.";
+      $("passBody").appendChild(line);
+      if(used >= 3){
+        var more = document.createElement("a");
+        more.href = "contact.html?topic=premium-upgrade";
+        more.textContent = "Contact us for a bigger premium offer";
+        $("passBody").appendChild(more);
+      }
+    }
+  } else {
+    $("passBody").appendChild(passBox(function(){ location.reload(); }));
+  }
 }
 
 /* Profile */
