@@ -270,6 +270,7 @@ $("stLogin").onsubmit = async function(e){
     say(friendly(res.error), "err"); return;
   }
   $("lPass").value = "";
+  try { await sb.rpc("record_my_activity", { p_event_type: "login_success" }); } catch(ignore) {}
   location.replace(NEXT);
 };
 
