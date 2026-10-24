@@ -35,9 +35,7 @@ function passBox(onDone){
     var profileResult = session ? await sb.from("profiles").select("role").eq("id", session.user.id).maybeSingle() : null;
     var role = profileResult && profileResult.data ? profileResult.data.role : null;
     if(session && role === "landlord"){
-      d.appendChild(passEl("p", "", "Landlord premium is separate and does not unlock other landlords' contact details. Use a renter account to buy the Renter Contact Pass."));
-      var renterLink = passEl("a", "", "Sign in or create a renter account"); renterLink.href = "login.html"; d.appendChild(renterLink);
-      return;
+      d.appendChild(passEl("p", "passfine", "Landlord premium only covers your own landlord features. The Renter Contact Pass is a separate add-on that you can purchase on this account to unlock up to 3 other listings' contact details."));
     }
     if(session && role === "admin"){
       d.appendChild(passEl("p", "", "Admin accounts can review listing contacts without purchasing a renter pass."));
