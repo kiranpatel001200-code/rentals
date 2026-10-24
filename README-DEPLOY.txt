@@ -13,7 +13,10 @@ ONE-TIME SETTINGS (only you can do these)
 - Supabase > Edge Functions > Secrets:
     PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_ENV (sandbox first, then live)   [Contact Pass payments]
     PASS_PRICE (default 4.99), PASS_DAYS (default 365)
-    RESEND_API_KEY, RESEND_FROM                                              [new-message emails]
+    RESEND_API_KEY, RESEND_FROM                                              [new-message + Contact Us emails]
+- Contact Us notifications are sent to kiranpatel001200@gmail.com by the notify-contact-request Edge Function.
+- Set RESEND_API_KEY and RESEND_FROM in Supabase > Edge Functions > Secrets. RESEND_FROM must be an allowed sender; for production, verify a domain in Resend and use an address on that domain.
+- Contact requests are saved even when an email fails. The Contact Us page reports the notification status, and retries use the same submission ID to avoid duplicate emails.
 - Supabase > Authentication > URL Configuration: Site URL + Redirect URLs for the GitHub Pages address.
 - First admin (run once in the Supabase SQL Editor):
     update public.profiles set role = 'admin' where email = 'YOUR@EMAIL';
