@@ -1,7 +1,126 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contact RentNest</title><meta name="description" content="Questions about renting or listing on RentNest? Send us a message."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap"><link rel="stylesheet" href="style.css"></head><body data-page="contact"><div id="nav"></div>
-<section><div class="wrap"><h1>Contact us</h1><p class="note">Questions about a listing or your account? We reply within two business days.</p>
-<form class="form" id="contactForm"><label for="n">Your name</label><input id="n" required><label for="e">Email</label><input id="e" type="email" required><label for="s">Topic</label><select id="s"><option>Renting a home</option><option>Listing a property</option><option>Premium contact upgrade</option><option>Report a listing</option><option>Other</option></select><label for="m">Message</label><textarea id="m" rows="5" required></textarea><p><button id="sendRequest" type="submit">Send message</button></p><p id="contactStatus" role="status"></p></form></div></section>
-<div id="footer"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="app.js"></script><script>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact Us | RentNest</title>
+<meta name="description" content="Contact RentNest about rental listings, your account, privacy, or premium contact access.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b2a5b;--blue:#1769e8;--ink:#1b2a41;--muted:#5b6b82;--bg:#f4f8ff;--line:#dbe6f6;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+a{color:var(--blue)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 22px}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.head{min-height:74px;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--blue);font-weight:800;font-size:1.35rem}
+.brand small{display:block;color:var(--muted);font-size:.76rem;font-weight:500}
+nav{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+nav a{text-decoration:none;color:var(--ink);font-weight:600;font-size:.94rem}
+nav a[aria-current=page]{color:var(--blue)}
+.hero{background:linear-gradient(130deg,#0b2a5b,#1558c9 65%,#1769e8);color:#fff;padding:48px 0 72px}
+.hero .eyebrow{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:#d6e5ff;margin:0 0 7px}
+h1{font-size:clamp(2rem,4vw,3rem);line-height:1.1;letter-spacing:-.04em;margin:0 0 12px}
+.hero p:last-child{margin:0;max-width:620px;color:#e2edff}
+main{max-width:1000px;margin:-34px auto 52px;padding:0 22px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.75fr);gap:22px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 12px 36px rgba(11,42,91,.1)}
+h2{font-size:1.25rem;line-height:1.25;color:var(--navy);margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 20px}
+label{display:block;font-weight:700;margin:13px 0 5px}
+input,select,textarea{width:100%;font:inherit;padding:12px 13px;border:1px solid #cbd9ee;border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:150px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:3px solid #d4e4ff;border-color:var(--blue)}
+button{margin-top:16px;background:var(--blue);color:#fff;font:700 1rem Inter,system-ui,sans-serif;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
+button:disabled{opacity:.65;cursor:wait}
+.status{min-height:1.5em;margin:12px 0 0;font-size:.94rem}
+.status.ok{color:#0f6b4f}.status.err{color:#b3261e}
+.topics{display:grid;gap:14px}
+.topic{border:1px solid var(--line);border-radius:13px;padding:15px;background:#f8faff}
+.topic b{display:block;color:var(--navy);margin-bottom:3px}
+.topic p{margin:0;color:var(--muted);font-size:.94rem}
+.links{margin-top:20px;font-size:.92rem;color:var(--muted)}
+.links a{font-weight:600;text-decoration:none}
+footer{background:#0b2a5b;color:#c9d7f0;padding:28px 0}
+.foot{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+.foot b{color:#fff}
+.foot-links{display:flex;gap:16px;flex-wrap:wrap}
+.foot a{color:#d9e6ff;text-decoration:none}
+.foot a:hover{text-decoration:underline}
+@media(max-width:760px){.head{padding:13px 0;align-items:flex-start;flex-direction:column}nav{gap:13px}main{grid-template-columns:1fr;margin-top:-38px}.panel{padding:20px}.hero{padding-top:36px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap head">
+    <a class="brand" href="index.html" aria-label="RentNest home">
+      <span aria-hidden="true">⌂</span><span>RentNest<small>Find Your Perfect Rental</small></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Rentals</a>
+      <a href="reviews.html">Reviews</a>
+      <a href="about.html">About</a>
+      <a href="contact.html" aria-current="page">Contact Us</a>
+    </nav>
+  </div>
+</header>
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">We’re here to help</p>
+    <h1>Contact RentNest</h1>
+    <p>Send us a question about renting, your account, a listing, or premium contact access. Your request is saved for our team to review.</p>
+  </div>
+</section>
+<main>
+  <section class="panel">
+    <h2>Send us a message</h2>
+    <p class="sub">Please use an email address where our team can reach you. Do not include your password or payment card details.</p>
+    <form id="contactForm">
+      <label for="n">Your name</label>
+      <input id="n" name="full_name" autocomplete="name" minlength="2" maxlength="100" required>
+      <label for="e">Email address</label>
+      <input id="e" name="email" type="email" autocomplete="email" maxlength="254" required>
+      <label for="s">What can we help with?</label>
+      <select id="s" name="topic" required>
+        <option>Renting a home</option>
+        <option>Listing a property</option>
+        <option>Premium contact upgrade</option>
+        <option>Report a listing</option>
+        <option>Other</option>
+      </select>
+      <label for="m">Message</label>
+      <textarea id="m" name="message" minlength="10" maxlength="2000" required placeholder="Tell us how we can help (10–2,000 characters)."></textarea>
+      <button id="sendRequest" type="submit">Send message</button>
+      <p id="contactStatus" class="status" role="status" aria-live="polite"></p>
+    </form>
+    <p class="links">Read our <a href="privacy.html">Privacy Policy</a> to learn how contact requests are handled, and our <a href="terms.html">Terms of Service</a> for the rules of using RentNest.</p>
+  </section>
+  <aside class="panel">
+    <h2>How can we help?</h2>
+    <div class="topics">
+      <div class="topic"><b>Rental questions</b><p>Ask about searching for a home, messaging landlords, or using a listing.</p></div>
+      <div class="topic"><b>Landlord support</b><p>Need help with your property listing, profile, photos, or account?</p></div>
+      <div class="topic"><b>Premium contact access</b><p>Used the 3 listing contacts in your Renter Contact Pass? Choose “Premium contact upgrade” and we’ll receive your request.</p></div>
+      <div class="topic"><b>Safety and privacy</b><p>Report a concern or ask about your personal information.</p></div>
+    </div>
+  </aside>
+</main>
+<footer>
+  <div class="wrap foot">
+    <div><b>RentNest</b><div>Better Homes. Happier Lives.</div></div>
+    <div class="foot-links">
+      <a href="contact.html" aria-current="page">Contact Us</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="safety.html">Rental safety</a>
+      <a href="sitemap.html">Sitemap</a>
+    </div>
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
 (function(){
   var q = new URLSearchParams(location.search);
   if(q.get("topic") === "premium-upgrade"){
@@ -13,44 +132,47 @@
 
   var client = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
   var form = document.getElementById("contactForm");
-  if(form){
-    form.addEventListener("submit", async function(event){
-      event.preventDefault();
-      var status = document.getElementById("contactStatus");
-      var button = document.getElementById("sendRequest");
-      var fullName = document.getElementById("n").value.trim();
-      var email = document.getElementById("e").value.trim();
-      var topic = document.getElementById("s").value;
-      var message = document.getElementById("m").value.trim();
-      if(fullName.length < 2 || message.length < 10){
-        status.textContent = "Please enter your name and a message of at least 10 characters.";
-        status.className = "err";
-        return;
+  form.addEventListener("submit", async function(event){
+    event.preventDefault();
+    var status = document.getElementById("contactStatus");
+    var button = document.getElementById("sendRequest");
+    var fullName = document.getElementById("n").value.trim();
+    var email = document.getElementById("e").value.trim();
+    var topic = document.getElementById("s").value;
+    var message = document.getElementById("m").value.trim();
+    if(fullName.length < 2 || fullName.length > 100 || message.length < 10 || message.length > 2000){
+      status.textContent = "Please check your name and message length, then try again.";
+      status.className = "status err";
+      return;
+    }
+    button.disabled = true;
+    status.textContent = "Sending your request...";
+    status.className = "status";
+    try{
+      var sessionResult = await client.auth.getSession();
+      var session = sessionResult.data && sessionResult.data.session;
+      var result = await client.from("support_requests").insert({
+        user_id: session ? session.user.id : null,
+        full_name: fullName,
+        email: email,
+        topic: topic,
+        message: message
+      });
+      if(result.error) throw result.error;
+      status.textContent = "Thank you. Your request has been saved for the RentNest team to review.";
+      status.className = "status ok";
+      form.reset();
+      if(q.get("topic") === "premium-upgrade"){
+        document.getElementById("s").value = "Premium contact upgrade";
       }
-      button.disabled = true;
-      status.textContent = "Sending your request...";
-      status.className = "";
-      try{
-        var sessionResult = await client.auth.getSession();
-        var session = sessionResult.data && sessionResult.data.session;
-        var result = await client.from("support_requests").insert({
-          user_id: session ? session.user.id : null,
-          full_name: fullName,
-          email: email,
-          topic: topic,
-          message: message
-        });
-        if(result.error) throw result.error;
-        status.textContent = "Thank you. Your request has been saved for the RentNest team to review in Admin.";
-        status.className = "ok";
-        form.querySelectorAll("input,select,textarea").forEach(function(field){ field.disabled = true; });
-        button.textContent = "Request sent";
-      }catch(error){
-        status.textContent = "We could not save your request. Please check the details and try again.";
-        status.className = "err";
-        button.disabled = false;
-      }
-    });
-  }
+    }catch(error){
+      status.textContent = "We could not save your request. Please check the details and try again.";
+      status.className = "status err";
+    }finally{
+      button.disabled = false;
+    }
+  });
 })();
-</script></body></html>
+</script>
+</body>
+</html>
