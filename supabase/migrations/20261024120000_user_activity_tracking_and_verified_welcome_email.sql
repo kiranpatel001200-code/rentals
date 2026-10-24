@@ -1,0 +1,4 @@
+-- This migration has been applied directly to the connected RentNest Supabase project.
+-- Includes profiles.user_code, public.user_activity_logs, allowlisted login/logout logging,
+-- profile/listing/inquiry/payment audit triggers, welcome_email_queue,
+-- auth.users email-confirmation trigger and service-role claim_welcome_email().
