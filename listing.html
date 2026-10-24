@@ -197,7 +197,6 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
-var currentRole = null;
 var STATUS = { pending: "In review", approved: "Live", rejected: "Rejected", inactive: "Paused", draft: "Draft" };
 var AM = {
   parking:["\uD83C\uDD7F\uFE0F","Parking"], laundry:["\uD83E\uDDFA","Washer & dryer"], air_conditioning:["\u2744\uFE0F","Air conditioning"], heating:["\uD83D\uDD25","Heating"],
@@ -237,12 +236,7 @@ async function contactForm(box, l){
   var pr = await sb.rpc("my_contact_pass");
   var lock = el("div", "lockbox");
   lock.appendChild(el("h3", "", "Landlord phone and email"));
-  if(pr.data === true && currentRole !== "renter" && currentRole !== "admin"){
-    lock.appendChild(el("p", "sub", "Landlord premium only applies to your own landlord features. It does not unlock another landlord's contact details. The Renter Contact Pass is separate."));
-    var renterUpgrade = el("a", "btnlink", "Contact RentNest about premium options");
-    renterUpgrade.href = "contact.html?topic=premium-upgrade";
-    lock.appendChild(renterUpgrade);
-  } else if(pr.data === true){
+  if(pr.data === true){
     var usageResult = await sb.rpc("my_contact_usage");
     var used = usageResult.error ? 0 : Math.max(0, Number(usageResult.data) || 0);
     var unlockResult = await sb.rpc("my_contact_listing_unlocked", { p_listing: l.id });
@@ -284,11 +278,6 @@ async function init(){
   if(!id){ missing(); return; }
   var s = await sb.auth.getSession();
   var uid = s.data.session ? s.data.session.user.id : null;
-  currentRole = null;
-  if(uid){
-    var profileResult = await sb.from("profiles").select("role").eq("id", uid).maybeSingle();
-    currentRole = profileResult.data && profileResult.data.role ? profileResult.data.role : null;
-  }
   var r = await sb.from("listings").select("*, listing_images(url,is_primary,display_order)").eq("id", id).maybeSingle();
   if(r.error || !r.data){ missing(); return; }
   var l = r.data, mine = uid && l.landlord_id === uid;
