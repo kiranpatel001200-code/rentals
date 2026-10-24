@@ -137,7 +137,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 </section>
 
 <section class="card" id="cPassCard">
-<div class="head"><h2>Contact Pass</h2></div>
+<div class="head"><h2>Renter Contact Pass</h2></div>
 <p class="row" id="passStatus" style="margin:8px 0 0">Loading...</p>
 <div id="passBody"></div>
 </section>
@@ -161,7 +161,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var user = null, prof = { full_name: "", phone: "" };
+var user = null, prof = { full_name: "", phone: "" }, accountRole = null;
 
 function note(id, t, k){ $(id).textContent = t || ""; $(id).className = "note" + (k ? " " + k : ""); }
 function friendly(err){
@@ -192,6 +192,7 @@ async function init(){
   var p = await sb.from("profiles").select("full_name,phone,role").eq("id", user.id).maybeSingle();
   if(p.data){ prof.full_name = p.data.full_name || ""; prof.phone = p.data.phone || ""; }
   var role = p.data && p.data.role;
+  accountRole = role || "renter";
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
   if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
@@ -200,9 +201,38 @@ async function init(){
   showPass();
 }
 async function showPass(){
+  if(accountRole === "admin"){
+    $("passStatus").textContent = "Admin account — contact access is available for site review.";
+    return;
+  }
   var info = await passInfo();
-  $("passStatus").textContent = passStatusText(info);
-  if(!info.active){ $("passBody").appendChild(passBox(function(){ location.reload(); })); }
+  $("passStatus").textContent = accountRole === "landlord"
+    ? "Landlord premium is separate from the Renter Contact Pass."
+    : passStatusText(info);
+  if(accountRole === "landlord"){
+    var note = document.createElement("p");
+    note.className = "passfine";
+    note.textContent = "Your landlord plan alone does not reveal other landlords' phone numbers or emails. An active Renter Contact Pass is required for up to 3 distinct listing contacts.";
+    $("passBody").appendChild(note);
+  }
+  if(info.active){
+    var usage = await sb.rpc("my_contact_usage");
+    if(!usage.error){
+      var used = Math.max(0, Number(usage.data) || 0);
+      var line = document.createElement("p");
+      line.className = "passfine";
+      line.textContent = "This pass unlocks up to 3 different listing contact details per pass period. Used: " + Math.min(used, 3) + "/3.";
+      $("passBody").appendChild(line);
+      if(used >= 3){
+        var more = document.createElement("a");
+        more.href = "contact.html?topic=premium-upgrade";
+        more.textContent = "Contact us for a bigger premium offer";
+        $("passBody").appendChild(more);
+      }
+    }
+  } else {
+    $("passBody").appendChild(passBox(function(){ location.reload(); }));
+  }
 }
 
 /* Profile */

@@ -134,7 +134,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <main class="wrap">
 <div id="gate" class="hide"></div>
 <div id="area" class="hide">
-<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="users">Users</button></div>
+<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="support">Support requests</button><button type="button" class="tab" data-tab="users">Users</button></div>
 <p id="msg" role="status"></p>
 <div id="list"></div>
 </div>
@@ -260,6 +260,41 @@ async function reports(box){
   });
 }
 
+/* ---------- support requests ---------- */
+async function support(box){
+  var r = await sb.from("support_requests").select("id,full_name,email,topic,message,status,created_at").order("created_at", { ascending: false }).limit(100);
+  if(r.error){ box.appendChild(el("p", "empty", "Could not load support requests. Please check the support_requests migration and admin permissions.")); say(r.error.message, "err"); return; }
+  var rows = r.data || [];
+  if(!rows.length){ box.appendChild(el("p", "empty", "No support requests yet.")); return; }
+  rows.forEach(function(item){
+    var d = el("div", "it");
+    var tp = el("div", "tp");
+    tp.appendChild(el("b", "", item.full_name));
+    tp.appendChild(chip(item.topic, item.topic === "Premium contact upgrade" ? "pend" : ""));
+    tp.appendChild(chip(item.status, item.status === "resolved" ? "live" : item.status === "new" ? "pend" : ""));
+    d.appendChild(tp);
+    d.appendChild(el("div", "meta", item.email + "  ·  " + when(item.created_at)));
+    d.appendChild(el("p", "body", item.message));
+    if(item.status !== "resolved"){
+      var a = el("div", "acts");
+      if(item.status === "new"){
+        a.appendChild(btn("Mark in progress", async function(){
+          var x = await sb.from("support_requests").update({status:"in_progress"}).eq("id", item.id);
+          if(x.error){ say(x.error.message, "err"); return; }
+          say("Support request updated.", "ok"); render();
+        }));
+      }
+      a.appendChild(btn("Mark resolved", async function(){
+        var x = await sb.from("support_requests").update({status:"resolved"}).eq("id", item.id);
+        if(x.error){ say(x.error.message, "err"); return; }
+        say("Support request resolved.", "ok"); render();
+      }));
+      d.appendChild(a);
+    }
+    box.appendChild(d);
+  });
+}
+
 /* ---------- users ---------- */
 async function users(box){
   var f = el("form", "sf"); var i = el("input"); i.placeholder = "Search by email"; i.id = "uq"; i.value = window.__uq || ""; var b = el("button", "act", "Search"); b.type = "submit"; f.appendChild(i); f.appendChild(b);
@@ -294,7 +329,7 @@ async function users(box){
 async function render(){
   document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("on", t.dataset.tab === tab); });
   var box = $("list"); box.textContent = "";
-  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "reports") await reports(box); else await users(box);
+  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "reports") await reports(box); else if(tab === "support") await support(box); else await users(box);
 }
 async function init(){
   var s = await sb.auth.getSession();

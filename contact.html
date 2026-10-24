@@ -1,4 +1,56 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contact RentNest</title><meta name="description" content="Questions about renting or listing on RentNest? Send us a message."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;800&display=swap"><link rel="stylesheet" href="style.css"></head><body data-page="contact"><div id="nav"></div>
 <section><div class="wrap"><h1>Contact us</h1><p class="note">Questions about a listing or your account? We reply within two business days.</p>
-<form class="form" data-demo="Message sent. We will reply by email."><label for="n">Your name</label><input id="n" required><label for="e">Email</label><input id="e" type="email" required><label for="s">Topic</label><select id="s"><option>Renting a home</option><option>Listing a property</option><option>Report a listing</option><option>Other</option></select><label for="m">Message</label><textarea id="m" rows="5" required></textarea><p><button>Send message</button></p></form></div></section>
-<div id="footer"></div><script src="app.js"></script></body></html>
+<form class="form" id="contactForm"><label for="n">Your name</label><input id="n" required><label for="e">Email</label><input id="e" type="email" required><label for="s">Topic</label><select id="s"><option>Renting a home</option><option>Listing a property</option><option>Premium contact upgrade</option><option>Report a listing</option><option>Other</option></select><label for="m">Message</label><textarea id="m" rows="5" required></textarea><p><button id="sendRequest" type="submit">Send message</button></p><p id="contactStatus" role="status"></p></form></div></section>
+<div id="footer"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="app.js"></script><script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  if(q.get("topic") === "premium-upgrade"){
+    var s = document.getElementById("s");
+    if(s) s.value = "Premium contact upgrade";
+    var m = document.getElementById("m");
+    if(m) m.value = "I have used the 3 listing contacts included with the Renter Contact Pass. Please tell me about a larger premium offer.";
+  }
+
+  var client = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
+  var form = document.getElementById("contactForm");
+  if(form){
+    form.addEventListener("submit", async function(event){
+      event.preventDefault();
+      var status = document.getElementById("contactStatus");
+      var button = document.getElementById("sendRequest");
+      var fullName = document.getElementById("n").value.trim();
+      var email = document.getElementById("e").value.trim();
+      var topic = document.getElementById("s").value;
+      var message = document.getElementById("m").value.trim();
+      if(fullName.length < 2 || message.length < 10){
+        status.textContent = "Please enter your name and a message of at least 10 characters.";
+        status.className = "err";
+        return;
+      }
+      button.disabled = true;
+      status.textContent = "Sending your request...";
+      status.className = "";
+      try{
+        var sessionResult = await client.auth.getSession();
+        var session = sessionResult.data && sessionResult.data.session;
+        var result = await client.from("support_requests").insert({
+          user_id: session ? session.user.id : null,
+          full_name: fullName,
+          email: email,
+          topic: topic,
+          message: message
+        });
+        if(result.error) throw result.error;
+        status.textContent = "Thank you. Your request has been saved for the RentNest team to review in Admin.";
+        status.className = "ok";
+        form.querySelectorAll("input,select,textarea").forEach(function(field){ field.disabled = true; });
+        button.textContent = "Request sent";
+      }catch(error){
+        status.textContent = "We could not save your request. Please check the details and try again.";
+        status.className = "err";
+        button.disabled = false;
+      }
+    });
+  }
+})();
+</script></body></html>
