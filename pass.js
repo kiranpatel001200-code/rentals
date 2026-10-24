@@ -29,11 +29,14 @@ async function passCall(body){
 function passBox(onDone){
   var d = passEl("div", "pass");
   d.appendChild(passEl("p", "passfine", "Checking your Contact Pass..."));
-  Promise.all([passInfo(), sb.auth.getSession()]).then(function(r){
+  Promise.all([passInfo(), sb.auth.getSession()]).then(async function(r){
     var info = r[0], session = r[1].data.session; d.textContent = "";
-    d.appendChild(passEl("b", "", "Contact Pass"));
+    d.appendChild(passEl("b", "", "Renter Contact Pass"));
     if(info.active){
-      d.appendChild(passEl("p", "", passStatusText(info) + " You do not need to pay again. You can buy a new pass after this one expires."));
+      var usageResult = await sb.rpc("my_contact_usage");
+      var used = usageResult.error ? 0 : Math.max(0, Number(usageResult.data) || 0);
+      d.appendChild(passEl("p", "", passStatusText(info) + " This pass includes up to 3 different listing contact details. Used: " + Math.min(used, 3) + "/3. You do not need to pay again while it is active."));
+      if(used >= 3){ var more = passEl("a", "", "Contact us for a bigger premium offer"); more.href = "contact.html?topic=premium-upgrade"; d.appendChild(more); }
       return;
     }
     if(!session){
@@ -46,14 +49,14 @@ function passBox(onDone){
   return d;
 }
 function buildPay(d, onDone){
-  d.appendChild(passEl("p", "", "Read the messages you receive and see phone numbers and emails. " + PASS.price + ", " + PASS.term + ". Unlimited contacts, no extra payment for each message or listing."));
+  d.appendChild(passEl("p", "", "Unlock contact details for up to 3 different rental listings during this pass period. " + PASS.price + ", " + PASS.term + ". If you need more than 3 listings, contact RentNest to discuss a bigger premium offer."));
   var fine = passEl("p", "passfine", "All purchases are final and non-refundable. The pass does not renew automatically. By paying you agree to the ");
   var ta = passEl("a", "", "Terms of Service"); ta.href = "terms.html"; ta.target = "_blank"; fine.appendChild(ta); fine.appendChild(document.createTextNode("."));
   d.appendChild(fine);
   var note = passEl("p", "passnote"); var holder = passEl("div", "ppbtn");
   d.appendChild(holder); d.appendChild(note);
   if(!PASS.clientId){
-    var b = passEl("button", "", "Get Contact Pass (" + PASS.price + ")"); b.type = "button";
+    var b = passEl("button", "", "Get Renter Contact Pass (" + PASS.price + ")"); b.type = "button";
     b.onclick = function(){ note.textContent = "Online payment is not switched on yet. It will be available soon."; };
     holder.appendChild(b); return;
   }
@@ -64,7 +67,7 @@ function buildPay(d, onDone){
       onApprove: async function(data){
         note.textContent = "Confirming your payment...";
         try{ var r = await passCall({ action: "capture", orderID: data.orderID });
-          note.textContent = "Payment received. Your Contact Pass is active" + (r && r.expires_at ? " until " + passDate(r.expires_at) : "") + ".";
+          note.textContent = "Payment received. Your Renter Contact Pass is active" + (r && r.expires_at ? " until " + passDate(r.expires_at) : "") + ".";
           if(onDone){ setTimeout(onDone, 1200); } }
         catch(e){ note.textContent = e.message; }
       },
