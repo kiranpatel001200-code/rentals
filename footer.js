@@ -93,7 +93,7 @@
   }
 
   function mountFooter() {
-    var old = document.querySelector(".rn-footer, .site-footer, .account-footer");
+    var old = document.querySelector(".rn-footer, .site-footer, .account-footer") || document.querySelector("body > footer:last-of-type");
     var mount = document.getElementById("footer");
     if (old && old.classList.contains("rn-footer")) return;
     if (old && old.parentNode) {
