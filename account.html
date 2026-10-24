@@ -161,7 +161,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var user = null, prof = { full_name: "", phone: "" };
+var user = null, prof = { full_name: "", phone: "" }, accountRole = null;
 
 function note(id, t, k){ $(id).textContent = t || ""; $(id).className = "note" + (k ? " " + k : ""); }
 function friendly(err){
@@ -192,6 +192,7 @@ async function init(){
   var p = await sb.from("profiles").select("full_name,phone,role").eq("id", user.id).maybeSingle();
   if(p.data){ prof.full_name = p.data.full_name || ""; prof.phone = p.data.phone || ""; }
   var role = p.data && p.data.role;
+  accountRole = role || "renter";
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
   if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
@@ -200,6 +201,18 @@ async function init(){
   showPass();
 }
 async function showPass(){
+  if(accountRole === "landlord"){
+    $("passStatus").textContent = "Landlord account — landlord premium and renter contact premium are separate.";
+    var note = document.createElement("p");
+    note.className = "passfine";
+    note.textContent = "A landlord plan applies to your own listing features. It does not unlock other landlords' phone numbers or emails. Contact details for other listings require a separate Renter Contact Pass from a renter account.";
+    $("passBody").appendChild(note);
+    return;
+  }
+  if(accountRole === "admin"){
+    $("passStatus").textContent = "Admin account — contact access is available for site review.";
+    return;
+  }
   var info = await passInfo();
   $("passStatus").textContent = passStatusText(info);
   if(info.active){
