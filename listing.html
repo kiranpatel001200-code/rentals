@@ -117,6 +117,11 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 }
 .ft-legal{margin:18px 0 0;text-align:center}
 .ft-legal a{display:inline;margin:0 8px}
+.owner-profile{display:flex;align-items:center;gap:12px;margin:14px 0 18px;padding:12px;background:#f4f8ff;border:1px solid var(--line);border-radius:14px}
+.owner-avatar{width:58px;height:58px;border-radius:50%;object-fit:cover;background:#eaf1ff;border:1px solid var(--line);flex:0 0 auto}
+.owner-avatar-fallback{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eaf1ff;color:var(--blue);font-size:1.15rem;font-weight:800;flex:0 0 auto}
+.owner-profile-name{font-weight:800;color:var(--navy);line-height:1.2}
+.owner-profile-meta{font-size:.88rem;color:var(--muted);margin-top:4px}
 </style>
 </head>
 <body>
@@ -138,6 +143,11 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div>
 <p class="price" id="price"></p>
 <h2 id="ttl"></h2>
+<div id="ownerProfile" class="owner-profile hide" aria-label="Landlord profile">
+<img id="ownerAvatar" class="owner-avatar hide" alt="">
+<div id="ownerAvatarFallback" class="owner-avatar-fallback" aria-hidden="true">RN</div>
+<div><div class="owner-profile-name" id="ownerFirstName">Landlord</div><div class="owner-profile-meta" id="ownerJoined"></div></div>
+</div>
 <p id="addr"></p>
 <p id="posted" class="sub" style="margin:0 0 4px;font-size:.9rem"></p>
 <p id="facts"></p>
@@ -272,6 +282,30 @@ async function contactForm(box, l){
   }
   box.appendChild(lock);
 }
+async function renderOwnerProfile(listingId){
+  var panel = $("ownerProfile");
+  try{
+    var r = await sb.rpc("listing_owner_public_profile", { p_listing: listingId });
+    if(r.error || !r.data || !r.data.length) return;
+    var owner = r.data[0];
+    var firstName = owner.owner_first_name || "Landlord";
+    $("ownerFirstName").textContent = firstName;
+    $("ownerJoined").textContent = owner.joined_year ? "Joined RentNest in " + owner.joined_year : "RentNest member";
+    $("ownerAvatarFallback").textContent = firstName.trim().charAt(0).toUpperCase() || "R";
+    var img = $("ownerAvatar");
+    img.alt = firstName + "'s profile photo";
+    img.onerror = function(){ img.classList.add("hide"); $("ownerAvatarFallback").classList.remove("hide"); };
+    if(owner.owner_avatar_url){
+      img.src = owner.owner_avatar_url;
+      img.classList.remove("hide"); $("ownerAvatarFallback").classList.add("hide");
+    }else{
+      img.removeAttribute("src"); img.classList.add("hide"); $("ownerAvatarFallback").classList.remove("hide");
+    }
+    panel.classList.remove("hide");
+  }catch(error){
+    /* Listing details stay usable if a profile is not available. */
+  }
+}
 function missing(){ $("missing").classList.remove("hide"); }
 async function init(){
   var id = new URLSearchParams(location.search).get("id");
@@ -311,6 +345,7 @@ async function init(){
   } else { main.classList.add("hide"); $("noimg").classList.remove("hide"); }
 
   document.title = l.title + " | RentNest";
+  await renderOwnerProfile(l.id);
   var md = document.querySelector('meta[name="description"]');
   if(md){ md.content = (l.bedrooms === 0 ? "Studio" : l.bedrooms + " bedroom") + " " + l.property_type + " for rent in " + l.city + ", " + String(l.state).trim() + " for $" + Number(l.monthly_rent).toLocaleString("en-US") + " a month. " + String(l.description).slice(0, 100); }
   $("price").textContent = "$" + Number(l.monthly_rent).toLocaleString("en-US") + " / month";
