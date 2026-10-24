@@ -339,7 +339,8 @@ async function verifyCode(){
   var res = await sb.auth.verifyOtp({ email: pendingEmail, token: token, type: "signup" });
   busy("cVerify", false);
   if(res.error){ say("That code is wrong or has expired. Tap \"Send the email again\" to get a new code.", "err"); return; }
-  say("Email verified. Taking you back...", "ok");
+  say("Email verified. Sending your welcome email...", "ok");
+  try { await sb.functions.invoke("send-welcome-email"); } catch(ignore) {}
   location.replace(NEXT);
 }
 $("cVerify").onclick = verifyCode;
