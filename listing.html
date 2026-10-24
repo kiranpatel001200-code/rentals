@@ -237,16 +237,37 @@ async function contactForm(box, l){
   var lock = el("div", "lockbox");
   lock.appendChild(el("h3", "", "Landlord phone and email"));
   if(pr.data === true){
-    var sl = passEl("p", "passfine", ""); passInfo().then(function(i){ sl.textContent = passStatusText(i); }); lock.appendChild(sl);
-    var c = await sb.rpc("listing_contact_for_pass", { p_listing: l.id });
-    var row = c.data && c.data[0];
-    if(row){
-      [["Name", row.contact_name], ["Email", row.contact_email], ["Phone", row.contact_phone], ["WhatsApp", row.contact_whatsapp]].forEach(function(x){
-        if(!x[1]) return; var d = el("div", "kv"); d.appendChild(el("span", "", x[0])); d.appendChild(el("b", "", x[1])); lock.appendChild(d);
-      });
-    } else { lock.appendChild(el("p", "sub", "No contact details were added for this listing. Please use the message form.")); }
+    var usageResult = await sb.rpc("my_contact_usage");
+    var used = usageResult.error ? 0 : Math.max(0, Number(usageResult.data) || 0);
+    var unlockResult = await sb.rpc("my_contact_listing_unlocked", { p_listing: l.id });
+    var alreadyUnlocked = !unlockResult.error && unlockResult.data === true;
+    var usageLine = el("p", "passfine", "Renter Contact Pass: " + Math.min(used, 3) + " of 3 different listing contacts used in this pass period.");
+    lock.appendChild(usageLine);
+
+    if(used >= 3 && !alreadyUnlocked){
+      lock.appendChild(el("p", "sub", "You have used all 3 included listing contacts for this pass. Contact RentNest about a bigger premium offer to unlock more listings."));
+      var more = el("a", "btnlink", "Contact us for a bigger premium offer");
+      more.href = "contact.html?topic=premium-upgrade";
+      lock.appendChild(more);
+    } else {
+      var c = await sb.rpc("listing_contact_for_pass", { p_listing: l.id });
+      var row = c.data && c.data[0];
+      if(row){
+        [["Name", row.contact_name], ["Email", row.contact_email], ["Phone", row.contact_phone], ["WhatsApp", row.contact_whatsapp]].forEach(function(x){
+          if(!x[1]) return; var d = el("div", "kv"); d.appendChild(el("span", "", x[0])); d.appendChild(el("b", "", x[1])); lock.appendChild(d);
+        });
+        var freshUsage = await sb.rpc("my_contact_usage");
+        if(!freshUsage.error){ usageLine.textContent = "Renter Contact Pass: " + Math.min(Number(freshUsage.data) || 0, 3) + " of 3 different listing contacts used in this pass period."; }
+      } else if(used >= 3 && !alreadyUnlocked){
+        lock.appendChild(el("p", "sub", "You have used all 3 included listing contacts. Contact RentNest for a bigger premium offer."));
+        var upgrade = el("a", "btnlink", "Contact us about a bigger premium offer");
+        upgrade.href = "contact.html?topic=premium-upgrade"; lock.appendChild(upgrade);
+      } else {
+        lock.appendChild(el("p", "sub", "No contact details were added for this listing. Please use the message form."));
+      }
+    }
   } else {
-    lock.appendChild(el("p", "sub", "Hidden to keep landlords safe from spam. You can message them for free above."));
+    lock.appendChild(el("p", "sub", "Landlord details are protected. You can message the landlord for free above; a Renter Contact Pass unlocks up to 3 different listing contacts."));
     lock.appendChild(passBox(function(){ location.reload(); }));
   }
   box.appendChild(lock);
