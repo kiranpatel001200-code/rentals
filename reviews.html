@@ -40,6 +40,8 @@ small{color:var(--muted)}
 .stars{color:var(--star);letter-spacing:2px}
 .review{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin:0 0 14px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
 .review p{margin:6px 0}
+.sample-notice{background:#e8f1ff;border:1px solid #c6d9ff;border-radius:12px;padding:12px 16px;margin:0 0 16px;color:#173d77;font-size:.93rem}
+.sample-review small strong{color:var(--navy)}
 .review small{color:var(--muted)}
 .empty{background:var(--white);border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
 .box{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:26px 0 48px;box-shadow:0 6px 20px rgba(11,42,91,.07)}
@@ -89,9 +91,102 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <a href="index.html">Home</a><a href="listings.html">Rentals</a><a href="reviews.html" class="on">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1>Reviews</h1><p>Written by people who use RentNest. Every review is checked by our team before it appears.</p><p class="summary" id="summary"></p></div></section>
+<section class="banner"><div class="wrap"><h1>Reviews</h1><p>Explore sample rental reviews and share your own experience. Submitted customer reviews appear after moderation.</p><p class="summary" id="summary"></p></div></section>
 
 <main class="wrap">
+<div class="sample-notice" role="note">Sample reviews for layout preview · These are illustrative examples, not verified customer testimonials.</div>
+<div id="sampleReviews" aria-label="Sample rental reviews">
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>Finding a rental from out of state felt overwhelming, but the clear listing details made it much easier to compare my options.</p>
+<small><strong>Emily Carter</strong> · Austin, Texas</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I liked being able to browse homes in one place and narrow my search to the area and budget I wanted.</p>
+<small><strong>Olivia Brooks</strong> · Phoenix, Arizona</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>The layout is simple and easy to understand. I could focus on the properties instead of figuring out the website.</p>
+<small><strong>Sophia Mitchell</strong> · Charlotte, North Carolina</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>The photos and property information helped me make a shortlist before arranging viewings. A very useful starting point.</p>
+<small><strong>Ava Thompson</strong> · Tampa, Florida</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I was looking for a place with enough room to work from home. The search process helped me compare options quickly.</p>
+<small><strong>Isabella Reed</strong> · Denver, Colorado</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I appreciate having rental listings presented clearly. It made my apartment hunt feel a little less stressful.</p>
+<small><strong>Mia Foster</strong> · Nashville, Tennessee</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>The site was straightforward to navigate on my phone, and I could check different neighborhoods without much hassle.</p>
+<small><strong>Charlotte Hayes</strong> · Columbus, Ohio</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I used the listings to organize my search and decide which properties I wanted to learn more about. Nice and simple.</p>
+<small><strong>Amelia Price</strong> · Raleigh, North Carolina</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>A clean design and easy browsing experience. I liked being able to look through different rental options at my own pace.</p>
+<small><strong>Harper Bennett</strong> · San Diego, California</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I was comparing places near work, and having the property details together helped me keep track of the options.</p>
+<small><strong>Evelyn Cooper</strong> · Dallas, Texas</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>The website made it easy to start my search and see what kinds of rentals were available in my preferred area.</p>
+<small><strong>Abigail Morgan</strong> · Orlando, Florida</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>Simple, practical, and easy to use. I found it helpful for making a shortlist before contacting property owners.</p>
+<small><strong>Ella Richardson</strong> · Minneapolis, Minnesota</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I liked the uncluttered layout and the ability to browse rentals without feeling lost in too many menus.</p>
+<small><strong>Grace Peterson</strong> · Portland, Oregon</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>The listing pages gave me a convenient place to compare the details I cared about while searching for a new home.</p>
+<small><strong>Lily Sanders</strong> · Philadelphia, Pennsylvania</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>A helpful starting point for my rental search. I could explore different options and return to the ones I wanted to review.</p>
+<small><strong>Zoey Murphy</strong> · Atlanta, Georgia</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>I appreciated how easy it was to browse and compare rental options. The experience felt clear and straightforward.</p>
+<small><strong>Nora Bailey</strong> · Chicago, Illinois</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>Searching for a rental takes time, but this gave me a simple way to explore listings and plan my next steps.</p>
+<small><strong>Hannah Kelly</strong> · Seattle, Washington</small>
+</article>
+<article class="review sample-review">
+<div class="stars" aria-label="Illustrative 5-star review">★★★★★</div>
+<p>The site is easy to follow and works well for browsing options in different areas. It helped me organize my search.</p>
+<small><strong>Madison Ward</strong> · Richmond, Virginia</small>
+</article>
+</div>
 <div id="list"></div>
 
 <div class="box">
