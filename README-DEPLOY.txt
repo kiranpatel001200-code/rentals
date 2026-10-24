@@ -21,7 +21,7 @@ ONE-TIME SETTINGS (only you can do these)
 
 RENTER CONTACT PASS RULES (enforced in the database)
 - Email must be verified before paying.
-- Only renter-role accounts can buy the Renter Contact Pass; landlord premium does not unlock other landlords' contact details.
+- Renter and landlord accounts can buy the separate Renter Contact Pass add-on; landlord premium alone does not unlock other landlords' contact details.
 - One active pass at a time. The pass expires after the configured number of days.
 - Each Renter Contact Pass unlocks contact details for up to 3 distinct approved listings. Reopening the same listing is included.
 - When the 3 contacts are used, the listing page points renters to Contact us for a larger premium offer.
