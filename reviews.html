@@ -250,7 +250,6 @@ async function load(){
   var res = await sb.from("reviews").select("display_name,rating,body,created_at").eq("status", "approved").order("created_at", { ascending: false }).limit(50);
   var list = $("list"); list.textContent = "";
   var rows = res.data || [];
-  if(res.error){ $("summary").textContent = "Could not load reviews. Please try again."; return; }
   if(!rows.length){
     $("summary").textContent = "";
     var e = document.createElement("p"); e.className = "empty";
