@@ -201,20 +201,20 @@ async function init(){
   showPass();
 }
 async function showPass(){
-  if(accountRole === "landlord"){
-    $("passStatus").textContent = "Landlord account — landlord premium and renter contact premium are separate.";
-    var note = document.createElement("p");
-    note.className = "passfine";
-    note.textContent = "A landlord plan applies to your own listing features. It does not unlock other landlords' phone numbers or emails. Contact details for other listings require a separate Renter Contact Pass from a renter account.";
-    $("passBody").appendChild(note);
-    return;
-  }
   if(accountRole === "admin"){
     $("passStatus").textContent = "Admin account — contact access is available for site review.";
     return;
   }
   var info = await passInfo();
-  $("passStatus").textContent = passStatusText(info);
+  $("passStatus").textContent = accountRole === "landlord"
+    ? "Landlord premium is separate from the Renter Contact Pass."
+    : passStatusText(info);
+  if(accountRole === "landlord"){
+    var note = document.createElement("p");
+    note.className = "passfine";
+    note.textContent = "Your landlord plan alone does not reveal other landlords' phone numbers or emails. An active Renter Contact Pass is required for up to 3 distinct listing contacts.";
+    $("passBody").appendChild(note);
+  }
   if(info.active){
     var usage = await sb.rpc("my_contact_usage");
     if(!usage.error){
