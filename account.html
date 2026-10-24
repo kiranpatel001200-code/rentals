@@ -202,7 +202,7 @@ function paint(){
   paintAvatar();
 }
 function initials(name){
-  var parts = String(name || "").trim().split(/\\s+/).filter(Boolean);
+  var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   return parts.length ? (parts[0].charAt(0) + (parts.length > 1 ? parts[parts.length-1].charAt(0) : "")).toUpperCase() : "RN";
 }
 function paintAvatar(){
