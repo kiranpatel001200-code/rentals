@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{if(localStorage.getItem("rn_blk")==="1"){document.documentElement.style.display="none"}}catch(e){}</script>
 <meta name="robots" content="noindex">
 <meta name="description" content="RentNest admin tools.">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -152,7 +153,6 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
 <a href="messages.html">Messages</a>
-<a href="login.html">Log in or sign up</a>
 </div>
 <div>
 <h3>Why renters like RentNest</h3>
@@ -264,7 +264,7 @@ async function reports(box){
 async function users(box){
   var f = el("form", "sf"); var i = el("input"); i.placeholder = "Search by email"; i.id = "uq"; i.value = window.__uq || ""; var b = el("button", "act", "Search"); b.type = "submit"; f.appendChild(i); f.appendChild(b);
   f.onsubmit = function(e){ e.preventDefault(); window.__uq = i.value.trim().replace(/[%,()*"\\]/g, ""); render(); }; box.appendChild(f);
-  var q = sb.from("profiles").select("id,email,full_name,role,created_at").order("created_at", { ascending: false }).limit(30);
+  var q = sb.from("profiles").select("id,email,full_name,role,created_at,is_banned").order("created_at", { ascending: false }).limit(30);
   if(window.__uq){ q = q.ilike("email", "%" + window.__uq + "%"); }
   var r = await q; var rows = r.data || [];
   var ps = rows.length ? await sb.from("contact_passes").select("user_id,expires_at,source").in("user_id", rows.map(function(x){ return x.id; })) : { data: [] };
@@ -276,13 +276,17 @@ async function users(box){
     if(x.error){ say(x.error.message, "err"); return; } say("Contact Pass saved.", "ok"); render();
   }
   rows.forEach(function(u){
-    var d = el("div", "it"); var tp = el("div", "tp"); tp.appendChild(el("b", "", u.full_name || "(no name)")); tp.appendChild(chip(u.role, u.role === "admin" ? "live" : "")); d.appendChild(tp);
+    var d = el("div", "it"); var tp = el("div", "tp"); tp.appendChild(el("b", "", u.full_name || "(no name)")); tp.appendChild(chip(u.role, u.role === "admin" ? "live" : "")); if(u.is_banned){ tp.appendChild(chip("Blocked", "rej")); } d.appendChild(tp);
     d.appendChild(el("div", "meta", u.email + "  \u00B7  joined " + when(u.created_at)));
     var p = pass[u.id], active = p && (!p.expires_at || new Date(p.expires_at) > new Date());
     d.appendChild(el("div", "meta", active ? "Contact Pass: active " + (p.expires_at ? "until " + when(p.expires_at) : "(no end date)") : "Contact Pass: none"));
     var a = el("div", "acts");
     a.appendChild(btn("Give 1 year", function(){ grant(u, 365); })); a.appendChild(btn("Give no end date", function(){ grant(u, 0); }));
     if(p){ a.appendChild(btn("Remove pass", async function(){ var x = await sb.from("contact_passes").delete().eq("user_id", u.id); if(x.error){ say(x.error.message, "err"); } else { say("Pass removed.", "ok"); render(); } }, "del")); }
+    if(u.role !== "admin"){
+      if(u.is_banned){ a.appendChild(btn("Unblock", async function(){ var x = await sb.from("blocked_users").delete().eq("email", String(u.email).toLowerCase()); if(x.error){ say(x.error.message, "err"); } else { say("User unblocked.", "ok"); render(); } })); }
+      else { a.appendChild(btn("Block user", async function(){ var why = window.prompt("Why are you blocking this user? (spam, scam, abuse...)", "Spam"); if(why === null) return; var x = await sb.from("blocked_users").insert({ email: u.email, reason: why || "Blocked" }); if(x.error){ say(x.error.message, "err"); } else { say("User blocked. They now see only a 404 page.", "ok"); render(); } }, "del")); }
+    }
     d.appendChild(a); box.appendChild(d);
   });
 }

@@ -36,3 +36,10 @@ TESTING PREMIUM WITHOUT PAYPAL
 - To test "expired": set expires_at to a past date. The pay button should appear again.
 - Delete the row and the pass is removed.
 - Before you go live, keep this table EMPTY (every row gives a free pass). Real payments use PayPal.
+
+BLOCK LIST (spam users)
+- Run block-list-migration.sql ONCE in the Supabase SQL Editor (it is safe to run again).
+- Then block someone: website > Admin > Users > "Block user", or Table Editor > blocked_users > Insert row (email + reason).
+- A blocked person can log in but sees only a 404 page, and the database refuses everything they try
+  (listings, messages, reviews, reports, uploads, payments). Their listings disappear for everyone. Delete the row to unblock.
+- Upload 404.html with the other files (GitHub Pages shows it for pages that do not exist).
