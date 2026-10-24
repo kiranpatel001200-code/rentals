@@ -19,11 +19,15 @@ ONE-TIME SETTINGS (only you can do these)
     update public.profiles set role = 'admin' where email = 'YOUR@EMAIL';
 - Google Search Console: submit sitemap.xml.
 
-CONTACT PASS RULES (enforced on the server)
+RENTER CONTACT PASS RULES (enforced in the database)
 - Email must be verified before paying.
-- A user with an active pass cannot pay again. The pay button only appears after the pass has expired.
-- The expiry date is shown in My account, Messages and on listings.
-- All purchases are final (non-refundable) and do not renew automatically.
+- Only renter-role accounts can buy the Renter Contact Pass; landlord premium does not unlock other landlords' contact details.
+- One active pass at a time. The pass expires after the configured number of days.
+- Each Renter Contact Pass unlocks contact details for up to 3 distinct approved listings. Reopening the same listing is included.
+- When the 3 contacts are used, the listing page points renters to Contact us for a larger premium offer.
+- The allowance resets when a new pass starts after the current pass expires.
+- The expiry date and the used/3 count are shown in My account and listing details.
+- Configure PayPal before collecting live payments; prices/duration must match the Supabase PASS_PRICE and PASS_DAYS secrets.
 
 MESSAGES (enforced in the database)
 - Anyone logged in sees "Messages" in the header with an unread count. The count is stored in the database, so it survives refreshes.
