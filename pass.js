@@ -32,6 +32,17 @@ function passBox(onDone){
   Promise.all([passInfo(), sb.auth.getSession()]).then(async function(r){
     var info = r[0], session = r[1].data.session; d.textContent = "";
     d.appendChild(passEl("b", "", "Renter Contact Pass"));
+    var profileResult = session ? await sb.from("profiles").select("role").eq("id", session.user.id).maybeSingle() : null;
+    var role = profileResult && profileResult.data ? profileResult.data.role : null;
+    if(session && role === "landlord"){
+      d.appendChild(passEl("p", "", "Landlord premium is separate and does not unlock other landlords' contact details. Use a renter account to buy the Renter Contact Pass."));
+      var renterLink = passEl("a", "", "Sign in or create a renter account"); renterLink.href = "login.html"; d.appendChild(renterLink);
+      return;
+    }
+    if(session && role === "admin"){
+      d.appendChild(passEl("p", "", "Admin accounts can review listing contacts without purchasing a renter pass."));
+      return;
+    }
     if(info.active){
       var usageResult = await sb.rpc("my_contact_usage");
       var used = usageResult.error ? 0 : Math.max(0, Number(usageResult.data) || 0);
