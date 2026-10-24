@@ -52,6 +52,11 @@ small{color:var(--muted)}
 .passfine{font-size:.85rem;color:var(--muted)}
 .passfine a,.pass a{color:var(--blue)}
 .passnote{min-height:1.2em;color:#6b4d00;font-weight:600}
+.profile-photo-row{display:flex;align-items:center;gap:16px;margin:14px 0 8px}
+.profile-photo-preview{width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid var(--line);background:#eef4ff;flex:0 0 auto}
+.profile-photo-placeholder{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eaf1ff;color:var(--blue);font-size:1.8rem;font-weight:800;flex:0 0 auto}
+.photo-fields{flex:1;min-width:0}
+.photo-fields input[type=file]{font-size:.9rem;padding:9px}
 @media(max-width:700px){nav{gap:14px}nav a.hide-sm{display:none}}
 .menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
 .menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
@@ -94,6 +99,17 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <section class="card">
 <div class="head"><h2>Profile</h2><button type="button" class="ghost" id="eProfile">Edit</button></div>
 <div id="vProfile">
+<div class="profile-photo-row">
+<img id="avatarPreview" class="profile-photo-preview hide" alt="Your profile photo">
+<div id="avatarPlaceholder" class="profile-photo-placeholder" aria-hidden="true">RN</div>
+<div class="photo-fields">
+<label for="avatarFile" style="margin-top:0">Profile photo</label>
+<input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+<div class="actions"><button type="button" class="main" id="uploadAvatar">Upload photo</button><button type="button" class="ghost" id="removeAvatar">Remove photo</button></div>
+<small>JPG, PNG, WEBP or GIF. Maximum 5 MB. This photo will appear on your public rental listings.</small>
+</div>
+</div>
+<p class="note" id="nAvatar" role="status"></p>
 <div class="row"><span>Full name</span><b id="dName"></b></div>
 <div class="row"><span>Phone</span><b id="dPhone"></b></div>
 </div>
@@ -161,7 +177,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var user = null, prof = { full_name: "", phone: "" }, accountRole = null;
+var user = null, prof = { full_name: "", phone: "", avatar_url: "" }, accountRole = null;
 
 function note(id, t, k){ $(id).textContent = t || ""; $(id).className = "note" + (k ? " " + k : ""); }
 function friendly(err){
@@ -183,14 +199,38 @@ function paint(){
   $("dName").textContent = prof.full_name || "Not added";
   $("dPhone").textContent = prof.phone || "Not added";
   $("dEmail").textContent = user.email || "";
+  paintAvatar();
+}
+function initials(name){
+  var parts = String(name || "").trim().split(/\\s+/).filter(Boolean);
+  return parts.length ? (parts[0].charAt(0) + (parts.length > 1 ? parts[parts.length-1].charAt(0) : "")).toUpperCase() : "RN";
+}
+function paintAvatar(){
+  var img = $("avatarPreview"), placeholder = $("avatarPlaceholder");
+  placeholder.textContent = initials(prof.full_name);
+  img.onerror = function(){ img.classList.add("hide"); placeholder.classList.remove("hide"); };
+  if(prof.avatar_url){
+    img.src = prof.avatar_url;
+    img.classList.remove("hide"); placeholder.classList.add("hide");
+  }else{
+    img.removeAttribute("src"); img.classList.add("hide"); placeholder.classList.remove("hide");
+  }
+}
+function getOwnPhotoPath(url){
+  var marker = "/storage/v1/object/public/profile-photos/";
+  var at = String(url || "").indexOf(marker);
+  if(at < 0) return null;
+  var path = String(url).slice(at + marker.length).split("?")[0];
+  try{ path = decodeURIComponent(path); }catch(e){}
+  return path.indexOf(user.id + "/") === 0 ? path : null;
 }
 
 async function init(){
   var r = await sb.auth.getSession();
   if(!r.data.session){ location.replace("login.html?next=account.html"); return; }
   user = r.data.session.user;
-  var p = await sb.from("profiles").select("full_name,phone,role").eq("id", user.id).maybeSingle();
-  if(p.data){ prof.full_name = p.data.full_name || ""; prof.phone = p.data.phone || ""; }
+  var p = await sb.from("profiles").select("full_name,phone,role,avatar_url").eq("id", user.id).maybeSingle();
+  if(p.data){ prof.full_name = p.data.full_name || ""; prof.phone = p.data.phone || ""; prof.avatar_url = p.data.avatar_url || ""; }
   var role = p.data && p.data.role;
   accountRole = role || "renter";
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
@@ -249,6 +289,50 @@ $("fProfile").onsubmit = async function(e){
   if(res.error){ note("nProfile", friendly(res.error), "err"); return; }
   prof.full_name = name; prof.phone = phone; paint(); edit("profile", false);
   note("nProfile", "Profile saved.", "ok");
+};
+
+/* Profile photo upload */
+$("uploadAvatar").onclick = async function(){
+  var file = $("avatarFile").files && $("avatarFile").files[0];
+  if(!file){ note("nAvatar", "Choose a photo first.", "err"); return; }
+  var allowed = ["image/jpeg","image/png","image/webp","image/gif"];
+  if(allowed.indexOf(file.type) < 0){ note("nAvatar", "Choose a JPG, PNG, WEBP or GIF image.", "err"); return; }
+  if(file.size > 5 * 1024 * 1024){ note("nAvatar", "Photo must be 5 MB or smaller.", "err"); return; }
+  var button = $("uploadAvatar");
+  button.disabled = true; note("nAvatar", "Uploading photo...");
+  try{
+    var ext = ({ "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp", "image/gif":"gif" })[file.type];
+    var path = user.id + "/" + Date.now() + "." + ext;
+    var up = await sb.storage.from("profile-photos").upload(path, file, { cacheControl:"3600", upsert:false, contentType:file.type });
+    if(up.error) throw up.error;
+    var pub = sb.storage.from("profile-photos").getPublicUrl(path);
+    var oldPath = getOwnPhotoPath(prof.avatar_url);
+    var saved = await sb.from("profiles").update({ avatar_url:pub.data.publicUrl }).eq("id",user.id);
+    if(saved.error){
+      await sb.storage.from("profile-photos").remove([path]);
+      throw saved.error;
+    }
+    prof.avatar_url = pub.data.publicUrl; paintAvatar();
+    $("avatarFile").value = "";
+    note("nAvatar", "Profile photo saved. It will appear on your rental listings.", "ok");
+    if(oldPath && oldPath !== path){ await sb.storage.from("profile-photos").remove([oldPath]); }
+  }catch(error){
+    note("nAvatar", friendly(error), "err");
+  }finally{ button.disabled = false; }
+};
+$("removeAvatar").onclick = async function(){
+  if(!prof.avatar_url){ note("nAvatar", "No profile photo to remove.", ""); return; }
+  var button = $("removeAvatar");
+  button.disabled = true; note("nAvatar", "Removing photo...");
+  try{
+    var oldPath = getOwnPhotoPath(prof.avatar_url);
+    var saved = await sb.from("profiles").update({ avatar_url:null }).eq("id",user.id);
+    if(saved.error) throw saved.error;
+    prof.avatar_url = ""; paintAvatar();
+    if(oldPath){ await sb.storage.from("profile-photos").remove([oldPath]); }
+    note("nAvatar", "Profile photo removed.", "ok");
+  }catch(error){ note("nAvatar", friendly(error), "err"); }
+  finally{ button.disabled = false; }
 };
 
 /* Email */
