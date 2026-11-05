@@ -4,8 +4,8 @@
   css.textContent =
     ".pw-wrap{position:relative;display:block}" +
     ".pw-wrap input{padding-right:70px}" +
-    ".pw-wrap button.pw-btn{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:auto;margin:0;padding:6px 10px;background:transparent;color:#1769e8;border:0;border-radius:8px;font:600 .85rem system-ui,sans-serif;cursor:pointer}" +
-    ".pw-wrap button.pw-btn:hover{background:#eef4ff}";
+    ".pw-wrap button.pw-btn{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:auto;margin:0;padding:6px 10px;background:transparent;color:#0b7a6e;border:0;border-radius:8px;font:600 .85rem system-ui,sans-serif;cursor:pointer}" +
+    ".pw-wrap button.pw-btn:hover{background:#e9f6f3}";
   document.head.appendChild(css);
 
   function wrap(input){
