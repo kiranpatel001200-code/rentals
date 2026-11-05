@@ -172,6 +172,7 @@ async function setStatus(id, status){
   var r = await sb.from("listings").update({ status: status }).eq("id", id);
   if(r.error){ say(r.error.message, "err"); return; }
   say(status === "inactive" ? "Listing paused." : status === "approved" ? "Your listing is live." : "Sent for review.", "ok"); load();
+  if(status === "approved" && window.openPremium){ window.openPremium("landlord", { once: "live-" + id }); }
 }
 async function remove(l){
   if(!window.confirm("Delete \"" + l.title + "\"? This cannot be undone.")) return;
@@ -196,7 +197,7 @@ function item(l){
   var a = el("div", "acts");
   a.appendChild(link("Preview", "listing.html?id=" + encodeURIComponent(l.id)));
   a.appendChild(link("Edit", "create-listing.html?edit=" + encodeURIComponent(l.id)));
-  if(l.status === "approved"){ a.appendChild(act("Pause", function(){ setStatus(l.id, "inactive"); })); }
+  if(l.status === "approved"){ a.appendChild(act("Pause", function(){ setStatus(l.id, "inactive"); })); a.appendChild(act("\u2B50 Premium", function(){ if(window.openPremium){ window.openPremium("landlord"); } })); }
   if(l.status === "inactive" || l.status === "draft"){ a.appendChild(act("Make it live", function(){ setStatus(l.id, "approved"); })); }
   if(l.status === "rejected"){ a.appendChild(act("Request review", function(){ setStatus(l.id, "pending"); })); }
   a.appendChild(act("Delete", function(){ remove(l); }, "act del"));

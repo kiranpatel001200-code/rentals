@@ -221,6 +221,7 @@ function receivedItem(r){
     if(open){ detail.classList.add("hide"); vb.textContent = r.read_at ? "View message" : "View new message"; return; }
     if(!built){ built = true; build(); }
     detail.classList.remove("hide"); vb.textContent = "Hide message";
+    if(window.openPremium){ window.openPremium("landlord", { once: "msg-" + r.id }); }
     /* The message becomes "read" only now, and only with an active pass (the database enforces it). */
     if(!r.locked && !r.read_at){
       sb.rpc("mark_inquiry_read", { p_id: r.id }).then(function(res){

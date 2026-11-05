@@ -1,6 +1,7 @@
 /* RentNest Premium popup.
-   Opens from the "Premium" button in the header, from any element that has a data-premium attribute
-   (data-premium="renter" or data-premium="landlord" forces one side), and from every "premium offer" link.
+   Pages open it with openPremium("landlord") or openPremium("renter"); openPremium("landlord", { once: "some-key" })
+   shows it only once per browser session for that key. It also opens from any element that has a data-premium
+   attribute and from every "premium offer" link.
    A logged-in renter sees the renter benefits, a logged-in landlord sees the landlord benefits.
    A visitor who is logged out (or an admin) sees both, with two tabs.
    To change the wording, edit RENTER() and LANDLORD below. */
@@ -43,7 +44,6 @@
   /* ---- styles ---- */
   var css = document.createElement("style");
   css.textContent =
-    ".prem-link{color:#9a6700!important;font-weight:700!important}" +
     ".prem-ov{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(11,42,91,.55);display:flex;padding:16px;overflow:auto}" +
     ".prem-box{position:relative;margin:auto;width:100%;max-width:460px;background:#fff;color:#1b2a41;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(4,20,52,.4);font:16px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:left}" +
     ".prem-head{background:linear-gradient(135deg,#0b2a5b 0%,#1558c9 62%,#1769e8 100%);color:#fff;padding:22px 56px 18px 24px}" +
@@ -128,7 +128,10 @@
     parts.foot.appendChild(fine);
   }
 
-  async function openPremium(kind){
+  async function openPremium(kind, opts){
+    if(opts && opts.once){
+      try{ var k = "rn_prem_" + opts.once; if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); }catch(e){}
+    }
     close();
     var st = await getState();
     var forced = (kind === "renter" || kind === "landlord") ? kind : null;
@@ -179,13 +182,4 @@
     e.preventDefault();
     openPremium(t.getAttribute("data-premium"));
   });
-
-  /* A "Premium" button in the header of every page. */
-  function addNavLink(){
-    var nav = document.getElementById("nav");
-    if(!nav || nav.querySelector(".prem-link")) return;
-    var a = h("a", "prem-link", "\u2B50 Premium"); a.href = "#premium"; a.setAttribute("data-premium", "");
-    nav.insertBefore(a, nav.querySelector("a.pill") || null);
-  }
-  if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", addNavLink); } else { addNavLink(); }
 })();
