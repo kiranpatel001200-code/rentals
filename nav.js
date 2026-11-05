@@ -1,6 +1,8 @@
 /* Header: Messages link with an unread count. Also: a blocked account sees only a 404 page, everywhere. */
 (function(){
   var URL_ = "https://abppfpgazlngdhrejrog.supabase.co", KEY = "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5";
+  /* Premium popup: premium.js adds the Premium button to the header and opens the popup. */
+  if(!window.openPremium && !document.getElementById("premJs")){ var pj = document.createElement("script"); pj.id = "premJs"; pj.src = "premium.js"; pj.defer = true; document.head.appendChild(pj); }
   function showPage(){ document.documentElement.style.display = ""; }
   function notFound(){
     try{ localStorage.setItem("rn_blk", "1"); }catch(e){}
