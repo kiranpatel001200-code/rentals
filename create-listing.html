@@ -458,6 +458,7 @@ $("publish").onclick = async function(){
   if(b.error){ await sb.from("listings").delete().eq("id", id); $("publish").disabled = false; say("Could not save your contact details: " + b.error.message, "err"); return; }
   var failed = await uploadPhotos(id, 0, true);
   finish("Your listing is live!", "Renters can now find it in Rentals. You can edit, pause or delete it any time from My listings.", failed, id);
+  setTimeout(function(){ if(window.openPremium){ window.openPremium("landlord", { once: "live-" + id }); } }, 600);
 };
 
 function renderExisting(){
