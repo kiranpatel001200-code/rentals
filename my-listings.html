@@ -194,30 +194,18 @@ async function setStatus(id, status){
 async function remove(l){
   if(!window.confirm("Move \"" + l.title + "\" to Recently Deleted? You can restore it later.")) return;
   say("Moving listing...");
-  var r = await sb.from("listings")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", l.id)
-    .eq("landlord_id", uid)
-    .is("deleted_at", null)
-    .select("id")
-    .maybeSingle();
+  var r = await sb.rpc("move_my_listing_to_recently_deleted", { p_listing: l.id });
   if(r.error){ say(r.error.message, "err"); return; }
-  if(!r.data){ say("This listing was already removed or could not be found.", "err"); return; }
+  if(r.data !== true){ say("This listing was already removed or could not be found.", "err"); return; }
   say("Moved to Recently Deleted. You can restore it anytime.", "ok");
   load();
 }
 async function restoreListing(l){
   if(!window.confirm("Restore \"" + l.title + "\"? It will return to its previous status.")) return;
   say("Restoring listing...");
-  var r = await sb.from("listings")
-    .update({ deleted_at: null })
-    .eq("id", l.id)
-    .eq("landlord_id", uid)
-    .eq("deleted_at", l.deleted_at)
-    .select("id")
-    .maybeSingle();
+  var r = await sb.rpc("restore_my_listing", { p_listing: l.id });
   if(r.error){ say(r.error.message, "err"); return; }
-  if(!r.data){ say("This listing could not be restored. Refresh and try again.", "err"); return; }
+  if(r.data !== true){ say("This listing could not be restored. Refresh and try again.", "err"); return; }
   say(l.status === "approved" ? "Listing restored and live again." : "Listing restored to its previous status.", "ok");
   load();
 }
