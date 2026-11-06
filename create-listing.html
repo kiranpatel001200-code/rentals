@@ -470,7 +470,7 @@ function renderExisting(){
   });
 }
 async function loadEdit(id){
-  var r = await sb.from("listings").select("*, listing_images(id,url,is_primary,display_order)").eq("id", id).eq("landlord_id", user.id).maybeSingle();
+  var r = await sb.from("listings").select("*, listing_images(id,url,is_primary,display_order)").eq("id", id).eq("landlord_id", user.id).is("deleted_at", null).maybeSingle();
   if(r.error || !r.data){ gate([el("p", "", "We could not find that listing."), link("My listings", "my-listings.html")]); return; }
   var l = r.data; editId = id; editing = l; titleTouched = true;
   var tile = document.querySelector('.tile[data-type="' + l.property_type + '"]'); if(tile){ tile.click(); }
