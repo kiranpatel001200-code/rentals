@@ -405,7 +405,11 @@ async function uploadPhotos(id, startAt, firstIsCover){
     if(up.error){ failed++; continue; }
     var url = sb.storage.from("listing-images").getPublicUrl(path).data.publicUrl;
     var r = await sb.from("listing_images").insert({ listing_id: id, url: url, display_order: startAt + i, is_primary: firstIsCover && i === 0 });
-    if(r.error){ failed++; }
+    if(r.error){
+      /* Avoid leaving an uploaded Storage object with no listing_images metadata row. */
+      await sb.storage.from("listing-images").remove([path]);
+      failed++;
+    }
   }
   return failed;
 }
@@ -436,6 +440,19 @@ $("publish").onclick = async function(){
     if(editing.status === "rejected"){ upd.status = "pending"; }
     var u = await sb.from("listings").update(upd).eq("id", editId);
     if(u.error){ $("publish").disabled = false; say(u.error.message, "err"); return; }
+    /* Keep the contact row in sync and repair listings restored after an incomplete first publish. */
+    var contactUpdate = await sb.from("listing_contacts").upsert({
+      listing_id: editId,
+      contact_name: me.full_name || me.email,
+      contact_email: me.email,
+      contact_phone: me.phone || null,
+      contact_whatsapp: null
+    }, { onConflict: "listing_id" });
+    if(contactUpdate.error){
+      $("publish").disabled = false;
+      say("Your listing changes were saved, but its contact details could not be saved: " + contactUpdate.error.message + ". Please try saving again.", "err");
+      return;
+    }
     var gone = existing.filter(function(im){ return removed[im.id]; });
     if(gone.length){
       var paths = gone.map(function(im){ var p = String(im.url).split("/listing-images/")[1]; return p ? decodeURIComponent(p.split("?")[0]) : null; }).filter(Boolean);
@@ -460,7 +477,7 @@ $("publish").onclick = async function(){
     $("publish").disabled = false;
     say(cleanup.error
       ? "Your listing was created, but its contact details could not be saved. Please open My Listings and move it to Recently Deleted, then contact support. " + b.error.message
-      : "Your listing could not be completed because contact details were not saved. It was moved to Recently Deleted, where you can restore it after fixing your account details. " + b.error.message,
+      : "Your listing could not be completed because contact details were not saved. It was moved to Recently Deleted. You can restore it from My Listings, then edit and save to retry your account contact details. " + b.error.message,
       "err");
     return;
   }
