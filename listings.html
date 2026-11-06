@@ -307,7 +307,7 @@ async function run(logIt, push){
   setTitle("Rentals within " + RADIUS + " miles of " + ctr.label);
   $("count").textContent = "Searching...";
   var b = RN_GEO.bbox(ctr.lat, ctr.lng, RADIUS), f4 = function(n){ return n.toFixed(4); };
-  var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,latitude,longitude,status,landlord_id,created_at,listing_images(url,is_primary,display_order)")
+  var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,latitude,longitude,status,landlord_id,created_at,premium_priority,premium_priority_until,listing_images(url,is_primary,display_order)")
     .or("and(latitude.gte." + f4(b.minLat) + ",latitude.lte." + f4(b.maxLat) + ",longitude.gte." + f4(b.minLng) + ",longitude.lte." + f4(b.maxLng) + "),latitude.is.null")
     .is("deleted_at", null)
     .limit(500);
@@ -324,17 +324,10 @@ async function run(logIt, push){
     var d = RN_GEO.dist(ctr.lat, ctr.lng, lat, lng);
     if(d <= RADIUS){ l._d = d; rows.push(l); }
   });
-  var priorityIds = {};
-  try{
-    var ids = rows.map(function(l){ return l.id; });
-    var ranked = ids.length
-      ? await sb.from("premium_listing_priorities").select("listing_id").in("listing_id", ids)
-      : { data: [], error: null };
-    if(!ranked.error && Array.isArray(ranked.data)){
-      ranked.data.forEach(function(x){ priorityIds[x.listing_id] = true; });
-    }
-  }catch(ignore){}
-  rows.forEach(function(l){ l._premiumPriority = priorityIds[l.id] === true; });
+  rows.forEach(function(l){
+    var expires = l.premium_priority_until ? new Date(l.premium_priority_until).getTime() : Infinity;
+    l._premiumPriority = l.premium_priority === true && expires > Date.now();
+  });
   rows.sort(function(x, y){
     if(x._premiumPriority !== y._premiumPriority){ return x._premiumPriority ? -1 : 1; }
     return sort === "low" ? x.monthly_rent - y.monthly_rent : sort === "high" ? y.monthly_rent - x.monthly_rent
