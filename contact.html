@@ -122,11 +122,16 @@ footer{background:#0a2e36;color:#c5dcd8;padding:28px 0}
 <script>
 (function(){
   var q = new URLSearchParams(location.search);
-  if(q.get("topic") === "premium-upgrade"){
+  var topic = q.get("topic");
+  if(topic === "premium-upgrade" || topic === "landlord-premium"){
     var s = document.getElementById("s");
     if(s) s.value = "Premium contact upgrade";
     var m = document.getElementById("m");
-    if(m) m.value = "I have used the 3 listing contacts included with the Renter Contact Pass. Please tell me about a larger premium offer.";
+    if(m){
+      m.value = topic === "landlord-premium"
+        ? "I am interested in Landlord Premium. Please share the plan price, priority search placement, unlimited active listings and how I can activate the plan."
+        : "I have used the 3 listing contacts included with the Renter Contact Pass. Please tell me about a larger premium offer.";
+    }
   }
 
   var client = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
