@@ -85,6 +85,10 @@ h3{font:800 1rem system-ui,sans-serif;color:var(--navy);margin:18px 0 6px}
 .chk input{width:auto}
 #cfNote{min-height:1.2em;margin:8px 0 0}#cfNote.err{color:#b3261e}
 .okmsg{color:#0f6b4f;font-weight:600}
+.sentbox{background:#f4faf8;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.sentbox p{margin:0 0 8px}
+.sentbox blockquote{margin:8px 0 12px;padding:10px 12px;background:#fff;border-left:3px solid var(--blue);border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.sentbox .when{color:var(--muted);font-size:.92rem}
 .lockbox{margin-top:16px;border-top:1px solid var(--line)}
 .pass{background:#e9f6f3;border:1px solid #b2dbd1;border-radius:14px;padding:14px 16px}
 .pass b{color:var(--navy)}
@@ -131,7 +135,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
 <button type="button" class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
 <nav id="nav">
-<a href="index.html">Home</a><a href="listings.html" class="on">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
+<a href="index.html">Home</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
 <section class="banner"><div class="wrap"><h1>Rental details</h1><p>See the photos, price, address and amenities.</p></div></section>
@@ -179,7 +183,6 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div>
 <h3>Explore</h3>
 <a href="index.html">Home</a>
-<a href="listings.html">Rentals</a>
 <a href="reviews.html">Reviews</a>
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
@@ -188,7 +191,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div>
 <h3>Why renters like RentNest</h3>
 <ul>
-<li>Easy to use: search by city, state and bedrooms</li>
+<li>Easy to use: search by city, ZIP code or address</li>
 <li>Report any listing that looks suspicious and we look into it</li>
 <li>Landlord contact details are protected until you unlock them</li>
 <li>Accounts are verified by email</li>
@@ -223,14 +226,38 @@ function ago(d){
   var days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
   return days <= 0 ? "today" : days === 1 ? "yesterday" : days < 30 ? days + " days ago" : new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
-async function contactForm(box, l){
-  box.appendChild(el("p", "sub", "Interested? Send the landlord a message. They will contact you."));
+/* A renter can send one message per listing. If they already did, show that message instead of the form. */
+async function sentInquiry(listingId){
+  try{
+    var r = await sb.rpc("my_sent_inquiries");
+    if(r.error || !r.data) return null;
+    for(var i = 0; i < r.data.length; i++){ if(r.data[i].listing_id === listingId) return r.data[i]; }
+  }catch(e){}
+  return null;
+}
+function sentCard(r){
+  var d = el("div", "sentbox");
+  d.appendChild(el("p", "okmsg", "\u2713 You sent a message to the landlord"));
+  var st = r.status === "contacted" ? "The landlord replied or contacted you." : r.status === "closed" ? "This conversation is closed." : "Waiting for the landlord to reply.";
+  d.appendChild(el("p", "when", "Sent " + ago(r.created_at) + ". " + st));
+  d.appendChild(el("blockquote", "", r.message));
+  var extra = [];
+  if(r.move_in_date){ extra.push("Move-in: " + new Date(r.move_in_date + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })); }
+  if(r.wants_tour){ extra.push("You asked for a tour"); }
+  if(extra.length){ d.appendChild(el("p", "when", extra.join(" \u00B7 "))); }
+  var a = el("a", "btnlink", "Go to Messages"); a.href = "messages.html?tab=sent"; d.appendChild(a);
+  d.appendChild(el("p", "passfine", "You can send one message per listing. The landlord replies by email or phone."));
+  return d;
+}
+function messageForm(box, l){
+  var wrap = el("div", "msgwrap"); box.appendChild(wrap);
+  wrap.appendChild(el("p", "sub", "Interested? Send the landlord a message. They will contact you."));
   var f = el("form", "cf");
   f.innerHTML = '<label for="cfMsg">Your message</label><textarea id="cfMsg" maxlength="1000"></textarea>' +
     '<label for="cfDate">When do you want to move in? <small>(optional)</small></label><input id="cfDate" type="date">' +
     '<label class="chk"><input type="checkbox" id="cfTour"><span>I would like to see it in person (tour)</span></label>' +
     '<button type="submit" id="cfBtn">Send message</button><p id="cfNote" role="status"></p>';
-  box.appendChild(f);
+  wrap.appendChild(f);
   $("cfMsg").value = "Hi, is this still available? I would like to know more about the place.";
   f.onsubmit = async function(e){
     e.preventDefault();
@@ -239,10 +266,19 @@ async function contactForm(box, l){
     $("cfBtn").disabled = true; note.className = ""; note.textContent = "Sending...";
     var r = await sb.from("inquiries").insert({ listing_id: l.id, message: msg, move_in_date: $("cfDate").value || null, wants_tour: $("cfTour").checked });
     $("cfBtn").disabled = false;
-    if(r.error){ note.className = "err"; note.textContent = r.error.message; return; }
-    f.textContent = ""; var ok = el("p", "okmsg", "Message sent. The landlord will contact you. You can follow it in Messages.");
-    var a = el("a", "btnlink", "Go to Messages"); a.href = "messages.html?tab=sent"; f.appendChild(ok); f.appendChild(a);
+    if(r.error){
+      if(r.error.code === "23505" || /already sent/i.test(r.error.message || "")){
+        var again = await sentInquiry(l.id);
+        if(again){ box.replaceChild(sentCard(again), wrap); return; }
+      }
+      note.className = "err"; note.textContent = r.error.message; return;
+    }
+    box.replaceChild(sentCard({ message: msg, created_at: new Date().toISOString(), status: "new", move_in_date: $("cfDate").value || null, wants_tour: $("cfTour").checked }), wrap);
   };
+}
+async function contactForm(box, l){
+  var prior = await sentInquiry(l.id);
+  if(prior){ box.appendChild(sentCard(prior)); } else { messageForm(box, l); }
   var pr = await sb.rpc("my_contact_pass");
   var lock = el("div", "lockbox");
   lock.appendChild(el("h3", "", "Landlord phone and email"));
