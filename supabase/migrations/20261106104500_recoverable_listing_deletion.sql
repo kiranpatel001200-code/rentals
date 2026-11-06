@@ -28,6 +28,15 @@ using (
 );
 
 -- A blocked owner with a stale JWT cannot edit listings.
+-- Only an administrator may permanently remove a listing row. Owners use Recently Deleted.
+drop policy if exists "Only admins can permanently delete listings" on public.listings;
+create policy "Only admins can permanently delete listings"
+on public.listings
+as restrictive
+for delete
+to authenticated
+using (public.is_admin((select auth.uid())));
+
 drop policy if exists "Block listing writes by banned owners" on public.listings;
 create policy "Block listing writes by banned owners"
 on public.listings
@@ -139,10 +148,18 @@ begin
 end;
 $function$;
 
+-- Keep the pre-existing INSERT trigger; this additional trigger checks only restores.
 drop trigger if exists trg_listings_enforce_limit on public.listings;
 create trigger trg_listings_enforce_limit
-before insert or update of deleted_at on public.listings
+before insert on public.listings
 for each row execute function public.enforce_listing_limit();
+
+drop trigger if exists trg_listings_restore_limit on public.listings;
+create trigger trg_listings_restore_limit
+before update of deleted_at on public.listings
+for each row
+when (old.deleted_at is not null and new.deleted_at is null)
+execute function public.enforce_listing_limit();
 
 -- Do not expose the owner profile or premium contact details of a deleted item.
 create or replace function public.listing_owner_public_profile(p_listing uuid)
