@@ -217,7 +217,8 @@ async function listings(box){
   if(!rows.length){ box.appendChild(el("p", "empty", "No listings yet.")); return; }
   rows.forEach(function(l){
     var d = el("div", "it"); var tp = el("div", "tp");
-    tp.appendChild(link(l.title, "listing.html?id=" + encodeURIComponent(l.id)));
+    if(l.deleted_at){ tp.appendChild(el("b", "", l.title)); }
+    else { tp.appendChild(link(l.title, "listing.html?id=" + encodeURIComponent(l.id))); }
     tp.appendChild(chip(l.deleted_at ? "Recently deleted" : l.status === "approved" ? "Live" : l.status === "rejected" ? "Taken down" : l.status, l.deleted_at || l.status === "rejected" ? "rej" : l.status === "approved" ? "live" : "pend"));
     var owner = owners[l.landlord_id] || {}, ownerBlocked = owner.is_banned === true;
     if(ownerBlocked){ tp.appendChild(chip("Spam blocked", "rej")); }
@@ -227,7 +228,7 @@ async function listings(box){
     var a = el("div", "acts");
     if(!l.deleted_at && l.status !== "rejected"){ a.appendChild(btn("Take down", function(){ var why = window.prompt("Reason (the owner can see it):", "Removed by RentNest."); if(why !== null){ setListing(l.id, { status: "rejected", rejection_reason: why || "Removed by RentNest." }, "Listing taken down."); } }, "del")); }
     if(!l.deleted_at && l.status !== "approved" && !ownerBlocked){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
-    a.appendChild(btn("Delete", async function(){ if(!window.confirm("Delete \"" + l.title + "\" for good?")) return; var x = await sb.from("listings").delete().eq("id", l.id); if(x.error){ say(x.error.message, "err"); } else { say("Deleted.", "ok"); render(); } }, "del"));
+    a.appendChild(btn("Delete permanently", async function(){ if(!window.confirm("Permanently delete \"" + l.title + "\"? This cannot be restored.")) return; var x = await sb.from("listings").delete().eq("id", l.id); if(x.error){ say(x.error.message, "err"); } else { say("Permanently deleted.", "ok"); render(); } }, "del"));
     d.appendChild(a); box.appendChild(d);
   });
 }
