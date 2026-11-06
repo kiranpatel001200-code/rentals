@@ -10,8 +10,8 @@ const money=n=>"$"+Number(n).toLocaleString("en-US");
 function all(){let u=[];try{u=JSON.parse(localStorage.getItem("rn_listings")||"[]")}catch(e){}return SAMPLE.concat(u)}
 const bd=n=>n==0?"Studio":n+" bd";
 function card(l){return `<a class="card" href="listing.html?id=${esc(l.id)}"><div class="ph">${esc(l.type)}</div><div class="cb"><div class="price">${money(l.rent)}/mo</div><h3>${esc(l.title)}</h3><p>${bd(l.beds)}, ${esc(l.baths)} ba in ${esc(l.city)}, ${esc(l.state)}</p></div></a>`}
-$("#nav").innerHTML=`<header><div class="wrap"><a class="logo" href="index.html">RentNest</a><nav><a href="reviews.html">Reviews</a><a href="blog.html">Guides & FAQ</a><a href="about.html">About</a><a href="contact.html">Contact</a><a class="btn" href="create-listing.html">List your property</a></nav></div></header>`;
-$("#footer").innerHTML=`<footer><div class="wrap"><a href="reviews.html">Reviews</a><a href="blog.html">Rental Guides & FAQ</a><a href="create-listing.html">List your property</a><a href="about.html">About</a><a href="contact.html">Contact Us</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><p>&copy; ${new Date().getFullYear()} RentNest. Rentals across the United States.</p></div></footer>`;
+$("#nav").innerHTML=`<header><div class="wrap"><a class="logo" href="index.html">RentNest</a><nav><a href="reviews.html">Reviews</a><a href="about.html">About</a><a href="contact.html">Contact</a><a class="btn" href="create-listing.html">List your property</a></nav></div></header>`;
+$("#footer").innerHTML=`<footer><div class="wrap"><a href="reviews.html">Reviews</a><a href="blog.html">Blog</a><a href="create-listing.html">List your property</a><a href="about.html">About</a><a href="contact.html">Contact Us</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><p>&copy; ${new Date().getFullYear()} RentNest. Rentals across the United States.</p></div></footer>`;
 const page=document.body.dataset.page;
 if(page==="home"){$("#featured").innerHTML=all().slice(0,3).map(card).join("")}
 if(page==="listings"){
