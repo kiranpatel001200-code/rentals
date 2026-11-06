@@ -326,9 +326,10 @@ async function run(logIt, push){
   });
   var priorityIds = {};
   try{
-    var ranked = await sb.rpc("get_premium_priority_listing_ids", {
-      p_listing_ids: rows.map(function(l){ return l.id; })
-    });
+    var ids = rows.map(function(l){ return l.id; });
+    var ranked = ids.length
+      ? await sb.from("premium_listing_priorities").select("listing_id").in("listing_id", ids)
+      : { data: [], error: null };
     if(!ranked.error && Array.isArray(ranked.data)){
       ranked.data.forEach(function(x){ priorityIds[x.listing_id] = true; });
     }
