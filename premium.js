@@ -61,6 +61,10 @@
     ".prem-list i{flex:none;width:34px;font-style:normal;font-size:1.5rem;text-align:center}" +
     ".prem-list b{display:block;color:#0b2a5b}" +
     ".prem-list span{color:#5b6b82;font-size:.93rem}" +
+    ".prem-compact{padding:16px 24px 4px;color:#41536b;font-size:.96rem}" +
+    ".prem-compact strong{display:block;color:#0b2a5b;font-size:1.04rem;margin-bottom:4px}" +
+    ".prem-learn{display:inline-block;margin:8px 24px 4px;padding:0;border:0;background:none;color:#1769e8;font:700 .94rem system-ui,sans-serif;text-decoration:underline;cursor:pointer}" +
+    ".prem-box .prem-list.prem-collapsed{display:none}" +
     ".prem-foot{padding:10px 24px 22px}" +
     ".prem-status{margin:0 0 10px;padding:10px 12px;background:#eef4ff;border:1px solid #bcd3fb;border-radius:10px;font-size:.92rem;color:#0b2a5b}" +
     ".prem-box a.prem-cta{display:block;padding:12px 20px;border-radius:10px;background:#1769e8;color:#fff;font-weight:600;text-align:center;text-decoration:none}" +
@@ -111,9 +115,29 @@
 
   function fill(mode, st, tabs, parts){
     var d = mode === "landlord" ? LANDLORD() : RENTER();
-    parts.title.textContent = d.title; parts.sub.textContent = d.sub;
+    parts.title.textContent = parts.compact && mode === "renter" ? "Unlock renter contacts" : d.title;
+    parts.sub.textContent = parts.compact && mode === "renter" ? "Find your next home with confidence." : d.sub;
     if(parts.tabs){ parts.tabs.forEach(function(t){ t.btn.className = "prem-tab" + (t.mode === mode ? " on" : ""); t.btn.setAttribute("aria-pressed", t.mode === mode ? "true" : "false"); }); }
     parts.list.textContent = ""; parts.foot.textContent = "";
+    if(parts.compactSummary){
+      parts.compactSummary.textContent = "";
+      parts.compactSummary.hidden = !(parts.compact && mode === "renter");
+      if(!parts.compactSummary.hidden){
+        parts.compactSummary.appendChild(h("strong", "", "Up to 3 landlord contacts"));
+        parts.compactSummary.appendChild(document.createTextNode("Unlock phone and email details for three different rental listings with one pass. Reopen the same listings anytime."));
+      }
+    }
+    if(parts.learn){
+      parts.learn.hidden = !(parts.compact && mode === "renter");
+      parts.learn.textContent = "Learn more";
+      parts.learn.setAttribute("aria-expanded", "false");
+      parts.learn.onclick = function(){
+        var expanded = parts.list.classList.toggle("prem-collapsed") === false;
+        parts.learn.textContent = expanded ? "Show less" : "Learn more";
+        parts.learn.setAttribute("aria-expanded", expanded ? "true" : "false");
+      };
+    }
+    parts.list.classList.toggle("prem-collapsed", !!(parts.compact && mode === "renter"));
     d.items.forEach(function(it){
       var li = h("li"); li.appendChild(h("i", "", it[0]));
       var txt = h("div"); txt.appendChild(h("b", "", it[1])); txt.appendChild(h("span", "", it[2]));
@@ -159,7 +183,14 @@
     var x = h("button", "prem-x", "\u00D7"); x.type = "button"; x.setAttribute("aria-label", "Close"); x.onclick = close;
     var head = h("div", "prem-head"), title = h("h2"), sub = h("p"); title.id = "premTitle";
     head.appendChild(title); head.appendChild(sub);
-    var parts = { title: title, sub: sub, list: h("ul", "prem-list"), foot: h("div", "prem-foot"), tabs: null };
+    var parts = {
+      title: title, sub: sub, list: h("ul", "prem-list"),
+      foot: h("div", "prem-foot"), tabs: null,
+      compact: !!(opts && opts.compact),
+      compactSummary: h("div", "prem-compact"),
+      learn: h("button", "prem-learn", "Learn more")
+    };
+    parts.learn.type = "button";
     box.appendChild(x); box.appendChild(head);
     if(tabs){
       var row = h("div", "prem-tabs"); parts.tabs = [];
@@ -170,6 +201,8 @@
       });
       box.appendChild(row);
     }
+    box.appendChild(parts.compactSummary);
+    box.appendChild(parts.learn);
     box.appendChild(parts.list); box.appendChild(parts.foot);
     ov.appendChild(box);
     ov.addEventListener("click", function(e){ if(e.target === ov){ close(); } });
