@@ -342,15 +342,35 @@ async function renderOwnerProfile(listingId){
     /* Listing details stay usable if a profile is not available. */
   }
 }
-function missing(){ $("missing").classList.remove("hide"); }
+function redirect404(){ window.location.replace("404.html"); }
+function missing(title, text){
+  var panel = $("missing");
+  panel.classList.remove("hide");
+  if(title){ panel.querySelector("h2").textContent = title; }
+  if(text){ panel.querySelector("p").textContent = text; }
+}
 async function init(){
   var id = new URLSearchParams(location.search).get("id");
-  if(!id){ missing(); return; }
+  if(!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)){
+    redirect404();
+    return;
+  }
   var s = await sb.auth.getSession();
   var uid = s.data.session ? s.data.session.user.id : null;
   var r = await sb.from("listings").select("*, listing_images(url,is_primary,display_order)").eq("id", id).maybeSingle();
-  if(r.error || !r.data){ missing(); return; }
+  if(r.error){
+    missing("Listing temporarily unavailable", "We could not load this listing. Please refresh the page and try again.");
+    return;
+  }
+  if(!r.data){ redirect404(); return; }
   var l = r.data, mine = uid && l.landlord_id === uid;
+
+  /* Admins can inspect blocked rows in the dashboard, but their public detail URLs must still be 404. */
+  var ownerStatus = await sb.from("profiles").select("is_banned").eq("id", l.landlord_id).maybeSingle();
+  if(ownerStatus.data && ownerStatus.data.is_banned === true){
+    redirect404();
+    return;
+  }
 
   if(mine || l.status !== "approved"){
     var bar = $("ownerBar"); bar.classList.remove("hide");
