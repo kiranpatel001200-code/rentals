@@ -307,6 +307,7 @@ async function run(logIt, push){
   var b = RN_GEO.bbox(ctr.lat, ctr.lng, RADIUS), f4 = function(n){ return n.toFixed(4); };
   var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,latitude,longitude,status,landlord_id,created_at,listing_images(url,is_primary,display_order)")
     .or("and(latitude.gte." + f4(b.minLat) + ",latitude.lte." + f4(b.maxLat) + ",longitude.gte." + f4(b.minLng) + ",longitude.lte." + f4(b.maxLng) + "),latitude.is.null")
+    .is("deleted_at", null)
     .limit(500);
   if(ptype) q = q.eq("property_type", ptype);
   if(beds === "3") q = q.gte("bedrooms", 3); else if(beds !== "") q = q.eq("bedrooms", parseInt(beds, 10));
