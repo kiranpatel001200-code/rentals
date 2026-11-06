@@ -81,6 +81,8 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 .sugg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .chipbtn{margin:0;padding:8px 16px;background:#fff;color:var(--blue);border:1px solid var(--blue);border-radius:99px;font:600 .92rem system-ui,sans-serif;cursor:pointer}
 .chipbtn:hover{background:#e9f6f3}
+form button.ghostbtn{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+.sentchip{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:99px;background:#e1f5ea;color:#0f6b4f;font-size:.82rem;font-weight:700}
 .ft-legal{margin:18px 0 0;text-align:center}
 .ft-legal a{display:inline;margin:0 8px}
 </style>
@@ -92,19 +94,19 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <span><b>RentNest</b><small>Find Your Perfect Rental</small></span></a>
 <button type="button" class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
 <nav id="nav">
-<a href="index.html">Home</a><a href="listings.html" class="on">Rentals</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
+<a href="index.html">Home</a><a href="reviews.html">Reviews</a><a href="create-listing.html" class="hide-sm">List your property</a><a href="account.html" class="pill">My account</a>
 </nav>
 </div></header>
-<section class="banner"><div class="wrap"><h1 id="pageTitle">Rentals in the United States</h1><p>Browse apartments, houses and studios posted directly by landlords.</p></div></section>
+<section class="banner"><div class="wrap"><h1 id="pageTitle">Find rentals near you</h1><p>Search a city, ZIP code or address and see the rentals within 20 miles.</p></div></section>
 
 <main class="wrap">
 <form id="f">
-<input id="city" list="places" placeholder="City, neighborhood, ZIP or address" aria-label="City, neighborhood, ZIP or address" autocomplete="off">
+<input id="city" list="places" placeholder="City, ZIP code or address" aria-label="City, ZIP code or address" autocomplete="off">
 <datalist id="places"></datalist>
-<select id="state" aria-label="State"><option value="">Any state</option></select>
 <select id="ptype" aria-label="Property type"><option value="">Any type</option><option value="apartment">Apartment</option><option value="house">House</option><option value="studio">Studio</option><option value="condo">Condo</option><option value="townhouse">Townhouse</option><option value="duplex">Duplex</option><option value="room">Private room</option></select>
 <select id="beds" aria-label="Bedrooms"><option value="">Any bedrooms</option><option value="0">Studio</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
-<select id="sort" aria-label="Sort by"><option value="new">Newest first</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select>
+<select id="sort" aria-label="Sort by"><option value="near">Closest first</option><option value="new">Newest first</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select>
+<button type="button" class="ghostbtn" id="loc">Use my location</button>
 <button type="submit">Search</button>
 </form>
 <p id="count" role="status" aria-live="polite"></p>
@@ -120,7 +122,6 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div>
 <h3>Explore</h3>
 <a href="index.html">Home</a>
-<a href="listings.html">Rentals</a>
 <a href="reviews.html">Reviews</a>
 <a href="create-listing.html">List your property</a>
 <a href="my-listings.html">My listings</a>
@@ -129,7 +130,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div>
 <h3>Why renters like RentNest</h3>
 <ul>
-<li>Easy to use: search by city, state and bedrooms</li>
+<li>Easy to use: search by city, ZIP code or address</li>
 <li>Report any listing that looks suspicious and we look into it</li>
 <li>Landlord contact details are protected until you unlock them</li>
 <li>Accounts are verified by email</li>
@@ -145,10 +146,11 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="places.js"></script>
+<script src="geo.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
-var uid = null, stateDirty = false;
+var uid = null, nearPoint = null, stateHint = "", sentIds = {};
 function sid(){ try{ var s = localStorage.getItem("rn_sid"); if(!s){ s = crypto.randomUUID(); localStorage.setItem("rn_sid", s); } return s; }catch(e){ return null; } }
 function track(type, extra){ try{ sb.from("site_events").insert(Object.assign({ event_type: type, path: location.pathname, session_id: sid() }, extra || {})).then(function(){}); }catch(e){} }
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
@@ -195,7 +197,6 @@ function fillSuggestions(){
   PLACES.states.forEach(function(s){ s.c.forEach(function(c){ var o = document.createElement("option"); o.value = c + ", " + s.a; frag.appendChild(o); }); });
   Object.keys(PLACES.hoods).forEach(function(k){ PLACES.hoods[k].forEach(function(h){ var o = document.createElement("option"); o.value = h + ", " + k; frag.appendChild(o); }); });
   dl.appendChild(frag);
-  var sel = $("state"); PLACES.states.slice().sort(function(a, b){ return a.n < b.n ? -1 : 1; }).forEach(function(s){ var o = el("option", "", s.n); o.value = s.a; sel.appendChild(o); });
 }
 
 /* ---------- cards ---------- */
@@ -204,6 +205,7 @@ function ago(d){
   return days <= 0 ? "Listed today" : days === 1 ? "Listed yesterday" : days < 30 ? "Listed " + days + " days ago" : "";
 }
 function money(n){ return "$" + Number(n).toLocaleString("en-US") + "/mo"; }
+function distText(d){ return d < 1 ? "Less than 1 mi away" : d.toFixed(1) + " mi away"; }
 function card(l){
   var a = el("a", "card"); a.href = "listing.html?id=" + encodeURIComponent(l.id);
   var imgs = (l.listing_images || []).slice().sort(function(x, y){ return (y.is_primary - x.is_primary) || (x.display_order - y.display_order); });
@@ -216,73 +218,134 @@ function card(l){
   b.appendChild(el("div", "price", money(l.monthly_rent)));
   b.appendChild(el("h2", "", l.title));
   b.appendChild(el("div", "meta", (l.bedrooms === 0 ? "Studio" : l.bedrooms + " bed") + ", " + l.bathrooms + " bath \u00B7 " + (l.neighborhood ? l.neighborhood + ", " : "") + l.city + ", " + String(l.state).trim() + " " + l.zip_code));
+  if(l._d !== undefined){ b.appendChild(el("div", "meta", distText(l._d))); }
   var when = ago(l.created_at); if(when){ b.appendChild(el("div", "meta", when)); }
+  if(sentIds[l.id]){ b.appendChild(el("div", "sentchip", "\u2713 Message sent")); }
   a.appendChild(b); return a;
 }
 
-/* ---------- search ---------- */
+/* ---------- search: only listings within 20 miles of what the renter typed ---------- */
+var RADIUS = RN_GEO.RADIUS;
+var HOOD_CITY = {};
+Object.keys(PLACES.hoods).forEach(function(k){
+  var i = k.lastIndexOf(","), c = k.slice(0, i).trim(), st = k.slice(i + 1).trim();
+  PLACES.hoods[k].forEach(function(h){ var n = RN_GEO.norm(h); (HOOD_CITY[n] = HOOD_CITY[n] || []).push({ city: c, state: st }); });
+});
+function hoodCity(name, st){
+  var list = HOOD_CITY[RN_GEO.norm(name)]; if(!list) return null;
+  for(var i = 0; i < list.length; i++){ if(!st || list[i].state === st) return list[i]; }
+  return null;
+}
 function readUrl(){
   var qs = new URLSearchParams(location.search);
   $("city").value = qs.get("q") || qs.get("city") || "";
-  $("state").value = (qs.get("state") || "").toUpperCase(); stateDirty = !!qs.get("state");
-  $("beds").value = qs.get("bedrooms") || ""; $("ptype").value = qs.get("type") || ""; $("sort").value = qs.get("sort") || "new";
-  return !!(qs.get("q") || qs.get("city") || qs.get("state") || qs.get("bedrooms") || qs.get("type"));
+  var s = (qs.get("state") || "").toUpperCase(); stateHint = BY_ABBR[s] ? s : "";
+  nearPoint = null;
+  var nr = (qs.get("near") || "").split(",");
+  if(nr.length === 2){ var la = parseFloat(nr[0]), lo = parseFloat(nr[1]); if(isFinite(la) && isFinite(lo) && la >= 17 && la <= 72 && lo >= -180 && lo <= -60){ nearPoint = { lat: la, lng: lo }; } }
+  $("beds").value = qs.get("bedrooms") || ""; $("ptype").value = qs.get("type") || ""; $("sort").value = qs.get("sort") || "near";
+  return !!(qs.get("q") || qs.get("city") || qs.get("state") || qs.get("near") || qs.get("bedrooms") || qs.get("type"));
 }
-function searchFor(text){ $("city").value = text; stateDirty = false; $("state").value = ""; run(true, true); }
+function searchFor(text){ $("city").value = text; nearPoint = null; stateHint = ""; run(true, true); }
+function chips(list){
+  var row = el("div", "sugg");
+  list.forEach(function(c){ var b = el("button", "chipbtn", c); b.type = "button"; b.onclick = function(){ searchFor(c); }; row.appendChild(b); });
+  return row;
+}
+var POPULAR = ["New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Austin, TX", "Seattle, WA", "Miami, FL", "Denver, CO"];
+function startBox(){
+  var d = el("div", "empty");
+  d.appendChild(el("p", "", "Type a city, ZIP code or address above and we show the rentals within " + RADIUS + " miles. You can also tap Use my location."));
+  d.appendChild(chips(POPULAR)); return d;
+}
+function stateBox(st){
+  var d = el("div", "empty");
+  d.appendChild(el("p", "", "Pick a city or ZIP code in " + BY_ABBR[st].n + " to see rentals within " + RADIUS + " miles."));
+  d.appendChild(chips(BY_ABBR[st].c.slice(0, 8).map(function(c){ return c + ", " + st; }))); return d;
+}
+function notFoundBox(text, p){
+  var d = el("div", "empty");
+  d.appendChild(el("p", "", p.street && !p.city && !p.zip
+    ? "Please add the city and state or the ZIP code to that address, for example \"" + text + ", Austin, TX\"."
+    : "We could not find \"" + text + "\". Try a city and state like \"Austin, TX\" or a 5-digit ZIP code like 78701."));
+  d.appendChild(chips(POPULAR)); return d;
+}
 function emptyBox(label, st){
   var d = el("div", "empty");
-  d.appendChild(el("p", "", "No rentals found for " + label + " yet. New listings are added all the time."));
-  var row = el("div", "sugg");
-  if(st){ var b = el("button", "chipbtn", "See all rentals in " + BY_ABBR[st].n); b.type = "button"; b.onclick = function(){ searchFor(BY_ABBR[st].n); }; row.appendChild(b);
-    BY_ABBR[st].c.slice(0, 6).forEach(function(c){ var x = el("button", "chipbtn", c); x.type = "button"; x.onclick = function(){ searchFor(c + ", " + st); }; row.appendChild(x); }); }
-  var all = el("button", "chipbtn", "Search all of the USA"); all.type = "button"; all.onclick = function(){ searchFor(""); }; row.appendChild(all);
-  d.appendChild(row); return d;
+  d.appendChild(el("p", "", "No rentals within " + RADIUS + " miles of " + label + " yet. New listings are added all the time."));
+  if(st && BY_ABBR[st]){ d.appendChild(chips(BY_ABBR[st].c.slice(0, 6).map(function(c){ return c + ", " + st; }))); }
+  return d;
 }
+function setTitle(t){ $("pageTitle").textContent = t; document.title = t + " | RentNest"; }
 async function run(logIt, push){
   var text = $("city").value.trim(), p = parseQuery(text);
-  var st = p.state || (stateDirty ? $("state").value : "");
-  stateDirty = false; $("state").value = st;
-  if(p.state && !p.zip && !p.street && (p.city || p.free)){ text = [p.hood, p.city || p.free, p.state].filter(Boolean).join(", "); $("city").value = text; }
   var beds = $("beds").value, ptype = $("ptype").value, sort = $("sort").value;
-
-  var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,status,landlord_id,created_at,listing_images(url,is_primary,display_order)").limit(60);
-  if(st) q = q.eq("state", st);
-  if(p.zip) q = q.ilike("zip_code", p.zip + "%");
-  if(p.city) q = q.ilike("city", "%" + safe(p.city) + "%");
-  if(p.street) q = q.ilike("street_address", "%" + safe(p.street) + "%");
-  if(p.hood){ var h = safe(p.hood); q = q.or("neighborhood.ilike.%" + h + "%,title.ilike.%" + h + "%"); }
-  else if(p.free){ var f = safe(p.free); q = q.or("city.ilike.%" + f + "%,neighborhood.ilike.%" + f + "%,street_address.ilike.%" + f + "%,title.ilike.%" + f + "%"); }
-  if(ptype) q = q.eq("property_type", ptype);
-  if(beds === "3") q = q.gte("bedrooms", 3); else if(beds !== "") q = q.eq("bedrooms", parseInt(beds, 10));
-  q = sort === "low" ? q.order("monthly_rent", { ascending: true }) : sort === "high" ? q.order("monthly_rent", { ascending: false }) : q.order("created_at", { ascending: false });
-
-  var label = p.zip ? "ZIP code " + p.zip : [p.hood, p.city || p.free || p.street].filter(Boolean).join(", ") + ((p.city || p.free || p.street || p.hood) && st ? ", " : "") + (st ? BY_ABBR[st].n : "");
-  if(!label) label = "the United States";
-  var title = "Rentals in " + label;
-  $("pageTitle").textContent = title; document.title = title + " | RentNest";
-
   if(push){
     var u = new URLSearchParams();
-    if(text) u.set("q", text); if(st && !p.state) u.set("state", st);
-    if(ptype) u.set("type", ptype); if(beds !== "") u.set("bedrooms", beds); if(sort !== "new") u.set("sort", sort);
+    if(text){ u.set("q", text); } else if(nearPoint){ u.set("near", nearPoint.lat.toFixed(2) + "," + nearPoint.lng.toFixed(2)); } else if(stateHint){ u.set("state", stateHint); }
+    if(ptype) u.set("type", ptype); if(beds !== "") u.set("bedrooms", beds); if(sort !== "near") u.set("sort", sort);
     history.pushState(null, "", "listings.html" + (u.toString() ? "?" + u.toString() : ""));
   }
+  var grid = $("grid"); grid.textContent = ""; grid.className = ""; $("count").textContent = "";
+
+  if(!text && !nearPoint){ setTitle("Find rentals near you"); grid.appendChild(stateHint ? stateBox(stateHint) : startBox()); return; }
+  try{ await RN_GEO.ready(); }catch(e){ $("count").textContent = "Could not load location data. Please refresh the page and try again."; return; }
+
+  var ctr;
+  if(text){
+    if(p.state && !p.zip && !p.street && !p.city && !p.free){ setTitle("Find rentals near you"); grid.appendChild(stateBox(p.state)); return; }
+    ctr = RN_GEO.center(p, hoodCity);
+    if(!ctr){
+      setTitle("Find rentals near you"); grid.appendChild(notFoundBox(text, p));
+      if(logIt){ track("search", { city: text.slice(0, 80), state: p.state || null, results_count: 0 }); }
+      return;
+    }
+  } else { ctr = { lat: nearPoint.lat, lng: nearPoint.lng, state: null, label: "your location" }; }
+
+  setTitle("Rentals within " + RADIUS + " miles of " + ctr.label);
+  $("count").textContent = "Searching...";
+  var b = RN_GEO.bbox(ctr.lat, ctr.lng, RADIUS), f4 = function(n){ return n.toFixed(4); };
+  var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,latitude,longitude,status,landlord_id,created_at,listing_images(url,is_primary,display_order)")
+    .or("and(latitude.gte." + f4(b.minLat) + ",latitude.lte." + f4(b.maxLat) + ",longitude.gte." + f4(b.minLng) + ",longitude.lte." + f4(b.maxLng) + "),latitude.is.null")
+    .limit(500);
+  if(ptype) q = q.eq("property_type", ptype);
+  if(beds === "3") q = q.gte("bedrooms", 3); else if(beds !== "") q = q.eq("bedrooms", parseInt(beds, 10));
   var res = await q;
-  var grid = $("grid"); grid.textContent = "";
   if(res.error){ $("count").textContent = "Could not load rentals. Please try again."; return; }
-  var rows = res.data || [];
-  if(logIt){ track("search", { city: text ? text.slice(0, 80) : null, state: st || null, bedrooms: beds === "" ? null : Math.min(parseInt(beds, 10), 10), results_count: rows.length }); }
-  $("count").textContent = rows.length ? rows.length + " rental" + (rows.length > 1 ? "s" : "") + " in " + label : "";
-  if(!rows.length){ grid.className = ""; grid.appendChild(emptyBox(label, st)); return; }
+
+  /* the database gave us a box; keep only what is really inside the 20 mile circle */
+  var rows = [];
+  (res.data || []).forEach(function(l){
+    var lat = l.latitude, lng = l.longitude;
+    if(lat === null || lat === undefined || lng === null || lng === undefined){ var g = RN_GEO.forListing(l); if(!g) return; lat = g.lat; lng = g.lng; }
+    var d = RN_GEO.dist(ctr.lat, ctr.lng, lat, lng);
+    if(d <= RADIUS){ l._d = d; rows.push(l); }
+  });
+  rows.sort(function(x, y){
+    return sort === "low" ? x.monthly_rent - y.monthly_rent : sort === "high" ? y.monthly_rent - x.monthly_rent
+      : sort === "new" ? new Date(y.created_at) - new Date(x.created_at) : x._d - y._d;
+  });
+  var total = rows.length; rows = rows.slice(0, 100);
+  if(logIt){ track("search", { city: text ? text.slice(0, 80) : "near me", state: ctr.state || null, bedrooms: beds === "" ? null : Math.min(parseInt(beds, 10), 10), results_count: total }); }
+  if(!rows.length){ $("count").textContent = ""; grid.appendChild(emptyBox(ctr.label, ctr.state)); return; }
+  $("count").textContent = total + " rental" + (total > 1 ? "s" : "") + " within " + RADIUS + " miles of " + ctr.label + (total > rows.length ? " (showing the first " + rows.length + ")" : "");
   grid.className = "grid"; rows.forEach(function(l){ grid.appendChild(card(l)); });
 }
 
-$("state").onchange = function(){ stateDirty = true; };
-$("f").onsubmit = function(e){ e.preventDefault(); run(true, true); };
+$("loc").onclick = function(){
+  if(!navigator.geolocation){ $("count").textContent = "Your browser cannot share your location. Please type a city or ZIP code."; return; }
+  $("count").textContent = "Finding your location...";
+  navigator.geolocation.getCurrentPosition(function(pos){
+    nearPoint = { lat: pos.coords.latitude, lng: pos.coords.longitude }; stateHint = ""; $("city").value = ""; run(true, true);
+  }, function(){ $("count").textContent = "We could not get your location. Please type a city or ZIP code instead."; }, { timeout: 10000, maximumAge: 600000 });
+};
+$("f").onsubmit = function(e){ e.preventDefault(); if($("city").value.trim()){ nearPoint = null; stateHint = ""; } run(true, true); };
 window.addEventListener("popstate", function(){ readUrl(); run(false, false); });
 (async function(){
   var s = await sb.auth.getSession(); uid = s.data.session ? s.data.session.user.id : null;
-  fillSuggestions(); var fromLink = readUrl(); track("page_view"); run(fromLink, false);
+  fillSuggestions();
+  if(uid){ try{ var r = await sb.rpc("my_sent_inquiries"); (r.data || []).forEach(function(x){ sentIds[x.listing_id] = true; }); }catch(e){} }
+  var fromLink = readUrl(); track("page_view"); run(fromLink, false);
 })();
 </script>
 <script>(function(){var b=document.getElementById("menuBtn"),n=document.getElementById("nav");if(b&&n){b.onclick=function(){var o=n.classList.toggle("open");b.setAttribute("aria-expanded",o?"true":"false");};}})();</script>
