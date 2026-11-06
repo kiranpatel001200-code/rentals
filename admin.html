@@ -212,18 +212,21 @@ async function listings(box){
   var r = await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,rejection_reason").order("created_at", { ascending: false }).limit(100);
   var rows = r.data || [];
   var ids = rows.map(function(x){ return x.landlord_id; });
-  var p = ids.length ? await sb.from("profiles").select("id,email").in("id", ids) : { data: [] };
-  var email = {}; (p.data || []).forEach(function(x){ email[x.id] = x.email; });
+  var p = ids.length ? await sb.from("profiles").select("id,email,is_banned").in("id", ids) : { data: [] };
+  var owners = {}; (p.data || []).forEach(function(x){ owners[x.id] = x; });
   if(!rows.length){ box.appendChild(el("p", "empty", "No listings yet.")); return; }
   rows.forEach(function(l){
     var d = el("div", "it"); var tp = el("div", "tp");
     tp.appendChild(link(l.title, "listing.html?id=" + encodeURIComponent(l.id)));
-    tp.appendChild(chip(l.status === "approved" ? "Live" : l.status === "rejected" ? "Taken down" : l.status, l.status === "approved" ? "live" : l.status === "rejected" ? "rej" : "pend")); d.appendChild(tp);
-    d.appendChild(el("div", "meta", (email[l.landlord_id] || "unknown owner") + "  \u00B7  " + l.city + ", " + String(l.state).trim() + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo  \u00B7  " + when(l.created_at)));
+    tp.appendChild(chip(l.status === "approved" ? "Live" : l.status === "rejected" ? "Taken down" : l.status, l.status === "approved" ? "live" : l.status === "rejected" ? "rej" : "pend"));
+    var owner = owners[l.landlord_id] || {}, ownerBlocked = owner.is_banned === true;
+    if(ownerBlocked){ tp.appendChild(chip("Spam blocked", "rej")); }
+    d.appendChild(tp);
+    d.appendChild(el("div", "meta", (owner.email || "unknown owner") + "  \u00B7  " + l.city + ", " + String(l.state).trim() + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo  \u00B7  " + when(l.created_at)));
     if(l.rejection_reason){ d.appendChild(el("div", "meta", "Reason: " + l.rejection_reason)); }
     var a = el("div", "acts");
     if(l.status !== "rejected"){ a.appendChild(btn("Take down", function(){ var why = window.prompt("Reason (the owner can see it):", "Removed by RentNest."); if(why !== null){ setListing(l.id, { status: "rejected", rejection_reason: why || "Removed by RentNest." }, "Listing taken down."); } }, "del")); }
-    if(l.status !== "approved"){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
+    if(l.status !== "approved" && !ownerBlocked){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
     a.appendChild(btn("Delete", async function(){ if(!window.confirm("Delete \"" + l.title + "\" for good?")) return; var x = await sb.from("listings").delete().eq("id", l.id); if(x.error){ say(x.error.message, "err"); } else { say("Deleted.", "ok"); render(); } }, "del"));
     d.appendChild(a); box.appendChild(d);
   });
@@ -310,7 +313,7 @@ async function users(box){
     if(x.error){ say(x.error.message, "err"); return; } say("Contact Pass saved.", "ok"); render();
   }
   rows.forEach(function(u){
-    var d = el("div", "it"); var tp = el("div", "tp"); tp.appendChild(el("b", "", u.full_name || "(no name)")); tp.appendChild(chip(u.role, u.role === "admin" ? "live" : "")); if(u.is_banned){ tp.appendChild(chip("Blocked", "rej")); } d.appendChild(tp);
+    var d = el("div", "it"); var tp = el("div", "tp"); tp.appendChild(el("b", "", u.full_name || "(no name)")); tp.appendChild(chip(u.role, u.role === "admin" ? "live" : "")); if(u.is_banned){ tp.appendChild(chip("Spam blocked", "rej")); } d.appendChild(tp);
     d.appendChild(el("div", "meta", "User ID: " + (u.user_code || u.id) + " · " + u.email + " · joined " + when(u.created_at)));
     d.appendChild(el("div", "meta", "Email verified: " + (u.is_verified ? "Yes" : "No")));
     var p = pass[u.id], active = p && (!p.expires_at || new Date(p.expires_at) > new Date());
@@ -319,8 +322,15 @@ async function users(box){
     a.appendChild(btn("Give 1 year", function(){ grant(u, 365); })); a.appendChild(btn("Give no end date", function(){ grant(u, 0); }));
     if(p){ a.appendChild(btn("Remove pass", async function(){ var x = await sb.from("contact_passes").delete().eq("user_id", u.id); if(x.error){ say(x.error.message, "err"); } else { say("Pass removed.", "ok"); render(); } }, "del")); }
     if(u.role !== "admin"){
-      if(u.is_banned){ a.appendChild(btn("Unblock", async function(){ var x = await sb.from("blocked_users").delete().eq("email", String(u.email).toLowerCase()); if(x.error){ say(x.error.message, "err"); } else { say("User unblocked.", "ok"); render(); } })); }
-      else { a.appendChild(btn("Block user", async function(){ var why = window.prompt("Why are you blocking this user? (spam, scam, abuse...)", "Spam"); if(why === null) return; var x = await sb.from("blocked_users").insert({ email: u.email, reason: why || "Blocked" }); if(x.error){ say(x.error.message, "err"); } else { say("User blocked. They now see only a 404 page.", "ok"); render(); } }, "del")); }
+      if(u.is_banned){ a.appendChild(btn("Unblock", async function(){ var x = await sb.from("blocked_users").delete().eq("email", String(u.email).toLowerCase()); if(x.error){ say(x.error.message, "err"); } else { say("User unblocked. Their listings stay taken down until you review and make them live again.", "ok"); render(); } })); }
+      else { a.appendChild(btn("Mark spam & block", async function(){
+        if(!window.confirm("Mark " + u.email + " as spam and block this account? All of this user's listing links will become unavailable (404).")) return;
+        var why = window.prompt("Reason for blocking this user:", "Spam");
+        if(why === null) return;
+        var x = await sb.from("blocked_users").insert({ email: u.email, reason: why.trim() || "Spam" });
+        if(x.error){ say(x.error.message, "err"); }
+        else { say("User marked as spam and blocked. All of their listing URLs now lead to 404.", "ok"); render(); }
+      }, "del")); }
     }
     d.appendChild(a); box.appendChild(d);
   });
