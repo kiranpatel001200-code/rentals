@@ -64,6 +64,7 @@ form button{margin-top:0}
 .card{display:block;position:relative;text-decoration:none;color:inherit}
 .card:hover{box-shadow:0 10px 26px rgba(10,46,54,.16)}
 .badge{position:absolute;top:10px;left:10px;right:10px;background:#fff7e0;color:#6b4d00;border:1px solid #f1d98a;border-radius:10px;padding:4px 10px;font-size:.82rem;font-weight:600}
+.premium-priority{position:absolute;top:10px;right:10px;background:#0a2e36;color:#fff;border-radius:99px;padding:5px 10px;font-size:.75rem;font-weight:700;letter-spacing:.01em;box-shadow:0 3px 10px rgba(0,0,0,.18)}
 .menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
 .menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
 body{overflow-wrap:break-word}
@@ -210,6 +211,7 @@ function card(l){
   var a = el("a", "card"); a.href = "listing.html?id=" + encodeURIComponent(l.id);
   var imgs = (l.listing_images || []).slice().sort(function(x, y){ return (y.is_primary - x.is_primary) || (x.display_order - y.display_order); });
   var img = el("img", "ph"); img.loading = "lazy"; img.alt = l.title; img.src = imgs.length ? imgs[0].url : PH; a.appendChild(img);
+  if(l._premiumPriority && l.status === "approved"){ a.appendChild(el("span", "premium-priority", "\u2605 Premium placement")); }
   if(l.status !== "approved"){
     var mine = uid && l.landlord_id === uid;
     a.appendChild(el("span", "badge", (mine ? "Your listing: " : "Admin view: ") + (STATUS[l.status] || l.status) + (mine ? ". Only you can see it." : "")));
@@ -322,7 +324,18 @@ async function run(logIt, push){
     var d = RN_GEO.dist(ctr.lat, ctr.lng, lat, lng);
     if(d <= RADIUS){ l._d = d; rows.push(l); }
   });
+  var priorityIds = {};
+  try{
+    var ranked = await sb.rpc("get_premium_priority_listing_ids", {
+      p_listing_ids: rows.map(function(l){ return l.id; })
+    });
+    if(!ranked.error && Array.isArray(ranked.data)){
+      ranked.data.forEach(function(x){ priorityIds[x.listing_id] = true; });
+    }
+  }catch(ignore){}
+  rows.forEach(function(l){ l._premiumPriority = priorityIds[l.id] === true; });
   rows.sort(function(x, y){
+    if(x._premiumPriority !== y._premiumPriority){ return x._premiumPriority ? -1 : 1; }
     return sort === "low" ? x.monthly_rent - y.monthly_rent : sort === "high" ? y.monthly_rent - x.monthly_rent
       : sort === "new" ? new Date(y.created_at) - new Date(x.created_at) : x._d - y._d;
   });
