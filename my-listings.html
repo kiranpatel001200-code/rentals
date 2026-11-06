@@ -80,6 +80,14 @@ main.wrap{max-width:860px;margin-top:-34px;padding-bottom:20px}
 .act{margin:0;padding:6px 14px;font:600 .9rem system-ui,sans-serif;color:var(--blue);background:#fff;border:1px solid var(--blue);border-radius:10px;text-decoration:none;cursor:pointer}
 .act.del{color:#b3261e;border-color:#e6b9b5}
 .empty{background:#fff;border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted)}
+.deleted-panel{margin-top:30px;padding:22px;background:#f0f5f3;border:1px solid var(--line);border-radius:18px}
+.deleted-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.deleted-head h2{margin:0 0 6px}
+.deleted-head p{margin:0;color:var(--muted);max-width:42em}
+.deleted-count{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;border-radius:99px;background:#e1e8e5;color:#425c56;font-weight:800}
+.deleted-panel .li{box-shadow:none}
+.st.deleted{background:#ecefed;color:#52625e}
+.act.restore{color:#0f6b4f;border-color:#8fc5ae}
 #msg{min-height:1.4em;margin:6px 0 20px}
 #msg.err{color:#b3261e}#msg.ok{color:#0f6b4f}
 @media(max-width:600px){.li{flex-direction:column}.li .th{width:100%;height:170px}}.menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
@@ -116,7 +124,17 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div id="area" class="hide">
 <div class="addbar"><a class="addbtn" href="create-listing.html">+ List a new property</a> <a class="act" href="messages.html" style="margin-left:8px">Messages</a></div>
 <p id="msg" role="status" aria-live="polite"></p>
-<div id="list"></div>
+<section aria-labelledby="activeHeading">
+  <h2 id="activeHeading">Your active listings</h2>
+  <div id="list"></div>
+</section>
+<section class="deleted-panel" aria-labelledby="deletedHeading">
+  <div class="deleted-head">
+    <div><h2 id="deletedHeading">Recently Deleted</h2><p>Listings you remove are kept here. Restore one anytime to bring it back with its previous status.</p></div>
+    <span id="deletedCount" class="deleted-count">0</span>
+  </div>
+  <div id="deletedList"></div>
+</section>
 </div>
 </main>
 <footer class="site-footer"><div class="wrap">
@@ -174,13 +192,34 @@ async function setStatus(id, status){
   if(status === "approved" && window.openPremium){ window.openPremium("landlord", { once: "live-" + id }); }
 }
 async function remove(l){
-  if(!window.confirm("Delete \"" + l.title + "\"? This cannot be undone.")) return;
-  say("Deleting...");
-  var paths = (l.listing_images || []).map(function(im){ var p = String(im.url).split("/listing-images/")[1]; return p ? decodeURIComponent(p.split("?")[0]) : null; }).filter(Boolean);
-  if(paths.length){ await sb.storage.from("listing-images").remove(paths); }
-  var r = await sb.from("listings").delete().eq("id", l.id);
+  if(!window.confirm("Move \"" + l.title + "\" to Recently Deleted? You can restore it later.")) return;
+  say("Moving listing...");
+  var r = await sb.from("listings")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", l.id)
+    .eq("landlord_id", uid)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
   if(r.error){ say(r.error.message, "err"); return; }
-  say("Listing deleted.", "ok"); load();
+  if(!r.data){ say("This listing was already removed or could not be found.", "err"); return; }
+  say("Moved to Recently Deleted. You can restore it anytime.", "ok");
+  load();
+}
+async function restoreListing(l){
+  if(!window.confirm("Restore \"" + l.title + "\"? It will return to its previous status.")) return;
+  say("Restoring listing...");
+  var r = await sb.from("listings")
+    .update({ deleted_at: null })
+    .eq("id", l.id)
+    .eq("landlord_id", uid)
+    .eq("deleted_at", l.deleted_at)
+    .select("id")
+    .maybeSingle();
+  if(r.error){ say(r.error.message, "err"); return; }
+  if(!r.data){ say("This listing could not be restored. Refresh and try again.", "err"); return; }
+  say(l.status === "approved" ? "Listing restored and live again." : "Listing restored to its previous status.", "ok");
+  load();
 }
 function item(l){
   var s = STATUS[l.status] || [l.status, "pause", ""];
@@ -203,13 +242,39 @@ function item(l){
   b.appendChild(a); d.appendChild(b);
   return d;
 }
+function deletedItem(l){
+  var d = el("div", "li");
+  var imgs = (l.listing_images || []).slice().sort(function(x, y){ return (y.is_primary - x.is_primary) || (x.display_order - y.display_order); });
+  var t = el("div", "th");
+  if(imgs.length){ var i = el("img"); i.src = imgs[0].url; i.alt = ""; t.appendChild(i); }
+  else { t.textContent = "No photo"; }
+  d.appendChild(t);
+  var b = el("div", "bd");
+  var top = el("div", "tp");
+  top.appendChild(el("b", "", l.title));
+  top.appendChild(el("span", "st deleted", "Recently Deleted"));
+  b.appendChild(top);
+  b.appendChild(el("div", "meta", l.street_address + ", " + l.city + ", " + String(l.state).trim() + " " + l.zip_code + "  ·  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo"));
+  b.appendChild(el("div", "note3", "Deleted " + new Date(l.deleted_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) + ". Hidden from renters."));
+  var a = el("div", "acts");
+  a.appendChild(act("Restore listing", function(){ restoreListing(l); }, "act restore"));
+  b.appendChild(a);
+  d.appendChild(b);
+  return d;
+}
 async function load(){
-  var r = await sb.from("listings").select("id,title,status,street_address,city,state,zip_code,monthly_rent,rejection_reason,listing_images(url,is_primary,display_order)").eq("landlord_id", uid).order("created_at", { ascending: false });
-  var list = $("list"); list.textContent = "";
+  var r = await sb.from("listings").select("id,title,status,street_address,city,state,zip_code,monthly_rent,rejection_reason,deleted_at,listing_images(url,is_primary,display_order)").eq("landlord_id", uid).order("created_at", { ascending: false });
+  var list = $("list"), deletedList = $("deletedList");
+  list.textContent = ""; deletedList.textContent = "";
   if(r.error){ say("Could not load your listings. Please try again.", "err"); return; }
   var rows = r.data || [];
-  if(!rows.length){ list.appendChild(el("p", "empty", "You have not listed a property yet. Tap the button above to add your first listing.")); return; }
-  rows.forEach(function(l){ list.appendChild(item(l)); });
+  var active = rows.filter(function(l){ return !l.deleted_at; });
+  var deleted = rows.filter(function(l){ return !!l.deleted_at; });
+  $("deletedCount").textContent = String(deleted.length);
+  if(!active.length){ list.appendChild(el("p", "empty", "You do not have any active listings. Add a new property or restore one from Recently Deleted.")); }
+  else { active.forEach(function(l){ list.appendChild(item(l)); }); }
+  if(!deleted.length){ deletedList.appendChild(el("p", "empty", "Your Recently Deleted folder is empty. Listings you remove will appear here.")); }
+  else { deleted.forEach(function(l){ deletedList.appendChild(deletedItem(l)); }); }
 }
 async function init(){
   var s = await sb.auth.getSession();
