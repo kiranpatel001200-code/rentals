@@ -454,7 +454,16 @@ $("publish").onclick = async function(){
   var a = await sb.from("listings").insert(row);
   if(a.error){ $("publish").disabled = false; say(a.error.message, "err"); return; }
   var b = await sb.from("listing_contacts").insert({ listing_id: id, contact_name: me.full_name || me.email, contact_email: me.email, contact_phone: me.phone || null });
-  if(b.error){ await sb.from("listings").delete().eq("id", id); $("publish").disabled = false; say("Could not save your contact details: " + b.error.message, "err"); return; }
+  if(b.error){
+    /* Owners cannot permanently delete listing rows. Hide this incomplete listing in Recently Deleted instead. */
+    var cleanup = await sb.rpc("move_my_listing_to_recently_deleted", { p_listing: id });
+    $("publish").disabled = false;
+    say(cleanup.error
+      ? "Your listing was created, but its contact details could not be saved. Please open My Listings and move it to Recently Deleted, then contact support. " + b.error.message
+      : "Your listing could not be completed because contact details were not saved. It was moved to Recently Deleted, where you can restore it after fixing your account details. " + b.error.message,
+      "err");
+    return;
+  }
   var failed = await uploadPhotos(id, 0, true);
   finish("Your listing is live!", "Renters can now find it in Rentals. You can edit, pause or delete it any time from My listings.", failed, id);
   setTimeout(function(){ if(window.openPremium){ window.openPremium("landlord", { once: "live-" + id }); } }, 600);
