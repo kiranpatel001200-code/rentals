@@ -364,6 +364,7 @@ async function init(){
   }
   if(!r.data){ redirect404(); return; }
   var l = r.data, mine = uid && l.landlord_id === uid;
+  if(l.deleted_at){ redirect404(); return; }
 
   /* Admins can inspect blocked rows in the dashboard, but their public detail URLs must still be 404. */
   var ownerStatus = await sb.from("profiles").select("is_banned").eq("id", l.landlord_id).maybeSingle();
