@@ -39,7 +39,7 @@
         ["\u2705", "Spot verified-email enquiries", "The Messages inbox marks renters whose email address has been verified."],
         ["\uD83D\uDCC8", "Keep renter enquiries together", "Review messages, move-in dates and viewing requests from your Messages inbox."]
       ],
-      fine: "Landlord Premium is separate from the Renter Contact Pass. The 3-contact limit applies to renter contact unlocks, not to messages a landlord receives."
+      fine: "Landlord Premium does not unlock other landlords' contact details. The separate Renter Contact Pass has a 3-listing contact limit; that limit does not cap enquiries received on your own listings."
     };
   }
 
