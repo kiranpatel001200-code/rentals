@@ -189,9 +189,9 @@
   }
   window.openPremium = openPremium;
 
-  /* Any element with data-premium, and any "premium offer" link, opens the popup. */
+  /* Only explicit Premium triggers open the popup. Contact Us links must navigate to the form. */
   document.addEventListener("click", function(e){
-    var t = e.target && e.target.closest ? e.target.closest("[data-premium], a[href*='topic=premium-upgrade'], a[href*='topic=landlord-premium']") : null;
+    var t = e.target && e.target.closest ? e.target.closest("[data-premium]") : null;
     if(!t || t.closest(".prem-ov")) return;
     e.preventDefault();
     openPremium(t.getAttribute("data-premium"));
