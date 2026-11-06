@@ -16,12 +16,13 @@
       title: "Renter Premium",
       sub: "The Renter Contact Pass",
       items: [
-        ["\uD83D\uDD13", "Unlock landlord contact details", "See the phone, email and WhatsApp of up to 3 different rental listings."],
-        ["\u26A1", "Talk to landlords directly", "Call or write straight away instead of waiting for a reply in Messages."],
-        ["\uD83D\uDCB3", "One payment, no subscription", price + " once, valid for 1 year. It never renews on its own."],
-        ["\uD83D\uDCC8", "Need more than 3 listings?", "Contact RentNest to discuss a bigger premium offer."]
+        ["\uD83D\uDD13", "Unlock up to 3 listing contacts", "Get the landlord's phone, email and WhatsApp for 3 different approved rental listings. These are 3 contact leads, not 3 messages."],
+        ["\uD83D\u267B", "Reopen the same listing anytime", "Opening one of your 3 unlocked listings again does not use another contact slot."],
+        ["\u26A1", "Contact landlords directly", "Use the details you unlock to call, email or WhatsApp the landlord."],
+        ["\uD83D\uDCB3", "One-time pass", price + " once for 1 year. It does not renew automatically."],
+        ["\uD83D\uDCC8", "Need more than 3 contact leads?", "After all 3 different listings are used, contact RentNest about a larger premium offer."]
       ],
-      fine: "All purchases are final and non-refundable."
+      fine: "A verified email is required before purchase. Purchases are final and non-refundable."
     };
   }
 
@@ -30,14 +31,15 @@
   function LANDLORD(){
     return {
       title: "Landlord Premium",
-      sub: "For landlords with listings on RentNest",
+      sub: "More visibility and room to grow on RentNest",
       items: [
-        ["\u2B50", "Premium landlord badge", "Stand out with a Premium badge so renters trust your listings."],
-        ["\uD83D\uDD1D", "Priority placement", "Your listings show higher in search results."],
-        ["\u2705", "Faster listing review", "Your new listings are looked at first."],
-        ["\uD83D\uDCCA", "Listing insights", "See how many renters viewed and messaged you."]
+        ["\u2B50", "Priority search placement", "Active Premium listings appear ahead of standard listings in matching rental searches."],
+        ["\uD83C\uDFE0", "Unlimited active listings", "Grow your rental portfolio without the Free plan's 5-active-listing limit."],
+        ["\uD83D\uDCE3", "Featured visibility", "Premium placement helps your eligible listings stand out to renters searching in your area."],
+        ["\u2705", "Spot verified-email enquiries", "The Messages inbox marks renters whose email address has been verified."],
+        ["\uD83D\uDCC8", "Keep renter enquiries together", "Review messages, move-in dates and viewing requests from your Messages inbox."]
       ],
-      fine: "Landlord Premium is separate from the Renter Contact Pass."
+      fine: "Landlord Premium is separate from the Renter Contact Pass. The 3-contact limit applies to renter contact unlocks, not to messages a landlord receives."
     };
   }
 
@@ -77,7 +79,7 @@
     return null;
   }
   async function getState(){
-    var st = { loggedIn: false, role: null, pass: null };
+    var st = { loggedIn: false, role: null, pass: null, usage: 0 };
     try{
       var c = getClient(); if(!c) return st;
       var s = await c.auth.getSession(); var session = s.data && s.data.session;
@@ -85,7 +87,13 @@
       st.loggedIn = true;
       var p = await c.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
       st.role = p.data && p.data.role ? p.data.role : "renter";
-      if(st.role === "renter" && typeof window.passInfo === "function"){ st.pass = await window.passInfo(); }
+      if(st.role === "renter" && typeof window.passInfo === "function"){
+        st.pass = await window.passInfo();
+        if(st.pass && st.pass.active){
+          var u = await c.rpc("my_contact_usage");
+          if(!u.error){ st.usage = Math.max(0, Number(u.data) || 0); }
+        }
+      }
     }catch(e){}
     return st;
   }
@@ -112,13 +120,19 @@
       li.appendChild(txt); parts.list.appendChild(li);
     });
     if(mode === "landlord"){
-      parts.foot.appendChild(st.loggedIn ? cta("contact.html?topic=premium-upgrade", "Ask about Landlord Premium") : cta("login.html?next=my-listings.html", "Log in or sign up"));
+      parts.foot.appendChild(st.loggedIn ? cta("contact.html?topic=landlord-premium", "Contact us about Landlord Premium") : cta("login.html?next=my-listings.html", "Log in or sign up"));
     } else if(!st.loggedIn){
       parts.foot.appendChild(cta("login.html?next=account.html", "Log in or sign up"));
     } else if(st.pass && st.pass.active){
+      var used = Math.min(Math.max(0, Number(st.usage) || 0), 3);
+      var remaining = Math.max(0, 3 - used);
       var line = (typeof window.passStatusText === "function") ? window.passStatusText(st.pass) : "Your Contact Pass is active.";
-      parts.foot.appendChild(h("p", "prem-status", line));
-      parts.foot.appendChild(cta("contact.html?topic=premium-upgrade", "Contact us about a bigger premium offer"));
+      parts.foot.appendChild(h("p", "prem-status", line + " Contact leads used: " + used + "/3. " + remaining + " remaining."));
+      if(used >= 3){
+        parts.foot.appendChild(cta("contact.html?topic=premium-upgrade", "Contact us for more than 3 leads"));
+      } else {
+        parts.foot.appendChild(cta("listings.html", "Browse rentals and use your remaining contacts"));
+      }
     } else {
       var price = (window.PASS && window.PASS.price) || "$4.99";
       parts.foot.appendChild(cta("account.html#cPassCard", "Get the Renter Contact Pass (" + price + ")"));
@@ -177,7 +191,7 @@
 
   /* Any element with data-premium, and any "premium offer" link, opens the popup. */
   document.addEventListener("click", function(e){
-    var t = e.target && e.target.closest ? e.target.closest("[data-premium], a[href*='topic=premium-upgrade']") : null;
+    var t = e.target && e.target.closest ? e.target.closest("[data-premium], a[href*='topic=premium-upgrade'], a[href*='topic=landlord-premium']") : null;
     if(!t || t.closest(".prem-ov")) return;
     e.preventDefault();
     openPremium(t.getAttribute("data-premium"));
