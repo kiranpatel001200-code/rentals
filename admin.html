@@ -209,7 +209,7 @@ async function setListing(id, patch, okText){
   if(r.error){ say(r.error.message, "err"); return false; } say(okText, "ok"); render(); return true;
 }
 async function listings(box){
-  var r = await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,rejection_reason").order("created_at", { ascending: false }).limit(100);
+  var r = await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,rejection_reason,deleted_at").order("created_at", { ascending: false }).limit(100);
   var rows = r.data || [];
   var ids = rows.map(function(x){ return x.landlord_id; });
   var p = ids.length ? await sb.from("profiles").select("id,email,is_banned").in("id", ids) : { data: [] };
@@ -218,15 +218,15 @@ async function listings(box){
   rows.forEach(function(l){
     var d = el("div", "it"); var tp = el("div", "tp");
     tp.appendChild(link(l.title, "listing.html?id=" + encodeURIComponent(l.id)));
-    tp.appendChild(chip(l.status === "approved" ? "Live" : l.status === "rejected" ? "Taken down" : l.status, l.status === "approved" ? "live" : l.status === "rejected" ? "rej" : "pend"));
+    tp.appendChild(chip(l.deleted_at ? "Recently deleted" : l.status === "approved" ? "Live" : l.status === "rejected" ? "Taken down" : l.status, l.deleted_at || l.status === "rejected" ? "rej" : l.status === "approved" ? "live" : "pend"));
     var owner = owners[l.landlord_id] || {}, ownerBlocked = owner.is_banned === true;
     if(ownerBlocked){ tp.appendChild(chip("Spam blocked", "rej")); }
     d.appendChild(tp);
     d.appendChild(el("div", "meta", (owner.email || "unknown owner") + "  \u00B7  " + l.city + ", " + String(l.state).trim() + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo  \u00B7  " + when(l.created_at)));
     if(l.rejection_reason){ d.appendChild(el("div", "meta", "Reason: " + l.rejection_reason)); }
     var a = el("div", "acts");
-    if(l.status !== "rejected"){ a.appendChild(btn("Take down", function(){ var why = window.prompt("Reason (the owner can see it):", "Removed by RentNest."); if(why !== null){ setListing(l.id, { status: "rejected", rejection_reason: why || "Removed by RentNest." }, "Listing taken down."); } }, "del")); }
-    if(l.status !== "approved" && !ownerBlocked){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
+    if(!l.deleted_at && l.status !== "rejected"){ a.appendChild(btn("Take down", function(){ var why = window.prompt("Reason (the owner can see it):", "Removed by RentNest."); if(why !== null){ setListing(l.id, { status: "rejected", rejection_reason: why || "Removed by RentNest." }, "Listing taken down."); } }, "del")); }
+    if(!l.deleted_at && l.status !== "approved" && !ownerBlocked){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
     a.appendChild(btn("Delete", async function(){ if(!window.confirm("Delete \"" + l.title + "\" for good?")) return; var x = await sb.from("listings").delete().eq("id", l.id); if(x.error){ say(x.error.message, "err"); } else { say("Deleted.", "ok"); render(); } }, "del"));
     d.appendChild(a); box.appendChild(d);
   });
