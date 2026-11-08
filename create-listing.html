@@ -271,6 +271,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="places.js"></script>
+<script src="geo.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
@@ -434,6 +435,25 @@ $("publish").onclick = async function(){
     amenities: AMEN.filter(function(a){ return !a[3] && picked.indexOf(a[0]) !== -1; }).map(function(a){ return a[0]; })
   };
   AMEN.forEach(function(a){ if(a[3]){ f[a[0]] = picked.indexOf(a[0]) !== -1; } });
+
+  /* Where is it? Make sure the ZIP code belongs to the state, then save the coordinates so renters
+     find this listing in the 20 mile search. If the location data cannot load, we still save the listing
+     without coordinates and the search works it out from the ZIP code. */
+  f.latitude = null; f.longitude = null;   /* never keep old coordinates when the address changed */
+  try{
+    await RN_GEO.ready();
+    var where = RN_GEO.zipCheck(f.zip_code, f.state);
+    if(where === "mismatch"){
+      $("publish").disabled = false; go(2);
+      say("ZIP code " + f.zip_code.slice(0, 5) + " belongs to " + RN_GEO.zip(f.zip_code).state + ", but you picked " + String(f.state).trim() + ". Please check the state and the ZIP code.", "err"); return;
+    }
+    if(where === "unknown" && !RN_GEO.city(f.city, f.state)){
+      $("publish").disabled = false; go(2);
+      say("We could not find that ZIP code or city in " + String(f.state).trim() + ". Please check the city and the ZIP code.", "err"); return;
+    }
+    var pt = RN_GEO.forListing({ zip_code: f.zip_code, state: f.state, city: f.city });
+    if(pt){ f.latitude = Math.round(pt.lat * 10000) / 10000; f.longitude = Math.round(pt.lng * 10000) / 10000; }
+  }catch(e){}
 
   if(editId){
     var upd = Object.assign({}, f);
