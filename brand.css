@@ -1,0 +1,79 @@
+/* RenterHere visual identity — loaded after page styles. */
+:root{
+  --navy:#0b2858;
+  --blue:#155fc0;
+  --ink:#172b4d;
+  --muted:#66758f;
+  --bg:#f5f8fd;
+  --line:#dce5f2;
+  --white:#ffffff;
+  --star:#f5a623;
+  --blue-dark:#0b367d;
+  --brand-orange:#f36a16;
+  --line-strong:#c1d2e8;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink)}
+a{transition:color .18s ease}
+header.top{
+  border-bottom:1px solid rgba(196,211,234,.75);
+  box-shadow:0 5px 22px rgba(11,40,88,.055);
+}
+.brand{gap:11px;min-width:0}
+.brand .brand-mark{width:46px;height:46px;display:block;flex:none;object-fit:contain}
+.brand b{display:block;font-size:1.42rem;line-height:1.05;font-weight:850;letter-spacing:-.055em;color:var(--blue-dark)}
+.brand b .brand-main{color:var(--blue-dark)}
+.brand b .brand-accent{color:var(--brand-orange)}
+.brand small{display:block;margin-top:4px;color:#71809a;font-size:.68rem;font-weight:650;letter-spacing:.055em}
+nav a.on{color:var(--blue-dark);border-bottom-color:var(--brand-orange)}
+nav a:not(.pill):hover{color:var(--brand-orange)}
+nav a.pill{background:linear-gradient(135deg,#1768ca,#0b367d);box-shadow:0 5px 14px rgba(11,54,125,.2)}
+nav a.pill:hover{background:linear-gradient(135deg,#f58a2b,#ed5c12);box-shadow:0 6px 16px rgba(243,106,22,.23)}
+button,.btn,.btnlink{background:var(--blue-dark)}
+button:hover:not(:disabled),.btn:hover,.btnlink:hover{filter:brightness(1.08)}
+form.search button,.hero3 form.search button{background:linear-gradient(135deg,#ff8b26,#f15d13);box-shadow:0 5px 16px rgba(243,106,22,.23)}
+.hero3{
+  background:linear-gradient(128deg,#09295d 0%,#104b92 64%,#1763ad 100%);
+}
+.hero3::before,.banner::before{
+  background:radial-gradient(54% 90% at 95% 3%,rgba(255,143,54,.25),transparent 60%),radial-gradient(48% 75% at 0% 100%,rgba(72,143,240,.22),transparent 60%);
+}
+.hero3 .eyebrow,.banner .eyebrow{color:#ffc18b}
+.hero3 h1 span,.banner h1 span{color:#ffb16b}
+.hero3 .chips a{border-color:rgba(255,255,255,.28)}
+.hero3 .chips a:hover{background:#fff;color:#0b367d;border-color:#fff}
+section.block{scroll-margin-top:88px}
+.tcard i,.num{background:#e8f0fc;color:#155fc0}
+.tcard:hover i{background:#dce9fc}
+.num{box-shadow:0 4px 10px rgba(21,95,192,.15)}
+.faq summary::after{background:#e8f0fc;color:#155fc0}
+.faq details[open] summary::after{background:#155fc0;color:#fff}
+.owner{background:linear-gradient(130deg,#09295d 0%,#104b92 75%,#155fc0 100%)}
+.site-footer{background:#081f49;color:#d8e4f5}
+.site-footer h3{color:#ffb16b}
+.site-footer a{color:#d8e4f5}
+.site-footer a:hover{color:#fff}
+.site-footer li:before{color:#ff9a45}
+.ft-logo{
+  display:inline-flex;align-items:center;gap:10px;
+  color:#fff;font-size:1.55rem;font-weight:850;letter-spacing:-.05em;
+}
+.ft-logo::before{
+  content:"";display:inline-block;width:34px;height:34px;flex:none;
+  background:url("renterhere-mark.svg") center/contain no-repeat;
+}
+.ft-logo{color:#fff}
+.site-footer .ft-note{color:#bacbe2}
+.ft-copy{color:#9eb2d0}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid #ff9a45;outline-offset:3px;
+}
+::selection{background:#d9e9ff;color:#0b2858}
+@media(max-width:760px){
+  .brand .brand-mark{width:42px;height:42px}
+  .brand b{font-size:1.25rem}
+  .brand small{font-size:.62rem}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
