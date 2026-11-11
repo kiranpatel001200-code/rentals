@@ -1,4 +1,4 @@
-RENTNEST - COMPLETE SITE PACKAGE (everything built so far, in one folder)
+RENTERHERE - COMPLETE SITE PACKAGE (everything built so far, in one folder)
 
 HOW TO PUT IT ON GITHUB (website, no tokens needed)
 1. Unzip this folder.
