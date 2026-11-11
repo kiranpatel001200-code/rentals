@@ -133,10 +133,10 @@ Deno.serve(async (req: Request) => {
       return json({ saved: true, notified: false, email_status: "failed", message: "Your request was saved, but email notification is not configured yet." }, 202, origin);
     }
 
-    const sender = Deno.env.get("RESEND_FROM") || "RentNest <onboarding@resend.dev>";
-    const subject = "[RentNest Contact Us] " + String(requestRow.topic);
+    const sender = Deno.env.get("RESEND_FROM") || "RenterHere <onboarding@resend.dev>";
+    const subject = "[RenterHere Contact Us] " + String(requestRow.topic);
     const details = [
-      "New Contact Us request received on RentNest.",
+      "New Contact Us request received on RenterHere.",
       "",
       "Name: " + requestRow.full_name,
       "Email: " + requestRow.email,
@@ -147,10 +147,10 @@ Deno.serve(async (req: Request) => {
       "Message:",
       String(requestRow.message),
       "",
-      "Open the RentNest Admin page to review support requests.",
+      "Open the RenterHere Admin page to review support requests.",
     ].join("\n");
     const html = `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#1b2a41;line-height:1.6">
-      <h2 style="color:#0b2a5b">New RentNest Contact Us request</h2>
+      <h2 style="color:#0b2a5b">New RenterHere Contact Us request</h2>
       <p>A visitor submitted a new request through the Contact Us page.</p>
       <table style="border-collapse:collapse;width:100%">
         <tr><td style="padding:8px;border-bottom:1px solid #dbe6f6;color:#5b6b82">Name</td><td style="padding:8px;border-bottom:1px solid #dbe6f6"><b>${esc(String(requestRow.full_name))}</b></td></tr>
@@ -160,7 +160,7 @@ Deno.serve(async (req: Request) => {
       </table>
       <h3 style="color:#0b2a5b">Message</h3>
       <div style="white-space:pre-wrap;background:#f4f8ff;border:1px solid #dbe6f6;border-radius:10px;padding:16px">${esc(String(requestRow.message))}</div>
-      <p style="font-size:13px;color:#5b6b82">This is an automated notification from RentNest.</p>
+      <p style="font-size:13px;color:#5b6b82">This is an automated notification from RenterHere.</p>
     </div>`;
 
     const send = await fetch("https://api.resend.com/emails", {
