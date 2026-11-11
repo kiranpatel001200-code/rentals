@@ -4,8 +4,10 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return reply({ error: "Method not allowed" }, 405);
-  const url = Deno.env.get("SUPABASE_URL"), key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), resend = Deno.env.get("RESEND_API_KEY"), sender = Deno.env.get("RESEND_FROM");
-  if (!url || !key || !resend || !sender) return reply({ error: "Welcome email service is not fully configured." }, 503);
+  const url = Deno.env.get("SUPABASE_URL"), key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), resend = Deno.env.get("RESEND_API_KEY"), configuredSender = Deno.env.get("RESEND_FROM");
+  if (!url || !key || !resend || !configuredSender) return reply({ error: "Welcome email service is not fully configured." }, 503);
+  const senderEmail = configuredSender.match(/<([^<>]+)>/)?.[1] || configuredSender.trim();
+  const sender = `RenterHere <${senderEmail}>`;
   const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return reply({ error: "Sign in required" }, 401);
   const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
