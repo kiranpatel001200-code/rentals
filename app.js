@@ -10,8 +10,8 @@ const money=n=>"$"+Number(n).toLocaleString("en-US");
 function all(){let u=[];try{u=JSON.parse(localStorage.getItem("rn_listings")||"[]")}catch(e){}return SAMPLE.concat(u)}
 const bd=n=>n==0?"Studio":n+" bd";
 function card(l){return `<a class="card" href="listing.html?id=${esc(l.id)}"><div class="ph">${esc(l.type)}</div><div class="cb"><div class="price">${money(l.rent)}/mo</div><h3>${esc(l.title)}</h3><p>${bd(l.beds)}, ${esc(l.baths)} ba in ${esc(l.city)}, ${esc(l.state)}</p></div></a>`}
-$("#nav").innerHTML=`<header><div class="wrap"><a class="logo" href="index.html">RentNest</a><nav><a href="reviews.html">Reviews</a><a href="about.html">About</a><a href="contact.html">Contact</a><a class="btn" href="create-listing.html">List your property</a></nav></div></header>`;
-$("#footer").innerHTML=`<footer><div class="wrap"><a href="reviews.html">Reviews</a><a href="blog.html">Blog</a><a href="create-listing.html">List your property</a><a href="about.html">About</a><a href="contact.html">Contact Us</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><p>&copy; ${new Date().getFullYear()} RentNest. Rentals across the United States.</p></div></footer>`;
+$("#nav").innerHTML=`<header class="top"><div class="wrap"><a class="logo brand" href="index.html" aria-label="RenterHere home"><img class="brand-mark" src="renterhere-mark.svg" width="46" height="46" alt=""><span><b><span class="brand-main">Renter</span><span class="brand-accent">Here</span></b><small>Find • Rent • Live Better</small></span></a><nav><a href="reviews.html">Reviews</a><a href="about.html">About</a><a href="contact.html">Contact</a><a class="btn" href="create-listing.html">List your property</a></nav></div></header>`;
+$("#footer").innerHTML=`<footer class="site-footer"><div class="wrap"><a class="ft-logo" href="index.html">RenterHere</a><a href="reviews.html">Reviews</a><a href="blog.html">Blog</a><a href="create-listing.html">List your property</a><a href="about.html">About</a><a href="contact.html">Contact Us</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><p>&copy; ${new Date().getFullYear()} RenterHere. Rentals across the United States.</p></div></footer>`;
 const page=document.body.dataset.page;
 if(page==="home"){$("#featured").innerHTML=all().slice(0,3).map(card).join("")}
 if(page==="listings"){
@@ -25,7 +25,7 @@ if(page==="listings"){
 if(page==="detail"){
  const l=all().find(x=>x.id===new URLSearchParams(location.search).get("id"));
  if(!l){$("#detail").innerHTML="<p>This listing was not found. <a href='listings.html'>Browse all rentals</a>.</p>"}
- else{document.title=l.title+" | RentNest";
+ else{document.title=l.title+" | RenterHere";
   $("#detail").innerHTML=`<div><div class="ph">${esc(l.type)}</div><h1>${esc(l.title)}</h1><p class="note">${esc(l.city)}, ${esc(l.state)} ${esc(l.zip||"")}</p><div class="facts"><span>${bd(l.beds)}</span><span>${esc(l.baths)} bath</span><span>${esc(l.type)}</span><span>${l.furnished?"Furnished":"Unfurnished"}</span><span>Available ${esc(l.available)}</span></div><h2>About this rental</h2><p>${esc(l.desc)}</p><h2>Amenities</h2><div class="facts">${(l.amen||[]).map(a=>`<span>${esc(a)}</span>`).join("")||"<span>None listed</span>"}</div></div>
   <aside><div class="form"><div class="price">${money(l.rent)}/mo</div><form data-demo="Message sent. The landlord will reply by email."><label for="n">Your name</label><input id="n" required><label for="e">Email</label><input id="e" type="email" required><label for="m">Message</label><textarea id="m" rows="4" required>Hi, is this rental still available?</textarea><p><button>Message landlord</button></p></form></div></aside>`}}
 if(page==="create"){$("#create").addEventListener("submit",e=>{e.preventDefault();const f=new FormData(e.target),g=k=>f.get(k).trim();
