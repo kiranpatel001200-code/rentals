@@ -1,4 +1,4 @@
-# RentNest
+# RenterHere
 Static multi-page rentals site (HTML, CSS, JS). Open `index.html` or deploy to GitHub Pages / Netlify / Vercel.
 
 Pages: index, listings, listing (detail), create-listing, contact, about.
