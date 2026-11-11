@@ -1,4 +1,4 @@
-/* RentNest Premium popup.
+/* RenterHere Premium popup.
    Pages open it with openPremium("landlord") or openPremium("renter"); openPremium("landlord", { once: "some-key" })
    shows it only once per browser session for that key. It also opens from any element that has a data-premium
    attribute and from every "premium offer" link.
@@ -20,7 +20,7 @@
         ["\uD83D\u267B", "Reopen the same listing anytime", "Opening one of your 3 unlocked listings again does not use another contact slot."],
         ["\u26A1", "Contact landlords directly", "Use the details you unlock to call, email or WhatsApp the landlord."],
         ["\uD83D\uDCB3", "One-time pass", price + " once for 1 year. It does not renew automatically."],
-        ["\uD83D\uDCC8", "Need more than 3 contact leads?", "After all 3 different listings are used, contact RentNest about a larger premium offer."]
+        ["\uD83D\uDCC8", "Need more than 3 contact leads?", "After all 3 different listings are used, contact RenterHere about a larger premium offer."]
       ],
       fine: "A verified email is required before purchase. Purchases are final and non-refundable."
     };
@@ -31,7 +31,7 @@
   function LANDLORD(){
     return {
       title: "Landlord Premium",
-      sub: "More visibility and room to grow on RentNest",
+      sub: "More visibility and room to grow on RenterHere",
       items: [
         ["\u2B50", "Priority search placement", "Active Premium listings appear ahead of standard listings in matching rental searches."],
         ["\uD83C\uDFE0", "Unlimited active listings", "Grow your rental portfolio without the Free plan's 5-active-listing limit."],
