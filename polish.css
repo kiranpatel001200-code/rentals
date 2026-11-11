@@ -1,0 +1,152 @@
+/* RentNest design polish.
+   Loaded last on every page, so it refines the look without touching each page's own CSS:
+   spacing, type, shadows, buttons, forms, cards, header, hero and footer. Delete the <link> to switch it off. */
+
+:root{
+  --r-md:14px; --r-lg:20px;
+  --sh-1:0 1px 2px rgba(10,46,54,.06),0 2px 8px rgba(10,46,54,.05);
+  --sh-2:0 2px 4px rgba(10,46,54,.05),0 10px 28px rgba(10,46,54,.09);
+  --sh-3:0 4px 10px rgba(10,46,54,.06),0 20px 44px rgba(10,46,54,.15);
+  --line-strong:#c3d9d3;
+  --blue-dark:#096a5f;
+}
+
+/* ---------- base and type ---------- */
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+::selection{background:#bfe7df;color:#0a2e36}
+h1,h2,h3{text-wrap:balance}
+p,li{text-wrap:pretty}
+h1{letter-spacing:-.03em;line-height:1.08}
+h2{letter-spacing:-.022em;line-height:1.18}
+h3{letter-spacing:-.01em}
+.eyebrow{font-size:.76rem;letter-spacing:.16em}
+.sub{font-size:1.05rem;line-height:1.55}
+.price,.kv b,#count{font-variant-numeric:tabular-nums}
+main.wrap{position:relative;z-index:1}
+
+/* ---------- header ---------- */
+header.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(1.5) blur(12px);backdrop-filter:saturate(1.5) blur(12px);box-shadow:0 1px 0 var(--line),0 4px 18px rgba(10,46,54,.04)}
+header.top .wrap{padding-top:10px;padding-bottom:10px}
+nav a{transition:color .15s,border-color .15s}
+nav a:not(.pill):not(.on):hover{color:var(--blue);border-bottom-color:var(--line-strong)}
+nav a.on{border-bottom-width:2px}
+nav a.pill{box-shadow:0 2px 10px rgba(11,122,110,.28);transition:background-color .15s,box-shadow .15s,transform .15s}
+nav a.pill:hover{background:var(--blue-dark);box-shadow:0 4px 14px rgba(11,122,110,.36)}
+.brand b{letter-spacing:-.03em}
+
+/* ---------- buttons ---------- */
+button,.btn,.btnlink{transition:transform .12s,box-shadow .15s,background-color .15s,filter .15s,border-color .15s}
+button:hover:not(:disabled),.btn:hover,.btnlink:hover{filter:brightness(1.07)}
+button:disabled{filter:none}
+.btn,.btnlink,form button[type=submit]{border-radius:12px;box-shadow:0 1px 2px rgba(10,46,54,.16),0 4px 12px rgba(11,122,110,.18)}
+.btn,.btnlink{display:inline-flex;align-items:center;justify-content:center;min-height:44px;line-height:1.2;text-decoration:none}
+.btn:active,.btnlink:active,form button[type=submit]:active{transform:translateY(1px)}
+.owner .btn{box-shadow:0 2px 6px rgba(0,0,0,.18)}
+
+/* ---------- forms ---------- */
+label{font-size:.92rem;color:#0a2e36}
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select,textarea{border-color:var(--line-strong);border-radius:12px;transition:border-color .15s,box-shadow .15s}
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select{min-height:46px}
+input::placeholder,textarea::placeholder{color:#8a9c99}
+input:not([type=checkbox]):not([type=radio]):hover,select:hover,textarea:hover{border-color:#9cc3ba}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid transparent;outline-offset:0;border-color:var(--blue);box-shadow:0 0 0 4px rgba(11,122,110,.18)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.hero3 a:focus-visible,.hero3 button:focus-visible,.banner a:focus-visible,.banner button:focus-visible,.owner a:focus-visible,.site-footer a:focus-visible{outline-color:#f5b301}
+
+/* search bars */
+form.search input,form.search select{min-height:52px;border-radius:14px;font-size:1rem}
+form.search input,form.search select{min-width:0}
+form.search input{flex:2 1 200px}
+form.search select{flex:1 1 140px}
+form.search button{flex:0 0 auto;min-height:52px;margin:0;padding:0 28px;border-radius:14px}
+.hero3 form.search{padding:10px;gap:8px;border-radius:22px;box-shadow:var(--sh-3)}
+form#f{display:grid;grid-template-columns:minmax(190px,1.7fr) repeat(3,minmax(128px,1.1fr)) auto auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--sh-3)}
+form#f input,form#f select{width:100%;min-width:0;border-radius:14px;text-overflow:ellipsis}
+form#f select{padding-right:8px}
+form#f button{margin:0;min-height:46px;padding:0 22px;border-radius:14px;white-space:nowrap}
+@media(max-width:1060px){form#f{grid-template-columns:1fr 1fr}form#f input{grid-column:1/-1}}
+@media(max-width:560px){
+  form#f{grid-template-columns:1fr}
+  form.search button{flex:1 1 100%}
+}
+
+/* ---------- hero and page banners ---------- */
+.hero3,.banner{position:relative;isolation:isolate;overflow:hidden}
+.hero3::before,.banner::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 90% at 94% 0%,rgba(143,214,200,.28),transparent 60%),radial-gradient(45% 70% at 0% 100%,rgba(245,179,1,.10),transparent 62%)}
+.hero3::after,.banner::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;background-image:radial-gradient(rgba(255,255,255,.16) 1px,transparent 1.2px);background-size:22px 22px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 80%);mask-image:linear-gradient(180deg,#000,transparent 80%)}
+.hero3{padding:72px 0 68px}
+.hero3 h1{font-size:clamp(2.3rem,5.2vw,3.7rem)}
+.hero3 .lead{font-size:1.15rem;line-height:1.55}
+.hero3 .chips a{transition:background-color .15s,color .15s,transform .15s}
+.hero3 .chips a:hover{transform:translateY(-1px)}
+.banner h1{letter-spacing:-.03em}
+@media(max-width:820px){.hero3{padding:44px 0 40px}}
+
+/* ---------- sections and cards ---------- */
+section.block{padding:52px 0}
+.card,.tcard,.box,.review,.faq details,#detail{border-radius:var(--r-lg)}
+.card,.tcard,.box,.review{box-shadow:var(--sh-1);transition:transform .2s,box-shadow .2s,border-color .2s}
+a.card,a.tcard{will-change:transform}
+a.card:hover,.tcard:hover{transform:translateY(-4px);box-shadow:var(--sh-3);border-color:var(--line-strong)}
+a.card:hover{box-shadow:var(--sh-3)}
+.card .ph{transition:transform .4s ease}
+a.card:hover .ph{transform:scale(1.04)}
+.card .body{padding:18px 20px 20px}
+.price{letter-spacing:-.02em}
+.card .price{font-size:1.4rem;line-height:1.2}
+.card .body h2{margin:6px 0 6px}
+.card .meta{line-height:1.5}
+.badge,.premium-priority,.sentchip{letter-spacing:.01em}
+
+/* property type tiles: a tidy 3 x 2 grid instead of 5 + 1 */
+.tgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tcard{display:flex;flex-direction:column;align-items:flex-start;padding:22px}
+.tcard i{display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin:0 0 14px;border-radius:14px;background:#e9f6f3;font-size:1.7rem;transition:background-color .2s}
+.tcard:hover i{background:#d6eee8}
+.tcard b{font-size:1.08rem;margin-bottom:2px}
+@media(max-width:820px){.tgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tcard{padding:18px}section.block{padding:40px 0}}
+
+/* steps, links and questions */
+.num{background:var(--blue);color:#fff;box-shadow:0 4px 10px rgba(11,122,110,.28)}
+.plinks a{transition:color .15s,padding-left .15s}
+.plinks a:hover{padding-left:4px}
+.faq details{border-color:var(--line);box-shadow:var(--sh-1);transition:box-shadow .2s,border-color .2s}
+.faq details[open]{box-shadow:var(--sh-2);border-color:var(--line-strong)}
+.faq summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";flex:none;width:26px;height:26px;border-radius:50%;background:#e9f6f3;color:var(--blue);font-weight:700;line-height:26px;text-align:center;transition:transform .2s}
+.faq details[open] summary::after{content:"\2212";background:var(--blue);color:#fff}
+
+/* owner call to action */
+.owner{background:linear-gradient(135deg,#0a2e36 0%,#0d4a4c 100%);border-radius:24px;padding:42px 44px;box-shadow:var(--sh-2)}
+.owner h2{font-size:clamp(1.5rem,3vw,2rem)}
+@media(max-width:700px){.owner{padding:28px 24px}}
+
+/* ---------- footer ---------- */
+.site-footer{padding:56px 0 30px;margin-top:40px}
+.site-footer h3{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:#8fd6c8}
+.site-footer a{transition:color .15s}
+.ft-logo{font-size:1.6rem;letter-spacing:-.03em}
+.site-footer .ft-note{margin:14px 0 0;padding:0;background:none;border-radius:0;font-size:.88rem;line-height:1.6;color:#a9c7c1}
+.site-footer .ft-grid + .ft-note{margin-top:36px;padding-top:26px;border-top:1px solid rgba(255,255,255,.12)}
+.site-footer .ft-note b{color:#e8f5f2}
+.ft-legal{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12)}
+.ft-legal a{margin:0 10px}
+.ft-copy{margin-top:14px}
+footer.band{padding:34px 0}
+
+/* ---------- small screens ---------- */
+@media(max-width:760px){
+  header.top nav a:not(.pill){padding:14px 4px}
+  header.top nav a.pill{min-height:46px;display:flex;align-items:center;justify-content:center}
+  .site-footer{padding:40px 0 24px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  a.card:hover,.tcard:hover,a.card:hover .ph{transform:none}
+}
+
+/* listing page: photo stays in view on wide screens */
+@media(min-width:861px){#detail>div:first-child{position:sticky;top:88px;align-self:start}}
