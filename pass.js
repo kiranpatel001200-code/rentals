@@ -58,7 +58,7 @@ function passBox(onDone){
   return d;
 }
 function buildPay(d, onDone){
-  d.appendChild(passEl("p", "", "Unlock contact details for up to 3 different rental listings during this pass period. " + PASS.price + ", " + PASS.term + ". If you need more than 3 listings, contact RentNest to discuss a bigger premium offer."));
+  d.appendChild(passEl("p", "", "Unlock contact details for up to 3 different rental listings during this pass period. " + PASS.price + ", " + PASS.term + ". If you need more than 3 listings, contact RenterHere to discuss a bigger premium offer."));
   var fine = passEl("p", "passfine", "All purchases are final and non-refundable. The pass does not renew automatically. By paying you agree to the ");
   var ta = passEl("a", "", "Terms of Service"); ta.href = "terms.html"; ta.target = "_blank"; fine.appendChild(ta); fine.appendChild(document.createTextNode("."));
   d.appendChild(fine);
