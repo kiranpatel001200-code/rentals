@@ -1,4 +1,4 @@
-/* RentNest location helper.
+/* RenterHere location helper.
    Turns a ZIP code or a city into a point (latitude/longitude) using zips.json (US ZIP codes, 50 states + DC),
    and measures distance in miles. The data file loads only when a page needs it (search, create listing).
    Distances are measured from the middle of the ZIP code or city, not from the exact house. */
