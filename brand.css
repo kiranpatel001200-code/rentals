@@ -1,4 +1,5 @@
 /* RenterHere visual identity — loaded after page styles. */
+:root{--rn-brand:#155fc0;--rn-ink:#172b4d;--rn-muted:#66758f;--rn-line:#dce5f2;--rn-soft:#edf3fc;}
 :root{
   --navy:#0b2858;
   --blue:#155fc0;
@@ -76,4 +77,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+/* Editorial guide templates and pages using the shared app.js navigation */
+.blog-hero{background:linear-gradient(128deg,#09295d 0%,#104b92 68%,#1763ad 100%)!important}
+.blog-hero .eyebrow{color:#ffc18b!important}
+.blog-hero h1 span{color:#ffb16b}
+body>header.top, #nav header.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+#nav header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 22px}
+#nav header.top nav{display:flex;align-items:center;gap:18px}
+#nav header.top nav a{text-decoration:none;color:var(--ink);font-weight:600}
+#nav header.top nav a.btn{color:#fff;padding:10px 18px;border-radius:12px}
+#nav header.top nav a:hover{color:var(--brand-orange)}
+#nav header.top nav a.btn:hover{color:#fff}
+#footer .site-footer .ft-logo{display:flex;margin-bottom:16px;text-decoration:none}
+#footer .site-footer .wrap>p{margin-top:18px;color:#aebfda}
+@media(max-width:760px){
+ #nav header.top .wrap{align-items:flex-start;flex-wrap:wrap}
+ #nav header.top nav{width:100%;gap:12px;justify-content:flex-start;flex-wrap:wrap;padding:2px 0 8px}
+ #nav header.top nav a{font-size:.9rem}
 }
