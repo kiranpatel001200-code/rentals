@@ -133,7 +133,9 @@ Deno.serve(async (req: Request) => {
       return json({ saved: true, notified: false, email_status: "failed", message: "Your request was saved, but email notification is not configured yet." }, 202, origin);
     }
 
-    const sender = Deno.env.get("RESEND_FROM") || "RenterHere <onboarding@resend.dev>";
+    const configuredSender = Deno.env.get("RESEND_FROM") || "onboarding@resend.dev";
+    const senderEmail = configuredSender.match(/<([^<>]+)>/)?.[1] || configuredSender.trim();
+    const sender = `RenterHere <${senderEmail}>`;
     const subject = "[RenterHere Contact Us] " + String(requestRow.topic);
     const details = [
       "New Contact Us request received on RenterHere.",
