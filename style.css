@@ -40,3 +40,11 @@ h2{font-size:1.8rem;margin:0 0 20px;letter-spacing:-.01em}
 footer{border-top:1px solid var(--line);padding:28px 0;color:var(--mut);background:var(--card)}
 footer a{margin-right:16px}
 @media(max-width:760px){.detail{grid-template-columns:1fr}.two{grid-template-columns:1fr}nav a{margin:0 14px 0 0}}
+
+@media(max-width:380px){
+  html,body{max-width:100%;overflow-x:clip}
+  .wrap{width:100%;max-width:100%;padding-left:16px;padding-right:16px}
+  .grid,.detail,.two,.filters{grid-template-columns:minmax(0,1fr)}
+  input,select,textarea{min-width:0;max-width:100%}
+  .form{padding-left:16px;padding-right:16px}
+}
