@@ -100,3 +100,56 @@ body>header.top, #nav header.top{position:sticky;top:0;z-index:50;background:rgb
  #nav header.top nav{width:100%;gap:12px;justify-content:flex-start;flex-wrap:wrap;padding:2px 0 8px}
  #nav header.top nav a{font-size:.9rem}
 }
+
+
+/* Compact-phone layout hardening: 320px–380px */
+@media (max-width:380px){
+  html,body{width:100%;max-width:100%;overflow-x:clip}
+  body{overflow-wrap:anywhere}
+  .wrap{width:100%;max-width:100%;padding-left:16px!important;padding-right:16px!important}
+  main.wrap{width:100%;max-width:100%;padding-left:16px!important;padding-right:16px!important}
+  header.top .wrap{gap:10px;padding-left:16px!important;padding-right:16px!important}
+  .brand{width:176px!important;height:36px!important;max-width:calc(100% - 54px)}
+  .menu{min-width:44px;min-height:44px;padding:9px 10px;flex:0 0 44px}
+  .menu span{width:21px}
+  header.top nav{width:100%;max-width:100%;min-width:0}
+  header.top nav a{max-width:100%;overflow-wrap:anywhere}
+  nav{min-width:0;max-width:100%;flex-wrap:wrap}
+  .grid{grid-template-columns:minmax(0,1fr)!important;min-width:0}
+  .cards,.steps,.filters,.row,.two,.detail{grid-template-columns:minmax(0,1fr)!important}
+  .tgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .tcard{min-width:0;padding:14px!important}
+  .tcard b,.tcard span{overflow-wrap:anywhere}
+  .search,form.search{width:100%;max-width:100%;min-width:0}
+  .search input,.search select,form input,form select,form textarea,input,select,textarea{
+    width:100%;max-width:100%;min-width:0
+  }
+  .hero3 form.search input,.hero3 form.search select,.hero3 form.search button{
+    flex:1 1 100%;width:100%;min-width:0
+  }
+  form#f{grid-template-columns:minmax(0,1fr)!important}
+  fieldset{min-width:0;padding:14px 14px 18px!important}
+  .card,.box,.notice,.step,.review,.empty,.deleted-panel,.owner,#detail{
+    max-width:100%;min-width:0
+  }
+  .card,.box,.notice,.step,.review{padding:16px!important}
+  .owner{padding:20px 16px!important}
+  #detail{grid-template-columns:minmax(0,1fr)!important;padding:14px!important;gap:14px!important}
+  #detail>*{min-width:0;max-width:100%}
+  .li{min-width:0;max-width:100%}
+  .li .th{width:100%;max-width:100%}
+  .bd,.tp,.acts,.cl,.sum,.sum .r{min-width:0;max-width:100%}
+  .tabs{width:100%;max-width:100%;min-width:0}
+  .tabs .tab{min-width:0;overflow-wrap:anywhere}
+  .acts>*{max-width:100%;min-width:0}
+  .btn,.btnlink,button,a.pill{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+  .ft-grid,.ft-grid>*{min-width:0;max-width:100%}
+  img,video,iframe,svg{max-width:100%}
+}
+@media (max-width:340px){
+  .brand{width:164px!important;height:34px!important}
+  .tgrid{grid-template-columns:minmax(0,1fr)!important}
+  .rn-mobile-item{font-size:9px!important}
+  .rn-mobile-item svg{width:18px!important;height:18px!important}
+  .rn-mobile-nav{gap:0!important;padding-left:2px!important;padding-right:2px!important}
+}
