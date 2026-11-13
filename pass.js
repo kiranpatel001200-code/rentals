@@ -59,35 +59,108 @@ function passBox(onDone){
 }
 function buildPay(d, onDone){
   d.appendChild(passEl("p", "", "Unlock contact details for up to 3 different rental listings during this pass period. " + PASS.price + ", " + PASS.term + ". If you need more than 3 listings, contact RenterHere to discuss a bigger premium offer."));
-  var fine = passEl("p", "passfine", "All purchases are final and non-refundable. The pass does not renew automatically. By paying you agree to the ");
-  var ta = passEl("a", "", "Terms of Service"); ta.href = "terms.html"; ta.target = "_blank"; fine.appendChild(ta); fine.appendChild(document.createTextNode("."));
+  var fine = passEl("p", "passfine", "Contact Pass purchases are strictly non-refundable once unlocked, subject to applicable law. The pass does not renew automatically. By paying you agree to the ");
+  var termsLink = passEl("a", "", "Terms of Service");
+  termsLink.href = "terms.html";
+  termsLink.target = "_blank";
+  termsLink.rel = "noopener";
+  fine.appendChild(termsLink);
+  fine.appendChild(document.createTextNode("."));
   d.appendChild(fine);
-  var note = passEl("p", "passnote"); var holder = passEl("div", "ppbtn");
-  d.appendChild(holder); d.appendChild(note);
-  if(!PASS.clientId){
-    var b = passEl("button", "", "Get Renter Contact Pass (" + PASS.price + ")"); b.type = "button";
-    b.onclick = function(){ note.textContent = "Online payment is not switched on yet. It will be available soon."; };
-    holder.appendChild(b); return;
-  }
-  function draw(){
-    paypal.Buttons({
+
+  var consentLine = passEl("label", "pass-consent");
+  consentLine.style.cssText = "display:flex;align-items:flex-start;gap:10px;margin:14px 0;padding:12px 14px;border:1px solid #cbd8e8;border-radius:10px;background:#f5f8fd;color:#172b4d;font-size:14px;line-height:1.5;cursor:pointer;";
+  var consent = document.createElement("input");
+  consent.type = "checkbox";
+  consent.required = true;
+  consent.setAttribute("aria-label", "I agree to the Terms of Service and understand that Contact Pass purchases are strictly non-refundable once unlocked.");
+  consent.style.cssText = "width:18px;height:18px;min-width:18px;margin:2px 0 0;accent-color:#155fc0;cursor:pointer;";
+  consentLine.appendChild(consent);
+  consentLine.appendChild(document.createTextNode("I agree to the "));
+  consentLine.appendChild(termsLink.cloneNode(true));
+  consentLine.appendChild(document.createTextNode(" and understand that Contact Pass purchases are strictly non-refundable once unlocked."));
+  d.appendChild(consentLine);
+
+  var holder = passEl("div", "ppbtn");
+  holder.style.display = "none";
+  var note = passEl("p", "passnote", "Please tick the checkbox above to enable PayPal checkout.");
+  d.appendChild(holder);
+  d.appendChild(note);
+
+  var rendered = false;
+  var loading = false;
+  var fallbackAdded = false;
+
+  function renderPaypal(){
+    if(!consent.checked || rendered || !window.paypal) return;
+    rendered = true;
+    var buttons = paypal.Buttons({
       style: { layout: "vertical", shape: "rect", label: "pay" },
-      createOrder: async function(){ note.textContent = ""; var r = await passCall({ action: "create" }); return r.id; },
+      onClick: function(data, actions){
+        if(!consent.checked){
+          note.textContent = "Please agree to the Terms of Service before paying.";
+          return actions.reject();
+        }
+        note.textContent = "";
+        return actions.resolve();
+      },
+      createOrder: async function(){
+        if(!consent.checked) throw new Error("Please agree to the Terms of Service before paying.");
+        note.textContent = "";
+        var r = await passCall({ action: "create" });
+        return r.id;
+      },
       onApprove: async function(data){
         note.textContent = "Confirming your payment...";
-        try{ var r = await passCall({ action: "capture", orderID: data.orderID });
+        try{
+          var r = await passCall({ action: "capture", orderID: data.orderID });
           note.textContent = "Payment received. Your Renter Contact Pass is active" + (r && r.expires_at ? " until " + passDate(r.expires_at) : "") + ".";
-          if(onDone){ setTimeout(onDone, 1200); } }
-        catch(e){ note.textContent = e.message; }
+          if(onDone){ setTimeout(onDone, 1200); }
+        }catch(e){ note.textContent = e.message; }
       },
-      onError: function(err){ note.textContent = (err && err.message && err.message.indexOf("already have") !== -1) ? err.message : "The payment could not be completed. Please try again."; }
-    }).render(holder);
+      onError: function(err){
+        note.textContent = (err && err.message && err.message.indexOf("already have") !== -1) ? err.message : "The payment could not be completed. Please try again.";
+      }
+    });
+    var renderResult = buttons.render(holder);
+    if(renderResult && typeof renderResult.catch === "function"){
+      renderResult.catch(function(){
+        rendered = false;
+        note.textContent = "The payment button could not be loaded. Please try again.";
+      });
+    }
   }
-  if(window.paypal){ draw(); }
-  else {
+
+  function enableCheckout(){
+    if(!consent.checked) return;
+    holder.style.display = "";
+    note.textContent = "";
+    if(!PASS.clientId){
+      if(!fallbackAdded){
+        var b = passEl("button", "", "Get Renter Contact Pass (" + PASS.price + ")");
+        b.type = "button";
+        b.onclick = function(){ note.textContent = "Online payment is not switched on yet. It will be available soon."; };
+        holder.appendChild(b);
+        fallbackAdded = true;
+      }
+      return;
+    }
+    if(window.paypal){ renderPaypal(); return; }
+    if(loading) return;
+    loading = true;
     var s = document.createElement("script");
     s.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(PASS.clientId) + "&currency=USD&intent=capture&components=buttons";
-    s.onload = draw; s.onerror = function(){ note.textContent = "Could not load PayPal. Please try again."; };
+    s.onload = function(){ loading = false; renderPaypal(); };
+    s.onerror = function(){ loading = false; note.textContent = "Could not load PayPal. Please try again."; };
     document.head.appendChild(s);
   }
+
+  consent.addEventListener("change", function(){
+    if(consent.checked){
+      enableCheckout();
+    }else{
+      holder.style.display = "none";
+      note.textContent = "Please tick the checkbox above to enable PayPal checkout.";
+    }
+  });
 }
