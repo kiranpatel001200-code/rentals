@@ -1,7 +1,7 @@
 /* Fill these in once. They appear on the Privacy Policy and Terms of Service pages.
    email: the address people can write to for support and privacy requests.
    state: the U.S. state whose laws govern the Terms (for example "California"). */
-var SITE_CONFIG = { email: "", state: "" };
+var SITE_CONFIG = { email: "support@renterhere.com", state: "" };
 (function(){
   function fill(sel, value, mail){
     document.querySelectorAll(sel).forEach(function(e){
