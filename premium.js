@@ -10,19 +10,20 @@
   var SB_URL = "https://abppfpgazlngdhrejrog.supabase.co", SB_KEY = "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5";
 
   /* ---- Renter benefits (these match what the Renter Contact Pass really does) ---- */
-  function RENTER(){
-    var price = (window.PASS && window.PASS.price) || "$4.99";
+  function RENTER(role, quotedPrice){
+    var price = quotedPrice || (role === "landlord" ? "$17.99" : "$25.00");
     return {
       title: "Renter Premium",
-      sub: "The Renter Contact Pass",
+      price: price,
+      sub: price + " USD for 1 year · one-time payment · no automatic renewal",
       items: [
-        ["\uD83D\uDD13", "Unlock up to 3 listing contacts", "Get the landlord's phone, email and WhatsApp for 3 different approved rental listings. These are 3 contact leads, not 3 messages."],
+        ["\uD83D\uDD13", "Unlock up to 3 listing contacts", "Get the landlord's phone, email and WhatsApp details when provided, for 3 different approved rental listings. These are 3 contact leads, not 3 messages."],
         ["\uD83D\u267B", "Reopen the same listing anytime", "Opening one of your 3 unlocked listings again does not use another contact slot."],
-        ["\u26A1", "Contact landlords directly", "Use the details you unlock to call, email or WhatsApp the landlord."],
-        ["\uD83D\uDCB3", "One-time pass", price + " once for 1 year. It does not renew automatically."],
-        ["\uD83D\uDCC8", "Need more than 3 contact leads?", "After all 3 different listings are used, contact RenterHere about a larger premium offer."]
+        ["\u26A1", "Contact landlords directly", "Use the contact details you unlock to call, email or WhatsApp the landlord."],
+        ["\uD83D\uDCB3", "One-time annual payment", price + " for 365 days. It does not renew automatically."],
+        ["\uD83D\uDCC8", "Need more than 3 contact leads?", "After using all 3 different listing contacts, contact RenterHere to ask about additional leads."]
       ],
-      fine: "A verified email is required before purchase. Purchases are final and non-refundable."
+      fine: "A verified email is required before purchase. Contact details unlock after PayPal confirms payment. Purchases are non-refundable once digital access is unlocked, subject to applicable law."
     };
   }
 
@@ -83,7 +84,7 @@
     return null;
   }
   async function getState(){
-    var st = { loggedIn: false, role: null, pass: null, usage: 0 };
+    var st = { loggedIn: false, role: null, pass: null, usage: 0, passPrice: "$25.00" };
     try{
       var c = getClient(); if(!c) return st;
       var s = await c.auth.getSession(); var session = s.data && s.data.session;
@@ -91,6 +92,15 @@
       st.loggedIn = true;
       var p = await c.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
       st.role = p.data && p.data.role ? p.data.role : "renter";
+      if(st.role === "landlord") st.passPrice = "$17.99";
+      if(st.role === "renter" || st.role === "landlord"){
+        try{
+          var quote = await c.functions.invoke("paypal-pass", { body: { action: "config" } });
+          if(!quote.error && quote.data && quote.data.price){
+            st.passPrice = "$" + Number(quote.data.price).toFixed(2);
+          }
+        }catch(e){}
+      }
       if(st.role === "renter" && typeof window.passInfo === "function"){
         st.pass = await window.passInfo();
         if(st.pass && st.pass.active){
@@ -114,7 +124,7 @@
   function cta(href, text){ var a = h("a", "prem-cta", text); a.href = href; a.onclick = function(){ close(); }; return a; }
 
   function fill(mode, st, tabs, parts){
-    var d = mode === "landlord" ? LANDLORD() : RENTER();
+    var d = mode === "landlord" ? LANDLORD() : RENTER(st.role, st.passPrice);
     parts.title.textContent = parts.compact && mode === "renter" ? "Unlock renter contacts" : d.title;
     parts.sub.textContent = parts.compact && mode === "renter" ? "Find your next home with confidence." : d.sub;
     if(parts.tabs){ parts.tabs.forEach(function(t){ t.btn.className = "prem-tab" + (t.mode === mode ? " on" : ""); t.btn.setAttribute("aria-pressed", t.mode === mode ? "true" : "false"); }); }
@@ -159,7 +169,7 @@
       }
     } else {
       var price = (window.PASS && window.PASS.price) || "$4.99";
-      parts.foot.appendChild(cta("account.html#cPassCard", "Get the Renter Contact Pass (" + price + ")"));
+      parts.foot.appendChild(cta("account.html#cPassCard", "Get Renter Premium — " + d.price));
     }
     var fine = h("p", "prem-fine", d.fine + (mode === "renter" ? " See the " : ""));
     if(mode === "renter"){ var ta = h("a", "", "Terms of Service"); ta.href = "terms.html"; fine.appendChild(ta); fine.appendChild(document.createTextNode(".")); }
