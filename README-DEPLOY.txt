@@ -12,7 +12,8 @@ ONE-TIME SETTINGS (only you can do these)
 - pass.js               : put your PayPal Client ID in clientId (public). Price text must match the secrets below.
 - Supabase > Edge Functions > Secrets:
     PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_ENV (sandbox first, then live)   [Contact Pass payments]
-    PASS_PRICE (default 4.99), PASS_DAYS (default 365)
+    PASS_PRICE (default 4.99), PASS_DAYS (default 365)                 [Renter Contact Pass]
+    PAYPAL_CLIENT_ID, PAYPAL_SECRET, PAYPAL_ENV (sandbox then live)     [Landlord Premium: $35 USD/year]
     RESEND_API_KEY, RESEND_FROM                                              [new-message + Contact Us emails]
 - Contact Us notifications are sent to kiranpatel001200@gmail.com by the notify-contact-request Edge Function.
 - Set RESEND_API_KEY and RESEND_FROM in Supabase > Edge Functions > Secrets. RESEND_FROM must be an allowed sender; for production, verify a domain in Resend and use an address on that domain.
@@ -20,6 +21,9 @@ ONE-TIME SETTINGS (only you can do these)
 - Supabase > Authentication > URL Configuration: Site URL + Redirect URLs for the GitHub Pages address.
 - First admin (run once in the Supabase SQL Editor):
     update public.profiles set role = 'admin' where email = 'YOUR@EMAIL';
+- Deploy the `paypal-landlord-premium` Edge Function. It requires PAYPAL_CLIENT_ID, PAYPAL_SECRET and PAYPAL_ENV (set to sandbox for testing, then live after PayPal approval).
+- Landlord Premium is a one-time $35 USD payment for 365 days; it does not renew automatically. Checkout appears in My Account for verified landlord accounts only.
+- Before switching PAYPAL_ENV to live, create a PayPal REST app in Live mode and add its Live Client ID/Secret to Supabase Edge Function secrets. Never place the Secret in GitHub or browser code.
 - Google Search Console: submit sitemap.xml.
 
 RENTER CONTACT PASS RULES (enforced in the database)
