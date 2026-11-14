@@ -250,8 +250,8 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
     <div id="landlordCardUnavailable" class="rh-card-unavailable hide" role="status"></div>
     <div id="landlordCardFieldsPanel" class="rh-card-panel rh-payment-pane hide">
       <h3>Pay by credit or debit card</h3>
-      <label for="landlordCardNameField">Cardholder name</label>
-      <div id="landlordCardNameField" class="rh-card-field"></div>
+      <label for="landlordCardholderName">Cardholder name</label>
+      <input id="landlordCardholderName" class="rh-card-input" type="text" autocomplete="cc-name" maxlength="100" placeholder="Name on card">
       <label for="landlordCardNumberField">Card number</label>
       <div id="landlordCardNumberField" class="rh-card-field"></div>
       <div class="rh-card-grid">
@@ -547,9 +547,6 @@ async function landlordRenderCardFields(){
       },
       ".invalid": { color: "#b3261e" }
     };
-    var nameField = session.createCardFieldsComponent({
-      type:"name", placeholder:"Name on card", style:fieldStyle
-    });
     var numberField = session.createCardFieldsComponent({
       type:"number", placeholder:"Card number", style:fieldStyle
     });
@@ -560,7 +557,6 @@ async function landlordRenderCardFields(){
       type:"cvv", placeholder:"CVV", style:fieldStyle
     });
 
-    $("landlordCardNameField").replaceChildren(nameField);
     $("landlordCardNumberField").replaceChildren(numberField);
     $("landlordCardExpiryField").replaceChildren(expiryField);
     $("landlordCardCvvField").replaceChildren(cvvField);
@@ -610,6 +606,12 @@ document.addEventListener("keydown", function(event){
 });
 $("landlordCardPay").onclick = async function(){
   if(!landlordCardSession || !landlordCardFieldsReady) return;
+  var cardholderName = $("landlordCardholderName").value.trim();
+  if(!cardholderName){
+    landlordCardNote("Enter the name shown on your card.", "err");
+    $("landlordCardholderName").focus();
+    return;
+  }
   var postal = $("landlordCardPostal").value.trim();
   if(!postal){
     landlordCardNote("Enter your US billing ZIP code to continue.", "err");
