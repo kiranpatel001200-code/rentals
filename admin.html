@@ -138,7 +138,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <main class="wrap">
 <div id="gate" class="hide"></div>
 <div id="area" class="hide">
-<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="support">Support requests</button><button type="button" class="tab" data-tab="users">Users</button><button type="button" class="tab" data-tab="activity">User activity</button></div>
+<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="support">Support requests</button><button type="button" class="tab" data-tab="users">Users</button><button type="button" class="tab" data-tab="payments">Payments & refunds</button><button type="button" class="tab" data-tab="activity">User activity</button></div>
 <p id="msg" role="status"></p>
 <div id="list"></div>
 </div>
@@ -342,6 +342,78 @@ async function users(box){
 }
 
 
+/* ---------- PayPal Premium payments and refunds ---------- */
+async function payments(box){
+  box.appendChild(el("p","sub","Recent PayPal transactions. Full card numbers and CVV are never available to RenterHere."));
+  var result=await sb.functions.invoke("paypal-landlord-premium",{body:{action:"admin_list"}});
+  if(result.error||!result.data||result.data.ok!==true){
+    box.appendChild(el("p","empty","Could not load payments. Please sign in again with your admin account."));
+    say(result.data&&result.data.error||result.error&&result.error.message||"Payment list unavailable.","err");
+    return;
+  }
+  var env=result.data.environment||"unknown";
+  var envLine=el("div","line");
+  envLine.appendChild(el("b","", "PayPal environment"));
+  envLine.appendChild(chip(env.toUpperCase(),env==="live"?"live":"pend"));
+  box.appendChild(envLine);
+  var rows=result.data.payments||[];
+  var search=el("form","sf"),input=el("input"),submit=el("button","act","Search");
+  input.placeholder="Search email, name, order ID or capture ID";
+  submit.type="submit";search.appendChild(input);search.appendChild(submit);
+  var list=el("div","");
+  search.onsubmit=function(e){
+    e.preventDefault();var q=input.value.trim().toLowerCase();
+    list.textContent="";
+    rows.filter(function(p){
+      var u=p.profiles||{};
+      return [u.email,u.full_name,u.user_code,p.paypal_order_id,p.paypal_capture_id,p.payer_email,p.payer_name].some(function(v){return String(v||"").toLowerCase().includes(q);});
+    }).forEach(renderPayment);
+  };
+  box.appendChild(search);box.appendChild(list);
+  function renderPayment(p){
+    var u=p.profiles||{},d=el("div","it"),head=el("div","tp");
+    head.appendChild(el("b","",u.full_name||p.payer_name||"Customer"));
+    head.appendChild(chip(String(p.status||"unknown").toUpperCase(),p.status==="completed"?"live":p.status==="pending"?"pend":"rej"));
+    if(p.refund_status&&p.refund_status!=="none")head.appendChild(chip("REFUND "+p.refund_status.toUpperCase(),p.refund_status==="completed"?"live":"pend"));
+    d.appendChild(head);
+    d.appendChild(el("div","meta",(u.email||p.payer_email||"No email")+(u.user_code?" · "+u.user_code:"")+" · "+String(u.role||"user")));
+    d.appendChild(el("div","meta","Paid: $"+Number(p.amount||0).toFixed(2)+" "+String(p.currency||"USD")+" · "+new Date(p.created_at).toLocaleString()));
+    d.appendChild(el("div","meta","Method: "+(p.payment_method==="card"?"Card"+(p.card_brand?" · "+p.card_brand:"")+(p.card_last4?" ending "+p.card_last4:""):p.payment_method==="paypal"?"PayPal wallet":"Not returned by PayPal")));
+    if(p.payer_name||p.payer_email)d.appendChild(el("div","meta","PayPal payer: "+[p.payer_name,p.payer_email].filter(Boolean).join(" · ")));
+    d.appendChild(el("div","meta","Order: "+(p.paypal_order_id||"—")+" · Capture: "+(p.paypal_capture_id||"—")));
+    if(p.paypal_payer_id)d.appendChild(el("div","meta","PayPal payer ID: "+p.paypal_payer_id));
+    d.appendChild(el("div","meta","PayPal fee: "+(p.paypal_fee_amount==null?"Not supplied":"$"+Number(p.paypal_fee_amount).toFixed(2))+" · Net received: "+(p.paypal_net_amount==null?"Not supplied":"$"+Number(p.paypal_net_amount).toFixed(2))));
+    if(Number(p.refunded_amount||0)>0)d.appendChild(el("div","meta","Refunded: $"+Number(p.refunded_amount).toFixed(2)+" · Refund ID: "+(p.paypal_refund_id||"pending")));
+    d.appendChild(el("div","meta","Account: "+(u.is_banned?"Blocked":"Active")+" · Subscription ID: "+(p.subscription_id||"—")));
+    if(p.refund_note)d.appendChild(el("div","meta","Refund note: "+p.refund_note));
+    if(p.refund_error)d.appendChild(el("div","meta","Refund status note: "+p.refund_error));
+    var actions=el("div","acts");
+    if(p.status==="completed"&&p.payment_type==="subscription"&&p.paypal_capture_id&&p.refund_status!=="completed"&&p.refund_status!=="pending"){
+      actions.appendChild(btn("Refund payment",async function(){
+        var remaining=Math.max(0,Number(p.amount)-Number(p.refunded_amount||0));
+        var raw=window.prompt("Refund amount in USD (maximum $"+remaining.toFixed(2)+"):",remaining.toFixed(2));
+        if(raw===null)return;
+        var amount=Number(raw);
+        if(!Number.isFinite(amount)||amount<=0||amount>remaining){say("Enter a valid amount not exceeding the remaining balance.","err");return;}
+        var note=window.prompt("Optional reason for the refund:","Customer refund request");
+        if(note===null)return;
+        if(!window.confirm("Send a PayPal refund of $"+amount.toFixed(2)+" to the original payment method? This cannot be undone."))return;
+        say("Submitting refund to PayPal...");
+        var x=await sb.functions.invoke("paypal-landlord-premium",{body:{action:"admin_refund",payment_id:p.id,amount:amount,note:note}});
+        if(x.error||!x.data||x.data.ok!==true){
+          say(x.data&&x.data.error||x.error&&x.error.message||"Refund result is not confirmed. Check PayPal activity before retrying.","err");
+        }else{
+          say(x.data.pending?"PayPal is still processing the refund.":"Refund submitted successfully. Refund ID: "+x.data.refund_id,"ok");
+        }
+        render();
+      },"del"));
+    }
+    d.appendChild(actions);list.appendChild(d);
+  }
+  rows.forEach(renderPayment);
+  if(!rows.length)list.appendChild(el("p","empty","No payment records yet."));
+}
+
 /* ---------- user activity ---------- */
 async function activity(box){
   var f=el("form","sf"),i=el("input"),b=el("button","act","Search");
@@ -362,7 +434,7 @@ async function activity(box){
 async function render(){
   document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("on", t.dataset.tab === tab); });
   var box = $("list"); box.textContent = "";
-  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "reports") await reports(box); else if(tab === "support") await support(box); else if(tab === "activity") await activity(box); else await users(box);
+  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "reports") await reports(box); else if(tab === "support") await support(box); else if(tab === "payments") await payments(box); else if(tab === "activity") await activity(box); else await users(box);
 }
 async function init(){
   var s = await sb.auth.getSession();
