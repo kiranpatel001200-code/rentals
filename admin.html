@@ -357,19 +357,37 @@ async function payments(box){
   envLine.appendChild(chip(env.toUpperCase(),env==="live"?"live":"pend"));
   box.appendChild(envLine);
   var rows=result.data.payments||[];
+  var filters=el("div","filters");
+  var filter=el("select","filter");
+  [["all","All premium payments & refunds"],["paid","Premium paid — no refund"],["partial","Partially refunded"],["refunded","Fully refunded"],["pending","Refund pending"],["failed","Refund failed"]].forEach(function(item){
+    var option=document.createElement("option");option.value=item[0];option.textContent=item[1];filter.appendChild(option);
+  });
+  filters.appendChild(filter);
   var search=el("form","sf"),input=el("input"),submit=el("button","act","Search");
   input.placeholder="Search email, name, order ID or capture ID";
   submit.type="submit";search.appendChild(input);search.appendChild(submit);
   var list=el("div","");
-  search.onsubmit=function(e){
-    e.preventDefault();var q=input.value.trim().toLowerCase();
+  function drawRows(){
+    var q=input.value.trim().toLowerCase(),mode=filter.value;
     list.textContent="";
-    rows.filter(function(p){
-      var u=p.profiles||{};
-      return [u.email,u.full_name,u.user_code,p.paypal_order_id,p.paypal_capture_id,p.payer_email,p.payer_name].some(function(v){return String(v||"").toLowerCase().includes(q);});
-    }).forEach(renderPayment);
-  };
-  box.appendChild(search);box.appendChild(list);
+    var matched=rows.filter(function(p){
+      var u=p.profiles||{},refunded=Number(p.refunded_amount||0),total=Number(p.amount||0);
+      var isFull=p.status==="refunded"||p.refund_status==="completed"|| (total>0&&refunded>=total);
+      var isPartial=refunded>0&&!isFull;
+      var isPending=p.refund_status==="pending";
+      var isFailed=p.refund_status==="failed";
+      var isPaid=!isFull&&!isPartial&&!isPending&&!isFailed&&p.status==="completed";
+      var statusMatch=mode==="all"||(mode==="paid"&&isPaid)||(mode==="partial"&&isPartial)||(mode==="refunded"&&isFull)||(mode==="pending"&&isPending)||(mode==="failed"&&isFailed);
+      var textMatch=[u.email,u.full_name,u.user_code,p.paypal_order_id,p.paypal_capture_id,p.payer_email,p.payer_name].some(function(v){return String(v||"").toLowerCase().includes(q);});
+      return statusMatch&&textMatch;
+    });
+    matched.forEach(renderPayment);
+    if(!matched.length)list.appendChild(el("p","empty","No premium payments or refunds match this filter."));
+  }
+  filter.onchange=drawRows;
+  search.onsubmit=function(e){e.preventDefault();drawRows();};
+  filters.appendChild(search);
+  box.appendChild(filters);box.appendChild(list);
   function renderPayment(p){
     var u=p.profiles||{},d=el("div","it"),head=el("div","tp");
     head.appendChild(el("b","",u.full_name||p.payer_name||"Customer"));
@@ -410,8 +428,7 @@ async function payments(box){
     }
     d.appendChild(actions);list.appendChild(d);
   }
-  rows.forEach(renderPayment);
-  if(!rows.length)list.appendChild(el("p","empty","No payment records yet."));
+  drawRows();
 }
 
 /* ---------- user activity ---------- */
