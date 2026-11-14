@@ -76,34 +76,61 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 .banner{padding:26px 0 56px}
 }
 
-/* RenterHere same-page PayPal checkout modal */
-.rh-checkout-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,25,30,.68);display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
-.rh-checkout-dialog{width:min(100%,520px);max-height:min(92vh,900px);overflow-y:auto;background:#fff;border:1px solid #d6e8e3;border-radius:20px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.28);color:#1a2e2c}
-.rh-checkout-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
-.rh-checkout-kicker{display:block;color:#0b7a6e;font-size:.69rem;font-weight:800;letter-spacing:.12em;margin-bottom:7px}
-.rh-checkout-head h2{font-size:1.25rem;line-height:1.25}
-.rh-checkout-close{width:38px;height:38px;min-width:38px;padding:0;border:1px solid #d6e8e3;background:#f4faf8;color:#0a2e36;font-size:1.65rem;line-height:1;border-radius:50%}
-.rh-checkout-total{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid #d6e8e3;background:#f4faf8;border-radius:14px;padding:15px;margin-bottom:12px}
+/* RenterHere same-page checkout: compact, tabbed and no internal scrolling */
+.rh-checkout-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,25,30,.72);display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}
+.rh-checkout-dialog{width:min(100%,540px);max-height:calc(100dvh - 24px);overflow:hidden;background:#fff;border:1px solid #d6e8e3;border-radius:20px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.28);color:#1a2e2c;display:flex;flex-direction:column}
+.rh-checkout-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;flex:0 0 auto}
+.rh-checkout-kicker{display:block;color:#0b7a6e;font-size:.64rem;font-weight:800;letter-spacing:.12em;margin-bottom:4px}
+.rh-checkout-head h2{font-size:1.12rem;line-height:1.2}
+.rh-checkout-close{width:36px;height:36px;min-width:36px;padding:0;border:1px solid #d6e8e3;background:#f4faf8;color:#0a2e36;font-size:1.5rem;line-height:1;border-radius:50%}
+.rh-checkout-total{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #d6e8e3;background:#f4faf8;border-radius:12px;padding:10px 12px;margin-bottom:8px;flex:0 0 auto}
 .rh-checkout-total b,.rh-checkout-total span{display:block}
-.rh-checkout-total span{font-size:.8rem;color:#5a6e6b;margin-top:3px}
-.rh-checkout-total>strong{white-space:nowrap;color:#0a2e36;font-size:1.35rem}
-.rh-checkout-total>strong small{font-size:.7rem}
-.rh-checkout-safe,.rh-checkout-foot,.rh-card-hint{font-size:.78rem;line-height:1.5;color:#5a6e6b}
-.rh-checkout-safe{margin:12px 0 18px}
-.rh-card-panel{border:1px solid #d6e8e3;border-radius:14px;padding:16px;margin:0 0 16px}
-.rh-card-panel h3{font-size:1rem;color:#0a2e36;margin:0 0 12px}
-.rh-card-panel label{font-size:.82rem;margin:10px 0 5px}
-.rh-card-field{min-height:44px;border:1px solid #cbdcd7;border-radius:9px;padding:10px 11px;background:#fff}
+.rh-checkout-total span{font-size:.72rem;color:#5a6e6b;margin-top:2px}
+.rh-checkout-total>strong{white-space:nowrap;color:#0a2e36;font-size:1.22rem}
+.rh-checkout-total>strong small{font-size:.68rem}
+.rh-checkout-safe,.rh-checkout-foot,.rh-card-hint{font-size:.7rem;line-height:1.35;color:#5a6e6b}
+.rh-checkout-safe{margin:6px 0 9px;flex:0 0 auto}
+.rh-payment-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;flex:0 0 auto}
+.rh-payment-tab{min-height:40px;padding:8px 10px;border:1px solid #cbdcd7;background:#f7fbfa;color:#25423e;border-radius:10px;font-size:.84rem}
+.rh-payment-tab[aria-selected="true"]{background:#e7f5f1;border:2px solid #0b7a6e;color:#07594f}
+.rh-card-panel{border:0;border-radius:0;padding:0;margin:0;min-height:0}
+.rh-card-panel h3{font-size:.9rem;color:#0a2e36;margin:0 0 6px}
+.rh-card-panel label{font-size:.76rem;margin:7px 0 3px}
+.rh-card-field{min-height:39px;border:1px solid #cbdcd7;border-radius:8px;padding:7px 9px;background:#fff}
 .rh-card-field:focus-within{outline:2px solid #0b7a6e;outline-offset:1px}
-.rh-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.rh-card-input{min-height:44px}
-.rh-card-pay{width:100%;margin-top:14px}
+.rh-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.rh-card-input{min-height:38px;padding:7px 9px}
+.rh-card-pay{width:100%;min-height:42px;margin-top:9px}
 .rh-card-pay:disabled{opacity:.5;cursor:not-allowed}
-.rh-card-unavailable{background:#fff8e6;border:1px solid #ead9a6;border-radius:10px;padding:11px 12px;font-size:.83rem;color:#655018;margin-bottom:14px}
-.rh-checkout-or{display:flex;align-items:center;gap:12px;color:#6a7c79;font-size:.7rem;font-weight:800;letter-spacing:.08em;margin:17px 0 13px}
-.rh-checkout-or:before,.rh-checkout-or:after{content:"";height:1px;background:#d6e8e3;flex:1}
-.rh-checkout-foot{margin:12px 0 0;text-align:center}
-@media(max-width:540px){.rh-checkout-overlay{align-items:flex-end;padding:0}.rh-checkout-dialog{width:100%;max-height:94dvh;border-radius:20px 20px 0 0;padding:20px 17px calc(20px + env(safe-area-inset-bottom))}.rh-checkout-total>strong{font-size:1.2rem}.rh-card-grid{gap:9px}}
+.rh-card-unavailable{background:#fff8e6;border:1px solid #ead9a6;border-radius:10px;padding:9px 10px;font-size:.78rem;color:#655018;margin:0 0 8px}
+.rh-payment-pane{min-height:0}
+.rh-checkout-foot{margin:8px 0 0;text-align:center;flex:0 0 auto}
+#landlordPayPalButton{min-height:48px}
+#landlordCardMessage,#landlordCheckoutMessage{font-size:.8rem;margin:5px 0 0;min-height:0}
+.rh-card-hint{margin:6px 0 0}
+@media(max-width:540px){
+.rh-checkout-overlay{align-items:center;padding:0}
+.rh-checkout-dialog{width:100%;max-height:100dvh;height:auto;border-radius:0;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
+.rh-checkout-head{margin-bottom:8px}
+.rh-checkout-head h2{font-size:1.02rem}
+.rh-checkout-total{padding:9px 10px}
+.rh-checkout-safe{font-size:.66rem;margin:5px 0 7px}
+.rh-payment-tabs{gap:6px;margin-bottom:8px}
+.rh-payment-tab{min-height:38px;font-size:.8rem}
+.rh-card-field{min-height:36px;padding:6px 8px}
+.rh-card-panel label{margin:6px 0 2px}
+.rh-card-pay{min-height:40px;margin-top:7px}
+.rh-checkout-foot{font-size:.66rem;margin-top:6px}
+}
+@media(max-height:650px){
+.rh-checkout-dialog{padding:12px 16px}
+.rh-checkout-head{margin-bottom:6px}
+.rh-checkout-safe{margin:4px 0 6px}
+.rh-card-panel label{margin:5px 0 2px}
+.rh-card-field{min-height:34px}
+.rh-card-pay{min-height:38px;margin-top:6px}
+.rh-checkout-foot{margin-top:5px}
+}
 
 </style>
 <link rel="stylesheet" href="polish.css">
@@ -222,7 +249,11 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
     <p class="rh-checkout-safe"><span aria-hidden="true">🔒</span> Your card details are entered in PayPal-hosted secure fields. RenterHere does not receive or store your card number or CVV.</p>
 
     <div id="landlordCardUnavailable" class="rh-card-unavailable hide" role="status"></div>
-    <div id="landlordCardFieldsPanel" class="rh-card-panel hide">
+    <div class="rh-payment-tabs hide" id="landlordPaymentTabs" role="tablist" aria-label="Choose payment method">
+      <button type="button" class="rh-payment-tab" id="landlordCardTab" role="tab" aria-selected="true" aria-controls="landlordCardFieldsPanel">Credit or debit card</button>
+      <button type="button" class="rh-payment-tab" id="landlordPayPalTab" role="tab" aria-selected="false" aria-controls="landlordPayPalPanel">PayPal</button>
+    </div>
+    <div id="landlordCardFieldsPanel" class="rh-card-panel rh-payment-pane hide" role="tabpanel" aria-labelledby="landlordCardTab">
       <h3>Pay by credit or debit card</h3>
       <label for="landlordCardNameField">Cardholder name</label>
       <div id="landlordCardNameField" class="rh-card-field"></div>
@@ -241,13 +272,13 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
       <label for="landlordCardPostal">Billing ZIP code</label>
       <input id="landlordCardPostal" class="rh-card-input" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="12" placeholder="ZIP code">
       <button type="button" class="main rh-card-pay" id="landlordCardPay" disabled>Pay $35.00 USD</button>
-      <p class="rh-card-hint">Card payments may require bank verification. Your Premium starts only after PayPal confirms the completed payment.</p>
+      <p class="rh-card-hint">Secure card processing by PayPal. Premium activates after payment confirmation.</p>
       <p id="landlordCardMessage" class="note" role="status" aria-live="polite"></p>
     </div>
-
-    <div class="rh-checkout-or"><span>OR PAY WITH PAYPAL</span></div>
-    <div id="landlordPayPalButton"></div>
-    <p class="rh-checkout-foot">Payments are processed securely by PayPal. Renter Contact Pass is a separate product and is not included.</p>
+    <div id="landlordPayPalPanel" class="rh-payment-pane hide" role="tabpanel" aria-labelledby="landlordPayPalTab">
+      <div id="landlordPayPalButton"></div>
+    </div>
+    <p class="rh-checkout-foot">Payments are processed securely by PayPal. No automatic renewal. Renter Contact Pass is separate.</p>
     <p id="landlordCheckoutMessage" class="note" role="status" aria-live="polite"></p>
   </div>
 </div>
@@ -426,6 +457,19 @@ function closeLandlordCheckout(){
   document.body.style.overflow = "";
   $("landlordOpenCheckout").focus();
 }
+function setLandlordPaymentMethod(method){
+  var card = method === "card";
+  var cardTab = $("landlordCardTab"), paypalTab = $("landlordPayPalTab");
+  var cardPanel = $("landlordCardFieldsPanel"), paypalPanel = $("landlordPayPalPanel");
+  if(!cardTab || !paypalTab || !cardPanel || !paypalPanel) return;
+  cardTab.setAttribute("aria-selected", card ? "true" : "false");
+  paypalTab.setAttribute("aria-selected", card ? "false" : "true");
+  cardPanel.classList.toggle("hide", !card || !landlordCardFieldsReady);
+  paypalPanel.classList.toggle("hide", card);
+}
+$("landlordCardTab").onclick = function(){ setLandlordPaymentMethod("card"); };
+$("landlordPayPalTab").onclick = function(){ setLandlordPaymentMethod("paypal"); };
+
 function loadLandlordPayPalSdk(config){
   if(landlordPayPalSdkPromise) return landlordPayPalSdkPromise;
   landlordPayPalSdkPromise = new Promise(function(resolve, reject){
@@ -492,8 +536,9 @@ async function landlordRenderCardFields(){
   var panel = $("landlordCardFieldsPanel");
   var unavailable = $("landlordCardUnavailable");
   if(!window.paypal || !window.paypal.CardFields || !landlordCheckoutConfig || !landlordCheckoutConfig.client_token){
-    unavailable.textContent = "In-page card entry is not enabled for this PayPal account yet. You can still continue with the PayPal option below.";
+    unavailable.textContent = "Card entry is not enabled for this PayPal account. Choose PayPal to continue.";
     unavailable.classList.remove("hide");
+    setLandlordPaymentMethod("paypal");
     return;
   }
   try{
@@ -506,8 +551,9 @@ async function landlordRenderCardFields(){
       },
     });
     if(!fields.isEligible()){
-      unavailable.textContent = "PayPal has not enabled direct card entry for this account or checkout. You can still pay securely using the PayPal option below.";
+      unavailable.textContent = "Direct card entry is not available for this PayPal account. Choose PayPal to continue.";
       unavailable.classList.remove("hide");
+      setLandlordPaymentMethod("paypal");
       return;
     }
     landlordCardFields = fields;
@@ -522,12 +568,15 @@ async function landlordRenderCardFields(){
       cvvField.render("#landlordCardCvvField")
     ]);
     panel.classList.remove("hide");
+    $("landlordPaymentTabs").classList.remove("hide");
     landlordCardFieldsReady = true;
     $("landlordCardPay").disabled = false;
+    setLandlordPaymentMethod("card");
   }catch(error){
     console.error("PayPal card fields unavailable:", error);
-    unavailable.textContent = "PayPal card entry is not available for this account right now. You can still continue using PayPal below.";
+    unavailable.textContent = "PayPal card entry is unavailable right now. Choose PayPal to continue.";
     unavailable.classList.remove("hide");
+    setLandlordPaymentMethod("paypal");
   }
 }
 async function initialiseLandlordCheckout(){
@@ -561,6 +610,7 @@ async function initialiseLandlordCheckout(){
     else landlordCheckoutNote("PayPal wallet checkout is not available for this browser or account.", "err");
 
     await landlordRenderCardFields();
+    if(!landlordCardFieldsReady) setLandlordPaymentMethod("paypal");
     landlordPaymentUiReady = true;
     landlordCheckoutNote("");
   }catch(error){
