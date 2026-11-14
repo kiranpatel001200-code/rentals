@@ -155,6 +155,24 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div class="head"><h2>Admin</h2><a href="admin.html" style="background:var(--blue);color:#fff;text-decoration:none;font-weight:600;padding:10px 20px;border-radius:10px">Open admin</a></div>
 </section>
 
+<section class="card hide" id="cLandlordPremium">
+<div class="head"><h2>Landlord Premium</h2></div>
+<div id="landlordPremiumStatus" class="passfine" role="status" aria-live="polite">Checking your Premium status...</div>
+<div id="landlordPremiumCheckout" class="hide">
+  <p><strong style="font-size:1.55rem;color:var(--navy)">$35 USD <span style="font-size:.95rem;font-weight:500">/ year</span></strong></p>
+  <p class="passfine">One secure payment for 365 days of Landlord Premium. No automatic renewal. Your Premium access starts after PayPal confirms the payment.</p>
+  <ul style="padding-left:20px;color:var(--muted);line-height:1.7">
+    <li>Unlimited active listings</li>
+    <li>Priority search placement and featured visibility</li>
+    <li>Verified landlord badge</li>
+    <li>Advanced listing analytics</li>
+  </ul>
+  <div id="landlordPayPalButton"></div>
+  <p class="passfine" style="font-size:.85rem">Payments are securely processed by PayPal. Renter Contact Pass is a separate product and is not included.</p>
+</div>
+<p class="note" id="landlordPremiumNotice" role="status" aria-live="polite"></p>
+</section>
+
 <section class="card" id="cPassCard">
 <div class="head"><h2>Renter Contact Pass</h2></div>
 <p class="row" id="passStatus" style="margin:8px 0 0">Loading...</p>
@@ -246,9 +264,11 @@ async function init(){
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
   if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
+  if(role === "landlord"){ $("cLandlordPremium").classList.remove("hide"); }
   if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
   $("page").classList.remove("hide");
   showPass();
+  if(accountRole === "landlord"){ showLandlordPremium(); }
 }
 async function showPass(){
   if(accountRole === "admin"){
@@ -282,6 +302,121 @@ async function showPass(){
     }
   } else {
     $("passBody").appendChild(passBox(function(){ location.reload(); }));
+  }
+}
+
+
+/* Annual Landlord Premium checkout ($35 USD / 365 days, non-recurring). */
+var landlordPayPalSdkPromise = null;
+var landlordPayPalButtonsRendered = false;
+function landlordPremiumNote(message, kind){
+  var el = $("landlordPremiumNotice");
+  if(!el) return;
+  el.textContent = message || "";
+  el.className = "note" + (kind ? " " + kind : "");
+}
+function loadLandlordPayPalSdk(clientId){
+  if(landlordPayPalSdkPromise) return landlordPayPalSdkPromise;
+  landlordPayPalSdkPromise = new Promise(function(resolve, reject){
+    var existing = document.querySelector('script[data-rh-landlord-paypal="1"]');
+    if(existing){
+      if(window.paypal && window.paypal.Buttons){ resolve(); return; }
+      existing.addEventListener("load", resolve, {once:true});
+      existing.addEventListener("error", reject, {once:true});
+      return;
+    }
+    var script = document.createElement("script");
+    script.dataset.rhLandlordPaypal = "1";
+    script.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(clientId) + "&currency=USD&intent=capture";
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = function(){ reject(new Error("Could not load PayPal checkout. Check your connection and try again.")); };
+    document.head.appendChild(script);
+  });
+  return landlordPayPalSdkPromise;
+}
+async function showLandlordPremium(){
+  var status = $("landlordPremiumStatus");
+  var checkout = $("landlordPremiumCheckout");
+  if(!status || !checkout || !user) return;
+  status.textContent = "Checking your Landlord Premium status...";
+  checkout.classList.add("hide");
+  $("landlordPayPalButton").textContent = "";
+  landlordPremiumNote("");
+
+  try{
+    var current = await sb.from("landlord_subscriptions")
+      .select("id,status,current_period_end,subscription_plans!inner(slug,billing_interval)")
+      .eq("landlord_id", user.id)
+      .eq("subscription_plans.slug", "landlord-premium-yearly")
+      .in("status", ["active","trialing"])
+      .order("current_period_start", {ascending:false})
+      .limit(1)
+      .maybeSingle();
+    if(current.error) throw current.error;
+    var active = current.data && (!current.data.current_period_end || new Date(current.data.current_period_end).getTime() > Date.now());
+    if(active){
+      status.textContent = "Your Landlord Premium is active until " + new Date(current.data.current_period_end).toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"}) + ". Your plan does not renew automatically.";
+      status.className = "passfine";
+      return;
+    }
+
+    status.textContent = "Landlord Premium gives your rental business more visibility for one year.";
+    status.className = "passfine";
+    checkout.classList.remove("hide");
+
+    var cfgResult = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"config"}});
+    if(cfgResult.error) throw cfgResult.error;
+    var cfg = cfgResult.data || {};
+    if(!cfg.ready || !cfg.client_id){
+      landlordPremiumNote("PayPal is not enabled yet. Add your PayPal REST app Client ID and Secret to Supabase Edge Function secrets to turn on payments.", "err");
+      return;
+    }
+    await loadLandlordPayPalSdk(cfg.client_id);
+    if(!window.paypal || !window.paypal.Buttons) throw new Error("PayPal checkout could not initialize.");
+    if(landlordPayPalButtonsRendered) return;
+    landlordPayPalButtonsRendered = true;
+
+    var buttons = window.paypal.Buttons({
+      style:{layout:"vertical",color:"gold",shape:"rect",label:"paypal",height:48},
+      createOrder: async function(){
+        landlordPremiumNote("Connecting to PayPal...");
+        var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"create"}});
+        if(result.error || !result.data || !result.data.id){
+          var message = result.data && result.data.error ? result.data.error : "Could not start PayPal checkout. Please try again.";
+          landlordPremiumNote(message, "err");
+          throw new Error(message);
+        }
+        landlordPremiumNote("");
+        return result.data.id;
+      },
+      onApprove: async function(data){
+        landlordPremiumNote("Payment approved. Verifying your payment and activating Premium...");
+        var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"capture",orderID:data.orderID}});
+        if(result.error || !result.data || result.data.ok !== true){
+          var message = result.data && result.data.error ? result.data.error : "Payment verification is still pending. Contact support with PayPal order ID: " + data.orderID;
+          landlordPremiumNote(message, "err");
+          return;
+        }
+        landlordPremiumNote("Payment successful! Your Landlord Premium is active until " + new Date(result.data.expires_at).toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"}) + ".", "ok");
+        status.textContent = "Your Landlord Premium is active.";
+        checkout.classList.add("hide");
+        setTimeout(function(){ showLandlordPremium(); }, 1200);
+      },
+      onCancel: function(){
+        landlordPremiumNote("Payment was cancelled. No Premium access was added.");
+      },
+      onError: function(error){
+        console.error("PayPal checkout error:", error);
+        landlordPremiumNote("PayPal could not complete checkout. Please try again or contact support.", "err");
+      }
+    });
+    if(buttons.isEligible()) await buttons.render("#landlordPayPalButton");
+    else landlordPremiumNote("PayPal checkout is not available for this browser or account. Please contact support.", "err");
+  }catch(error){
+    console.error("Landlord Premium status error:", error);
+    status.textContent = "Could not load Landlord Premium status. Refresh the page to try again.";
+    landlordPremiumNote(friendly(error), "err");
   }
 }
 
