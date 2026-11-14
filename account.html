@@ -75,6 +75,36 @@ header.top nav a.hide-sm{display:block}
 header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;border:0}
 .banner{padding:26px 0 56px}
 }
+
+/* RenterHere same-page PayPal checkout modal */
+.rh-checkout-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,25,30,.68);display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto}
+.rh-checkout-dialog{width:min(100%,520px);max-height:min(92vh,900px);overflow-y:auto;background:#fff;border:1px solid #d6e8e3;border-radius:20px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.28);color:#1a2e2c}
+.rh-checkout-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.rh-checkout-kicker{display:block;color:#0b7a6e;font-size:.69rem;font-weight:800;letter-spacing:.12em;margin-bottom:7px}
+.rh-checkout-head h2{font-size:1.25rem;line-height:1.25}
+.rh-checkout-close{width:38px;height:38px;min-width:38px;padding:0;border:1px solid #d6e8e3;background:#f4faf8;color:#0a2e36;font-size:1.65rem;line-height:1;border-radius:50%}
+.rh-checkout-total{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid #d6e8e3;background:#f4faf8;border-radius:14px;padding:15px;margin-bottom:12px}
+.rh-checkout-total b,.rh-checkout-total span{display:block}
+.rh-checkout-total span{font-size:.8rem;color:#5a6e6b;margin-top:3px}
+.rh-checkout-total>strong{white-space:nowrap;color:#0a2e36;font-size:1.35rem}
+.rh-checkout-total>strong small{font-size:.7rem}
+.rh-checkout-safe,.rh-checkout-foot,.rh-card-hint{font-size:.78rem;line-height:1.5;color:#5a6e6b}
+.rh-checkout-safe{margin:12px 0 18px}
+.rh-card-panel{border:1px solid #d6e8e3;border-radius:14px;padding:16px;margin:0 0 16px}
+.rh-card-panel h3{font-size:1rem;color:#0a2e36;margin:0 0 12px}
+.rh-card-panel label{font-size:.82rem;margin:10px 0 5px}
+.rh-card-field{min-height:44px;border:1px solid #cbdcd7;border-radius:9px;padding:10px 11px;background:#fff}
+.rh-card-field:focus-within{outline:2px solid #0b7a6e;outline-offset:1px}
+.rh-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rh-card-input{min-height:44px}
+.rh-card-pay{width:100%;margin-top:14px}
+.rh-card-pay:disabled{opacity:.5;cursor:not-allowed}
+.rh-card-unavailable{background:#fff8e6;border:1px solid #ead9a6;border-radius:10px;padding:11px 12px;font-size:.83rem;color:#655018;margin-bottom:14px}
+.rh-checkout-or{display:flex;align-items:center;gap:12px;color:#6a7c79;font-size:.7rem;font-weight:800;letter-spacing:.08em;margin:17px 0 13px}
+.rh-checkout-or:before,.rh-checkout-or:after{content:"";height:1px;background:#d6e8e3;flex:1}
+.rh-checkout-foot{margin:12px 0 0;text-align:center}
+@media(max-width:540px){.rh-checkout-overlay{align-items:flex-end;padding:0}.rh-checkout-dialog{width:100%;max-height:94dvh;border-radius:20px 20px 0 0;padding:20px 17px calc(20px + env(safe-area-inset-bottom))}.rh-checkout-total>strong{font-size:1.2rem}.rh-card-grid{gap:9px}}
+
 </style>
 <link rel="stylesheet" href="polish.css">
 <meta name="theme-color" content="#0b367d">
@@ -165,13 +195,62 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
     <li>Priority placement in matching rental searches</li>
     <li>Unlimited active listings while Premium is active</li>
     <li>Featured visibility for eligible listings</li>
-    <li>See which renter enquiries have verified email addresses</li>
-    <li>Manage renter messages, move-in dates and viewing requests in one inbox</li>
+    <li>Verified-email renter enquiry indicators</li>
+    <li>Messages inbox for renter enquiries and viewing requests</li>
   </ul>
-  <div id="landlordPayPalButton"></div>
-  <p class="passfine" style="font-size:.85rem">Payments are securely processed by PayPal. Renter Contact Pass is a separate product and is not included.</p>
+  <button type="button" class="main" id="landlordOpenCheckout">Continue to secure checkout — $35/year</button>
+  <p class="passfine" style="font-size:.85rem">Choose PayPal or, when enabled for your account, enter your card details securely on this page.</p>
 </div>
 <p class="note" id="landlordPremiumNotice" role="status" aria-live="polite"></p>
+
+<div id="landlordCheckoutModal" class="rh-checkout-overlay hide" role="dialog" aria-modal="true" aria-labelledby="landlordCheckoutTitle" aria-describedby="landlordCheckoutDescription">
+  <div class="rh-checkout-dialog">
+    <div class="rh-checkout-head">
+      <div>
+        <span class="rh-checkout-kicker">RENTERHERE SECURE CHECKOUT</span>
+        <h2 id="landlordCheckoutTitle">Complete your Premium upgrade</h2>
+      </div>
+      <button type="button" class="rh-checkout-close" id="landlordCloseCheckout" aria-label="Close checkout">×</button>
+    </div>
+    <div class="rh-checkout-total">
+      <div>
+        <b>Landlord Premium</b>
+        <span id="landlordCheckoutDescription">One-time payment · 365 days · No automatic renewal</span>
+      </div>
+      <strong>$35.00 <small>USD</small></strong>
+    </div>
+    <p class="rh-checkout-safe"><span aria-hidden="true">🔒</span> Your card details are entered in PayPal-hosted secure fields. RenterHere does not receive or store your card number or CVV.</p>
+
+    <div id="landlordCardUnavailable" class="rh-card-unavailable hide" role="status"></div>
+    <div id="landlordCardFieldsPanel" class="rh-card-panel hide">
+      <h3>Pay by credit or debit card</h3>
+      <label for="landlordCardNameField">Cardholder name</label>
+      <div id="landlordCardNameField" class="rh-card-field"></div>
+      <label for="landlordCardNumberField">Card number</label>
+      <div id="landlordCardNumberField" class="rh-card-field"></div>
+      <div class="rh-card-grid">
+        <div>
+          <label for="landlordCardExpiryField">Expiration date</label>
+          <div id="landlordCardExpiryField" class="rh-card-field"></div>
+        </div>
+        <div>
+          <label for="landlordCardCvvField">Security code</label>
+          <div id="landlordCardCvvField" class="rh-card-field"></div>
+        </div>
+      </div>
+      <label for="landlordCardPostal">Billing ZIP code</label>
+      <input id="landlordCardPostal" class="rh-card-input" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="12" placeholder="ZIP code">
+      <button type="button" class="main rh-card-pay" id="landlordCardPay" disabled>Pay $35.00 USD</button>
+      <p class="rh-card-hint">Card payments may require bank verification. Your Premium starts only after PayPal confirms the completed payment.</p>
+      <p id="landlordCardMessage" class="note" role="status" aria-live="polite"></p>
+    </div>
+
+    <div class="rh-checkout-or"><span>OR PAY WITH PAYPAL</span></div>
+    <div id="landlordPayPalButton"></div>
+    <p class="rh-checkout-foot">Payments are processed securely by PayPal. Renter Contact Pass is a separate product and is not included.</p>
+    <p id="landlordCheckoutMessage" class="note" role="status" aria-live="polite"></p>
+  </div>
+</div>
 </section>
 
 <section class="card" id="cPassCard">
@@ -309,14 +388,45 @@ async function showPass(){
 
 /* Annual Landlord Premium checkout ($35 USD / 365 days, non-recurring). */
 var landlordPayPalSdkPromise = null;
-var landlordPayPalButtonsRendered = false;
+var landlordPaymentUiReady = false;
+var landlordCardFields = null;
+var landlordCardFieldsReady = false;
+var landlordCheckoutConfig = null;
+
 function landlordPremiumNote(message, kind){
   var el = $("landlordPremiumNotice");
   if(!el) return;
   el.textContent = message || "";
   el.className = "note" + (kind ? " " + kind : "");
 }
-function loadLandlordPayPalSdk(clientId){
+function landlordCheckoutNote(message, kind){
+  var el = $("landlordCheckoutMessage");
+  if(!el) return;
+  el.textContent = message || "";
+  el.className = "note" + (kind ? " " + kind : "");
+}
+function landlordCardNote(message, kind){
+  var el = $("landlordCardMessage");
+  if(!el) return;
+  el.textContent = message || "";
+  el.className = "note" + (kind ? " " + kind : "");
+}
+function openLandlordCheckout(){
+  var modal = $("landlordCheckoutModal");
+  if(!modal) return;
+  modal.classList.remove("hide");
+  document.body.style.overflow = "hidden";
+  $("landlordCloseCheckout").focus();
+  if(!landlordPaymentUiReady) initialiseLandlordCheckout();
+}
+function closeLandlordCheckout(){
+  var modal = $("landlordCheckoutModal");
+  if(!modal) return;
+  modal.classList.add("hide");
+  document.body.style.overflow = "";
+  $("landlordOpenCheckout").focus();
+}
+function loadLandlordPayPalSdk(config){
   if(landlordPayPalSdkPromise) return landlordPayPalSdkPromise;
   landlordPayPalSdkPromise = new Promise(function(resolve, reject){
     var existing = document.querySelector('script[data-rh-landlord-paypal="1"]');
@@ -328,21 +438,178 @@ function loadLandlordPayPalSdk(clientId){
     }
     var script = document.createElement("script");
     script.dataset.rhLandlordPaypal = "1";
-    script.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(clientId) + "&currency=USD&intent=capture";
+    if(config.client_token) script.setAttribute("data-client-token", config.client_token);
+    script.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(config.client_id) +
+      "&components=buttons,card-fields&currency=USD&intent=capture";
     script.async = true;
     script.onload = resolve;
-    script.onerror = function(){ reject(new Error("Could not load PayPal checkout. Check your connection and try again.")); };
+    script.onerror = function(){
+      landlordPayPalSdkPromise = null;
+      reject(new Error("PayPal checkout could not load. Please check your connection and try again."));
+    };
     document.head.appendChild(script);
   });
   return landlordPayPalSdkPromise;
 }
+async function landlordCreateOrder(){
+  landlordCheckoutNote("Preparing your secure payment...");
+  landlordCardNote("Preparing your secure payment...");
+  var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"create"}});
+  if(result.error || !result.data || !result.data.id){
+    var message = result.data && result.data.error ? result.data.error : (result.error && result.error.message) || "Could not create the PayPal order. Please try again.";
+    landlordCheckoutNote(message, "err");
+    landlordCardNote(message, "err");
+    throw new Error(message);
+  }
+  landlordCheckoutNote("");
+  landlordCardNote("");
+  return result.data.id;
+}
+async function landlordCaptureAndActivate(data){
+  var orderID = data && data.orderID;
+  if(!orderID) throw new Error("PayPal did not return a payment order ID.");
+  landlordCheckoutNote("Payment approved. Verifying your payment and activating Premium...");
+  landlordCardNote("Payment approved. Verifying your payment and activating Premium...");
+  var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"capture",orderID:orderID}});
+  if(result.error || !result.data || result.data.ok !== true){
+    var message = result.data && result.data.error ? result.data.error : "Payment verification is still pending. Contact support with PayPal order ID: " + orderID;
+    landlordCheckoutNote(message, "err");
+    landlordCardNote(message, "err");
+    throw new Error(message);
+  }
+  var expiry = result.data.expires_at ? new Date(result.data.expires_at).toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"}) : "one year from today";
+  landlordPremiumNote("Payment successful! Your Landlord Premium is active until " + expiry + ".", "ok");
+  $("landlordPremiumStatus").textContent = "Your Landlord Premium is active until " + expiry + ".";
+  $("landlordPremiumStatus").className = "passfine";
+  $("landlordPremiumCheckout").classList.add("hide");
+  closeLandlordCheckout();
+  landlordPaymentUiReady = false;
+  landlordPayPalSdkPromise = null;
+  setTimeout(function(){ showLandlordPremium(); }, 800);
+  return result.data;
+}
+async function landlordRenderCardFields(){
+  var panel = $("landlordCardFieldsPanel");
+  var unavailable = $("landlordCardUnavailable");
+  if(!window.paypal || !window.paypal.CardFields || !landlordCheckoutConfig || !landlordCheckoutConfig.client_token){
+    unavailable.textContent = "In-page card entry is not enabled for this PayPal account yet. You can still continue with the PayPal option below.";
+    unavailable.classList.remove("hide");
+    return;
+  }
+  try{
+    var fields = window.paypal.CardFields({
+      createOrder: landlordCreateOrder,
+      onApprove: landlordCaptureAndActivate,
+      onError: function(error){
+        console.error("PayPal card-field error:", error);
+        landlordCardNote("The card payment could not be completed. Check the details or try PayPal below.", "err");
+      },
+    });
+    if(!fields.isEligible()){
+      unavailable.textContent = "PayPal has not enabled direct card entry for this account or checkout. You can still pay securely using the PayPal option below.";
+      unavailable.classList.remove("hide");
+      return;
+    }
+    landlordCardFields = fields;
+    var nameField = fields.NameField();
+    var numberField = fields.NumberField();
+    var expiryField = fields.ExpiryField();
+    var cvvField = fields.CVVField();
+    await Promise.all([
+      nameField.render("#landlordCardNameField"),
+      numberField.render("#landlordCardNumberField"),
+      expiryField.render("#landlordCardExpiryField"),
+      cvvField.render("#landlordCardCvvField")
+    ]);
+    panel.classList.remove("hide");
+    landlordCardFieldsReady = true;
+    $("landlordCardPay").disabled = false;
+  }catch(error){
+    console.error("PayPal card fields unavailable:", error);
+    unavailable.textContent = "PayPal card entry is not available for this account right now. You can still continue using PayPal below.";
+    unavailable.classList.remove("hide");
+  }
+}
+async function initialiseLandlordCheckout(){
+  landlordCheckoutNote("Loading secure checkout options...");
+  landlordCardNote("");
+  try{
+    var cfgResult = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"config"}});
+    var cfg = cfgResult.data || {};
+    if(cfgResult.error || !cfg.ready || !cfg.client_id){
+      var message = cfg.error || "PayPal is not configured yet. Please contact support.";
+      landlordCheckoutNote(message, "err");
+      return;
+    }
+    landlordCheckoutConfig = cfg;
+    await loadLandlordPayPalSdk(cfg);
+    if(!window.paypal || !window.paypal.Buttons) throw new Error("PayPal checkout could not initialize.");
+
+    var buttons = window.paypal.Buttons({
+      style:{layout:"vertical",color:"gold",shape:"rect",label:"paypal",height:48},
+      createOrder: landlordCreateOrder,
+      onApprove: landlordCaptureAndActivate,
+      onCancel: function(){
+        landlordCheckoutNote("Payment was cancelled. No Premium access was added.");
+      },
+      onError: function(error){
+        console.error("PayPal wallet checkout error:", error);
+        landlordCheckoutNote("PayPal could not complete this payment. Please try again or choose another available method.", "err");
+      }
+    });
+    if(buttons.isEligible()) await buttons.render("#landlordPayPalButton");
+    else landlordCheckoutNote("PayPal wallet checkout is not available for this browser or account.", "err");
+
+    await landlordRenderCardFields();
+    landlordPaymentUiReady = true;
+    landlordCheckoutNote("");
+  }catch(error){
+    console.error("Landlord checkout initialization error:", error);
+    landlordCheckoutNote(friendly(error), "err");
+  }
+}
+
+/* Open and close the same-page checkout dialog. */
+$("landlordOpenCheckout").onclick = openLandlordCheckout;
+$("landlordCloseCheckout").onclick = closeLandlordCheckout;
+$("landlordCheckoutModal").addEventListener("click", function(event){
+  if(event.target === $("landlordCheckoutModal")) closeLandlordCheckout();
+});
+document.addEventListener("keydown", function(event){
+  if(event.key === "Escape" && !$("landlordCheckoutModal").classList.contains("hide")) closeLandlordCheckout();
+});
+$("landlordCardPay").onclick = async function(){
+  if(!landlordCardFields || !landlordCardFieldsReady) return;
+  var postal = $("landlordCardPostal").value.trim();
+  if(!postal){
+    landlordCardNote("Enter your US billing ZIP code to continue.", "err");
+    $("landlordCardPostal").focus();
+    return;
+  }
+  var button = $("landlordCardPay");
+  button.disabled = true;
+  landlordCardNote("Submitting your card securely to PayPal...");
+  try{
+    await landlordCardFields.submit({
+      billingAddress:{
+        countryCode:"US",
+        postalCode:postal
+      }
+    });
+  }catch(error){
+    console.error("PayPal card submission error:", error);
+    landlordCardNote(error && error.message ? error.message : "The card payment could not be completed. Check the details and try again.", "err");
+  }finally{
+    button.disabled = false;
+  }
+};
+
 async function showLandlordPremium(){
   var status = $("landlordPremiumStatus");
   var checkout = $("landlordPremiumCheckout");
   if(!status || !checkout || !user) return;
   status.textContent = "Checking your Landlord Premium status...";
   checkout.classList.add("hide");
-  $("landlordPayPalButton").textContent = "";
   landlordPremiumNote("");
 
   try{
@@ -361,59 +628,9 @@ async function showLandlordPremium(){
       status.className = "passfine";
       return;
     }
-
     status.textContent = "Landlord Premium gives your rental business more visibility for one year.";
     status.className = "passfine";
     checkout.classList.remove("hide");
-
-    var cfgResult = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"config"}});
-    if(cfgResult.error) throw cfgResult.error;
-    var cfg = cfgResult.data || {};
-    if(!cfg.ready || !cfg.client_id){
-      landlordPremiumNote("PayPal is not enabled yet. Add your PayPal REST app Client ID and Secret to Supabase Edge Function secrets to turn on payments.", "err");
-      return;
-    }
-    await loadLandlordPayPalSdk(cfg.client_id);
-    if(!window.paypal || !window.paypal.Buttons) throw new Error("PayPal checkout could not initialize.");
-    if(landlordPayPalButtonsRendered) return;
-    landlordPayPalButtonsRendered = true;
-
-    var buttons = window.paypal.Buttons({
-      style:{layout:"vertical",color:"gold",shape:"rect",label:"paypal",height:48},
-      createOrder: async function(){
-        landlordPremiumNote("Connecting to PayPal...");
-        var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"create"}});
-        if(result.error || !result.data || !result.data.id){
-          var message = result.data && result.data.error ? result.data.error : "Could not start PayPal checkout. Please try again.";
-          landlordPremiumNote(message, "err");
-          throw new Error(message);
-        }
-        landlordPremiumNote("");
-        return result.data.id;
-      },
-      onApprove: async function(data){
-        landlordPremiumNote("Payment approved. Verifying your payment and activating Premium...");
-        var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"capture",orderID:data.orderID}});
-        if(result.error || !result.data || result.data.ok !== true){
-          var message = result.data && result.data.error ? result.data.error : "Payment verification is still pending. Contact support with PayPal order ID: " + data.orderID;
-          landlordPremiumNote(message, "err");
-          return;
-        }
-        landlordPremiumNote("Payment successful! Your Landlord Premium is active until " + new Date(result.data.expires_at).toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"}) + ".", "ok");
-        status.textContent = "Your Landlord Premium is active.";
-        checkout.classList.add("hide");
-        setTimeout(function(){ showLandlordPremium(); }, 1200);
-      },
-      onCancel: function(){
-        landlordPremiumNote("Payment was cancelled. No Premium access was added.");
-      },
-      onError: function(error){
-        console.error("PayPal checkout error:", error);
-        landlordPremiumNote("PayPal could not complete checkout. Please try again or contact support.", "err");
-      }
-    });
-    if(buttons.isEligible()) await buttons.render("#landlordPayPalButton");
-    else landlordPremiumNote("PayPal checkout is not available for this browser or account. Please contact support.", "err");
   }catch(error){
     console.error("Landlord Premium status error:", error);
     status.textContent = "Could not load Landlord Premium status. Refresh the page to try again.";
