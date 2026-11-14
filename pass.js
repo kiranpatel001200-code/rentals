@@ -1,6 +1,6 @@
 /* Contact Pass settings. Keep the price text in sync with the PASS_PRICE / PASS_DAYS secrets of the paypal-pass function.
    Put your PayPal Client ID (it is public, it is safe here) in clientId. Leave it empty to keep payment switched off. */
-var PASS = { price: "$4.99", term: "one payment, valid for 1 year", clientId: "" };
+var PASS = { price: "$25.00", term: "one payment, valid for 1 year", clientId: "" };
 
 function passEl(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
 function passDate(d){ return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); }
@@ -31,7 +31,7 @@ function passBox(onDone){
   d.appendChild(passEl("p", "passfine", "Checking your Contact Pass..."));
   Promise.all([passInfo(), sb.auth.getSession()]).then(async function(r){
     var info = r[0], session = r[1].data.session; d.textContent = "";
-    d.appendChild(passEl("b", "", "Renter Contact Pass"));
+    d.appendChild(passEl("b", "", "Renter Premium"));
     var profileResult = session ? await sb.from("profiles").select("role").eq("id", session.user.id).maybeSingle() : null;
     var role = profileResult && profileResult.data ? profileResult.data.role : null;
     if(session && role === "landlord"){
@@ -53,12 +53,21 @@ function passBox(onDone){
       var lg = passEl("a", "", "Log in or sign up"); lg.href = "login.html"; d.appendChild(lg); return;
     }
     if(info.ever && info.expires){ d.appendChild(passEl("p", "passfine", "Your last pass expired on " + passDate(info.expires) + ".")); }
+    try{
+      var quote = await passCall({ action: "config" });
+      if(quote && quote.price){ PASS.price = "$" + Number(quote.price).toFixed(2); }
+      if(quote && quote.days){ PASS.term = "one payment, valid for " + Number(quote.days) + " days"; }
+      if(quote && quote.client_id){ PASS.clientId = quote.client_id; }
+    }catch(e){
+      d.appendChild(passEl("p", "passnote", e.message || "Could not load the Premium price. Please refresh and try again."));
+      return;
+    }
     buildPay(d, onDone);
   });
   return d;
 }
 function buildPay(d, onDone){
-  d.appendChild(passEl("p", "", "Unlock contact details for up to 3 different rental listings during this pass period. " + PASS.price + ", " + PASS.term + ". If you need more than 3 listings, contact RenterHere to discuss a bigger premium offer."));
+  d.appendChild(passEl("p", "", "Unlock the landlord's phone, email and WhatsApp details when provided, for up to 3 different rental listings. " + PASS.price + " USD for 1 year, as a one-time payment. No automatic renewal. Need more than 3 contact leads? Contact RenterHere about additional access."));
   var fine = passEl("p", "passfine", "Contact Pass purchases are strictly non-refundable once unlocked, subject to applicable law. The pass does not renew automatically. By paying you agree to the ");
   var termsLink = passEl("a", "", "Terms of Service");
   termsLink.href = "terms.html";
@@ -114,7 +123,7 @@ function buildPay(d, onDone){
         note.textContent = "Confirming your payment...";
         try{
           var r = await passCall({ action: "capture", orderID: data.orderID });
-          note.textContent = "Payment received. Your Renter Contact Pass is active" + (r && r.expires_at ? " until " + passDate(r.expires_at) : "") + ".";
+          note.textContent = "Payment received. Your Renter Premium is active" + (r && r.expires_at ? " until " + passDate(r.expires_at) : "") + ".";
           if(onDone){ setTimeout(onDone, 1200); }
         }catch(e){ note.textContent = e.message; }
       },
@@ -137,7 +146,7 @@ function buildPay(d, onDone){
     note.textContent = "";
     if(!PASS.clientId){
       if(!fallbackAdded){
-        var b = passEl("button", "", "Get Renter Contact Pass (" + PASS.price + ")");
+        var b = passEl("button", "", "Get Renter Premium (" + PASS.price + ")");
         b.type = "button";
         b.onclick = function(){ note.textContent = "Online payment is not switched on yet. It will be available soon."; };
         holder.appendChild(b);
