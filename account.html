@@ -530,9 +530,13 @@ async function landlordRenderCardFields(){
       components: ["card-fields"],
       pageType: "checkout"
     });
-    var methods = await sdk.findEligibleMethods({currencyCode:"USD"});
+    var methods = await sdk.findEligibleMethods({
+      currencyCode:"USD",
+      countryCode:"US",
+      amount:"35.00"
+    });
     if(!methods || !methods.isEligible("advanced_cards")){
-      unavailable.textContent = "PayPal has not enabled direct credit/debit card payments for this merchant account yet. The card fields will appear here once PayPal approves Advanced Card Payments.";
+      unavailable.textContent = "PayPal did not return Advanced Card Fields eligibility for a US buyer at $35 USD on this merchant account. This setting is controlled by PayPal; US customer cards alone cannot override merchant-country approval. Ask PayPal to enable Advanced Card Payments for this business account.";
       unavailable.classList.remove("hide");
       return;
     }
