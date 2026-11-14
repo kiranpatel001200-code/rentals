@@ -31,7 +31,7 @@
   function LANDLORD(){
     return {
       title: "Landlord Premium",
-      sub: "More visibility and room to grow on RenterHere",
+      sub: "$35 USD for 1 year · one-time payment · no automatic renewal",
       items: [
         ["\u2B50", "Priority search placement", "Active Premium listings appear ahead of standard listings in matching rental searches."],
         ["\uD83C\uDFE0", "Unlimited active listings", "Grow your rental portfolio without the Free plan's 5-active-listing limit."],
@@ -144,7 +144,7 @@
       li.appendChild(txt); parts.list.appendChild(li);
     });
     if(mode === "landlord"){
-      parts.foot.appendChild(st.loggedIn ? cta("contact.html?topic=landlord-premium", "Contact us about Landlord Premium") : cta("login.html?next=my-listings.html", "Log in or sign up"));
+      parts.foot.appendChild(st.loggedIn ? cta("account.html#cLandlordPremium", "Get Landlord Premium — $35/year") : cta("login.html?next=account.html%23cLandlordPremium", "Log in to get Landlord Premium"));
     } else if(!st.loggedIn){
       parts.foot.appendChild(cta("login.html?next=account.html", "Log in or sign up"));
     } else if(st.pass && st.pass.active){
