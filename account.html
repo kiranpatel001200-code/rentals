@@ -470,28 +470,23 @@ function loadLandlordPayPalSdk(config){
 }
 async function landlordCreateOrder(){
   landlordCheckoutNote("Preparing your secure payment...");
-  landlordCardNote("Preparing your secure payment...");
   var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"create"}});
   if(result.error || !result.data || !result.data.id){
     var message = result.data && result.data.error ? result.data.error : (result.error && result.error.message) || "Could not create the PayPal order. Please try again.";
     landlordCheckoutNote(message, "err");
-    landlordCardNote(message, "err");
     throw new Error(message);
   }
   landlordCheckoutNote("");
-  landlordCardNote("");
   return result.data.id;
 }
 async function landlordCaptureAndActivate(data){
   var orderID = data && data.orderID;
   if(!orderID) throw new Error("PayPal did not return a payment order ID.");
   landlordCheckoutNote("Payment approved. Verifying your payment and activating Premium...");
-  landlordCardNote("Payment approved. Verifying your payment and activating Premium...");
   var result = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"capture",orderID:orderID}});
   if(result.error || !result.data || result.data.ok !== true){
     var message = result.data && result.data.error ? result.data.error : "Payment verification is still pending. Contact support with PayPal order ID: " + orderID;
     landlordCheckoutNote(message, "err");
-    landlordCardNote(message, "err");
     throw new Error(message);
   }
   var expiry = result.data.expires_at ? new Date(result.data.expires_at).toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"}) : "one year from today";
@@ -555,7 +550,7 @@ async function landlordRenderPaymentButtons(){
 }
 async function initialiseLandlordCheckout(){
   landlordCheckoutNote("Loading secure checkout options...");
-  landlordCardNote("");
+  landlordCardOptionNote("");
   try{
     var cfgResult = await sb.functions.invoke("paypal-landlord-premium", {body:{action:"config"}});
     var cfg = cfgResult.data || {};
