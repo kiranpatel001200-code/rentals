@@ -222,12 +222,12 @@ function say(t, k){ $("msg").textContent = t || ""; $("msg").className = k || ""
 function link(label, href, cls){ var a = el("a", cls || "act", label); a.href = href; return a; }
 function act(label, fn, cls){ var b = el("button", cls || "act", label); b.type = "button"; b.onclick = fn; return b; }
 
-async function setStatus(id, status){
+async function setStatus(id, status, title){
   say("Saving...");
   var r = await sb.from("listings").update({ status: status }).eq("id", id);
   if(r.error){ say(r.error.message, "err"); return; }
   say(status === "inactive" ? "Listing paused." : status === "approved" ? "Your listing is live." : "Sent for review.", "ok"); load();
-  if(status === "approved" && window.openPremium){ window.openPremium("landlord", { once: "live-" + id }); }
+  if(status === "approved"){ setTimeout(function(){ openListingPremium(id,title||"Your listing"); }, 600); }
 }
 async function remove(l){
   if(!window.confirm("Move \"" + l.title + "\" to Recently Deleted? You can restore it later.")) return;
@@ -268,7 +268,7 @@ function item(l){
     if(premiumActive){ if(l.premium_priority_until) b.appendChild(el("div","note3","Premium priority until "+new Date(l.premium_priority_until).toLocaleDateString("en-US")+". Account-level Premium or an admin featured listing may have no expiry.")); }
     else { a.appendChild(act("★ Get Listing Premium · $35/year", function(){ openListingPremium(l.id,l.title); })); }
   }
-  if(l.status === "inactive" || l.status === "draft"){ a.appendChild(act("Make it live", function(){ setStatus(l.id, "approved"); })); }
+  if(l.status === "inactive" || l.status === "draft"){ a.appendChild(act("Make it live", function(){ setStatus(l.id, "approved", l.title); })); }
   if(l.status === "rejected"){ a.appendChild(act("Request review", function(){ setStatus(l.id, "pending"); })); }
   a.appendChild(act("Delete", function(){ remove(l); }, "act del"));
   b.appendChild(a); d.appendChild(b);
@@ -307,6 +307,14 @@ async function load(){
   else { active.forEach(function(l){ list.appendChild(item(l)); }); }
   if(!deleted.length){ deletedList.appendChild(el("p", "empty", "Your Recently Deleted folder is empty. Listings you remove will appear here.")); }
   else { deleted.forEach(function(l){ deletedList.appendChild(deletedItem(l)); }); }
+  var promoteId = new URLSearchParams(location.search).get("promote");
+  if(promoteId){
+    var selected = active.find(function(l){ return l.id === promoteId; });
+    if(selected && selected.status === "approved" && !(selected.premium_priority && (!selected.premium_priority_until || new Date(selected.premium_priority_until).getTime() > Date.now()))){
+      openListingPremium(selected.id, selected.title);
+      history.replaceState(null, "", location.pathname);
+    }
+  }
 }
 function listingPremiumNote(text,kind){
   var e=$("listingPremiumNote");e.textContent=text||"";e.className="rh-lp-note"+(kind?" "+kind:"");
