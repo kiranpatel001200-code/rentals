@@ -441,37 +441,49 @@ async function premiumListings(box){
   var r=await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,deleted_at,is_featured,premium_priority,premium_priority_until").order("created_at",{ascending:false}).limit(250);
   if(r.error){say(r.error.message,"err");box.appendChild(el("p","empty","Could not load listings."));return;}
   var rows=r.data||[],ids=Array.from(new Set(rows.map(function(x){return x.landlord_id;}).filter(Boolean)));
-  var pr=ids.length?await sb.from("profiles").select("id,email,full_name,is_banned").in("id",ids):{data:[]};
+  var pr=ids.length?await sb.from("profiles").select("id,email,full_name,is_banned,role").in("id",ids):{data:[]};
   var owners={};(pr.data||[]).forEach(function(p){owners[p.id]=p;});
   var gr=await sb.from("admin_listing_premium_grants").select("listing_id,granted_at,expires_at,reason");
-  if(gr.error){say(gr.error.message,"err");box.appendChild(el("p","empty","Could not load free Premium grants. Check the database migration and admin permissions."));return;}
+  if(gr.error){say(gr.error.message,"err");box.appendChild(el("p","empty","Could not load free Premium grants. Check database migration and admin permissions."));return;}
+  var paid=await sb.from("listing_premium_orders").select("id,listing_id,user_id,amount,currency,status,paypal_order_id,paypal_capture_id,created_at,completed_at,expires_at").order("created_at",{ascending:false}).limit(500);
+  if(paid.error){say(paid.error.message,"err");box.appendChild(el("p","empty","Could not load Listing Premium PayPal orders."));return;}
   var grants={};(gr.data||[]).forEach(function(g){grants[g.listing_id]=g;});
+  var paidByListing={};(paid.data||[]).forEach(function(o){if(!paidByListing[o.listing_id])paidByListing[o.listing_id]=[];paidByListing[o.listing_id].push(o);});
   var term=(window.__premiumQ||"").toLowerCase();
   if(term)rows=rows.filter(function(l){var p=owners[l.landlord_id]||{};return[l.title,l.city,l.state,p.email,p.full_name].some(function(v){return String(v||"").toLowerCase().includes(term);});});
   var active=rows.filter(function(l){return l.premium_priority&&(!l.premium_priority_until||new Date(l.premium_priority_until)>new Date());});
+  var paidActive=(paid.data||[]).filter(function(o){return o.status==="completed"&&o.expires_at&&new Date(o.expires_at)>new Date();}).length;
+  var freeActive=Object.keys(grants).filter(function(id){return grants[id].expires_at&&new Date(grants[id].expires_at)>new Date();}).length;
   var stats=el("div","stats");
-  [[rows.length,"Listings"],[active.length,"Premium priority"],[Object.keys(grants).filter(function(id){return grants[id].expires_at&&new Date(grants[id].expires_at)>new Date();}).length,"Free test grants"]].forEach(function(x){var d=el("div","stat");d.appendChild(el("b","",String(x[0])));d.appendChild(el("span","",x[1]));stats.appendChild(d);});box.appendChild(stats);
-  box.appendChild(el("p","sub","Grant free listing-specific Premium for testing. Choose a duration from 1 to 365 days. This does not create a payment or change a paid subscription."));
+  [[rows.length,"Listings"],[active.length,"Premium priority"],[paidActive,"Paid promotions"],[freeActive,"Free test grants"]].forEach(function(x){var d=el("div","stat");d.appendChild(el("b","",""+x[0]));d.appendChild(el("span","",x[1]));stats.appendChild(d);});box.appendChild(stats);
+  box.appendChild(el("p","sub","Paid Listing Premium is a separate $35 USD / 365-day PayPal purchase for each listing. Free test grants are separate and never create or change a PayPal payment record."));
   if(!rows.length){box.appendChild(el("p","empty","No matching listings."));return;}
   rows.forEach(function(l){
-    var d=el("div","it"),p=owners[l.landlord_id]||{},g=grants[l.id],gActive=!!(g&&new Date(g.expires_at)>new Date()),isActive=!!(l.premium_priority&&(!l.premium_priority_until||new Date(l.premium_priority_until)>new Date()));
+    var d=el("div","it"),p=owners[l.landlord_id]||{},g=grants[l.id],gActive=!!(g&&new Date(g.expires_at)>new Date()),orders=paidByListing[l.id]||[];
+    var activeOrder=orders.find(function(o){return o.status==="completed"&&o.expires_at&&new Date(o.expires_at)>new Date();})||null;
+    var isActive=!!(l.premium_priority&&(!l.premium_priority_until||new Date(l.premium_priority_until)>new Date()));
+    var latest=orders[0]||null;
     var tp=el("div","tp");tp.appendChild(l.deleted_at?el("b","",l.title):link(l.title,"listing.html?id="+encodeURIComponent(l.id)));
     tp.appendChild(chip(l.deleted_at?"Deleted":l.status==="approved"?"Live":String(l.status),""));
     tp.appendChild(chip(isActive?"Premium active":"Not Premium",isActive?"live":"pend"));
+    if(activeOrder)tp.appendChild(chip("Paid via PayPal","live"));
     if(gActive)tp.appendChild(chip("Free test grant","live"));
     if(p.is_banned)tp.appendChild(chip("Spam blocked","rej"));
     d.appendChild(tp);
-    d.appendChild(el("div","meta",(p.full_name||"Unknown owner")+" · "+(p.email||"No email")));
+    d.appendChild(el("div","meta",(p.full_name||"Unknown owner")+" · "+(p.email||"No email")+" · "+String(p.role||"user")));
     d.appendChild(el("div","meta",l.city+", "+String(l.state||"").trim()+" · $"+Number(l.monthly_rent||0).toLocaleString("en-US")+"/mo · Created "+when(l.created_at)));
     d.appendChild(el("div","meta","Listing ID: "+l.id));
     if(l.premium_priority_until&&isActive)d.appendChild(el("div","meta","Premium priority expires: "+new Date(l.premium_priority_until).toLocaleString()));
+    if(activeOrder)d.appendChild(el("div","meta","Paid Listing Premium: $"+Number(activeOrder.amount).toFixed(2)+" "+activeOrder.currency+" · Expires "+new Date(activeOrder.expires_at).toLocaleString()+" · Order "+activeOrder.paypal_order_id));
+    else if(latest&&latest.status!=="completed")d.appendChild(el("div","meta","Latest PayPal order: "+String(latest.status).toUpperCase()+" · $"+Number(latest.amount).toFixed(2)+" · "+latest.paypal_order_id));
+    else if(latest&&latest.status==="completed"&&latest.expires_at&&new Date(latest.expires_at)<=new Date())d.appendChild(el("div","meta","Last paid promotion expired: "+new Date(latest.expires_at).toLocaleString()));
     if(g)d.appendChild(el("div","meta","Free test grant: "+(gActive?"Expires "+new Date(g.expires_at).toLocaleString():"Expired")+" · Granted "+new Date(g.granted_at).toLocaleString()));
     var acts=el("div","acts");
     if(!l.deleted_at){
       if(gActive){
-        acts.appendChild(btn("Remove free Premium",async function(){if(!window.confirm("Remove the free test Premium grant for this listing? Paid subscription and admin featured status will remain unchanged."))return;var x=await sb.rpc("admin_set_listing_free_premium",{p_listing_id:l.id,p_enabled:false,p_days:30});if(x.error){say(x.error.message,"err");return;}say("Free test Premium removed. Other paid or featured priority is preserved.","ok");render();},"del"));
-      }else{
-        acts.appendChild(btn("Grant free Premium",async function(){var raw=window.prompt("How many days should this free test Premium grant last? Enter 1–365 days.","30");if(raw===null)return;var days=Number(raw);if(!Number.isInteger(days)||days<1||days>365){say("Enter a whole number from 1 to 365.","err");return;}if(!window.confirm("Grant free Premium to this listing for "+days+" days? No payment will be recorded."))return;var x=await sb.rpc("admin_set_listing_free_premium",{p_listing_id:l.id,p_enabled:true,p_days:days});if(x.error){say(x.error.message,"err");return;}say("Free test Premium granted until "+new Date(x.data).toLocaleString()+".","ok");render();}));
+        acts.appendChild(btn("Remove free Premium",async function(){if(!window.confirm("Remove the free test Premium grant? Paid Premium and account-level Premium will remain unchanged."))return;var x=await sb.rpc("admin_set_listing_free_premium",{p_listing_id:l.id,p_enabled:false,p_days:30});if(x.error){say(x.error.message,"err");return;}say("Free test grant removed. Any separate paid promotion remains intact.","ok");render();},"del"));
+      }else if(!isActive){
+        acts.appendChild(btn("Grant free Premium",async function(){var raw=window.prompt("How many days should this free test Premium grant last? Enter 1–365 days.","30");if(raw===null)return;var days=Number(raw);if(!Number.isInteger(days)||days<1||days>365){say("Enter a whole number from 1 to 365.","err");return;}if(!window.confirm("Grant free Premium to this listing for "+days+" days? No PayPal payment will be recorded."))return;var x=await sb.rpc("admin_set_listing_free_premium",{p_listing_id:l.id,p_enabled:true,p_days:days});if(x.error){say(x.error.message,"err");return;}say("Free test Premium granted until "+new Date(x.data).toLocaleString()+".","ok");render();}));
       }
     }
     d.appendChild(acts);box.appendChild(d);
