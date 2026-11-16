@@ -93,6 +93,23 @@ main.wrap{max-width:860px;margin-top:-34px;padding-bottom:20px}
 .act.restore{color:#0f6b4f;border-color:#8fc5ae}
 #msg{min-height:1.4em;margin:6px 0 20px}
 #msg.err{color:#b3261e}#msg.ok{color:#0f6b4f}
+.rh-lp-overlay{position:fixed;inset:0;z-index:100000;background:rgba(4,25,30,.76);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.rh-lp-dialog{width:min(100%,640px);max-height:calc(100dvh - 32px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.32)}
+.rh-lp-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.rh-lp-head h2{margin:0 0 6px}
+.rh-lp-close{margin:0;width:36px;height:36px;padding:0;border-radius:50%;background:#f4faf8;color:var(--navy);border:1px solid var(--line);font-size:1.35rem}
+.rh-lp-price{background:#f4faf8;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0}
+.rh-lp-price strong{font-size:1.5rem;color:var(--navy)}
+.rh-lp-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.rh-lp-choice{border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.rh-lp-choice h3{font-size:.95rem;margin:0 0 9px;color:var(--navy)}
+.rh-lp-consent{display:flex;align-items:flex-start;gap:9px;margin:14px 0;padding:12px;background:#f4faf8;border:1px solid var(--line);border-radius:10px;font-size:.9rem}
+.rh-lp-consent input{width:18px;min-width:18px;margin:3px 0 0}
+.rh-lp-note{min-height:1.4em;margin:10px 0 0;color:var(--muted);font-size:.9rem}
+.rh-lp-note.err{color:#b3261e}.rh-lp-note.ok{color:#0f6b4f}
+.premium-status{display:inline-flex;gap:5px;align-items:center;padding:2px 10px;border-radius:99px;background:#e1f5ea;color:#0f6b4f;font-size:.8rem;font-weight:700}
+@media(max-width:560px){.rh-lp-overlay{padding:8px}.rh-lp-dialog{padding:16px;border-radius:14px;max-height:calc(100dvh - 16px)}.rh-lp-choices{grid-template-columns:1fr}}
+
 @media(max-width:600px){.li{flex-direction:column}.li .th{width:100%;height:170px}}.menu{display:none;margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
 .menu span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
 body{overflow-wrap:break-word}
@@ -139,6 +156,22 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
   </div>
   <div id="deletedList"></div>
 </section>
+<div id="listingPremiumModal" class="rh-lp-overlay hide" role="dialog" aria-modal="true" aria-labelledby="listingPremiumTitle">
+  <div class="rh-lp-dialog">
+    <div class="rh-lp-head">
+      <div><h2 id="listingPremiumTitle">Promote your listing</h2><p class="sub" id="listingPremiumProperty">Make your property stand out in matching rental searches.</p></div>
+      <button type="button" class="rh-lp-close" id="listingPremiumClose" aria-label="Close checkout">×</button>
+    </div>
+    <div class="rh-lp-price"><strong>$35.00 USD</strong><div>Per listing · 365 days · One-time payment · No automatic renewal</div></div>
+    <p class="sub">Premium placement helps renters discover your live listing. This is separate from the Renter Contact Pass, and you do not need to switch account mode.</p>
+    <label class="rh-lp-consent"><input type="checkbox" id="listingPremiumConsent"><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and understand that Listing Premium is a one-time, non-recurring digital promotion for 365 days.</span></label>
+    <div class="rh-lp-choices">
+      <section class="rh-lp-choice"><h3>Pay with PayPal</h3><div id="listingPremiumPaypalButton"></div></section>
+      <section class="rh-lp-choice"><h3>Debit or credit card</h3><div id="listingPremiumCardButton"></div><p id="listingPremiumCardMessage" class="rh-lp-note"></p></section>
+    </div>
+    <p id="listingPremiumNote" class="rh-lp-note" role="status" aria-live="polite">Tick the box above to enable secure PayPal checkout.</p>
+  </div>
+</div>
 </div>
 </main>
 <footer class="site-footer"><div class="wrap">
@@ -177,6 +210,7 @@ var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_p
 var $ = function(id){ return document.getElementById(id); };
 function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
 var uid = null;
+var listingPremiumConfig = null, listingPremiumCurrentId = null, listingPremiumSdkPromise = null, listingPremiumRendered = false;
 var STATUS = {
   pending: ["In review", "pend", "Our team is looking at it. Only you can see it for now."],
   approved: ["Live", "live", "Everyone can find it in Rentals."],
@@ -227,7 +261,13 @@ function item(l){
   var a = el("div", "acts");
   a.appendChild(link("Preview", "listing.html?id=" + encodeURIComponent(l.id)));
   a.appendChild(link("Edit", "create-listing.html?edit=" + encodeURIComponent(l.id)));
-  if(l.status === "approved"){ a.appendChild(act("Pause", function(){ setStatus(l.id, "inactive"); })); a.appendChild(act("\u2B50 Premium", function(){ if(window.openPremium){ window.openPremium("landlord"); } })); }
+  var premiumActive = !!(l.premium_priority && (!l.premium_priority_until || new Date(l.premium_priority_until).getTime() > Date.now()));
+  if(premiumActive){ top.appendChild(el("span", "premium-status", "★ Premium active")); }
+  if(l.status === "approved"){
+    a.appendChild(act("Pause", function(){ setStatus(l.id, "inactive"); }));
+    if(premiumActive){ if(l.premium_priority_until) b.appendChild(el("div","note3","Premium priority until "+new Date(l.premium_priority_until).toLocaleDateString("en-US")+". Account-level Premium or an admin featured listing may have no expiry.")); }
+    else { a.appendChild(act("★ Get Listing Premium · $35/year", function(){ openListingPremium(l.id,l.title); })); }
+  }
   if(l.status === "inactive" || l.status === "draft"){ a.appendChild(act("Make it live", function(){ setStatus(l.id, "approved"); })); }
   if(l.status === "rejected"){ a.appendChild(act("Request review", function(){ setStatus(l.id, "pending"); })); }
   a.appendChild(act("Delete", function(){ remove(l); }, "act del"));
@@ -255,7 +295,7 @@ function deletedItem(l){
   return d;
 }
 async function load(){
-  var r = await sb.from("listings").select("id,title,status,street_address,city,state,zip_code,monthly_rent,rejection_reason,deleted_at,listing_images(url,is_primary,display_order)").eq("landlord_id", uid).order("created_at", { ascending: false });
+  var r = await sb.from("listings").select("id,title,status,street_address,city,state,zip_code,monthly_rent,rejection_reason,deleted_at,premium_priority,premium_priority_until,listing_images(url,is_primary,display_order)").eq("landlord_id", uid).order("created_at", { ascending: false });
   var list = $("list"), deletedList = $("deletedList");
   list.textContent = ""; deletedList.textContent = "";
   if(r.error){ say("Could not load your listings. Please try again.", "err"); return; }
@@ -268,6 +308,110 @@ async function load(){
   if(!deleted.length){ deletedList.appendChild(el("p", "empty", "Your Recently Deleted folder is empty. Listings you remove will appear here.")); }
   else { deleted.forEach(function(l){ deletedList.appendChild(deletedItem(l)); }); }
 }
+function listingPremiumNote(text,kind){
+  var e=$("listingPremiumNote");e.textContent=text||"";e.className="rh-lp-note"+(kind?" "+kind:"");
+}
+function closeListingPremium(){
+  $("listingPremiumModal").classList.add("hide");
+  document.body.style.overflow="";
+  listingPremiumCurrentId=null;listingPremiumRendered=false;
+  $("listingPremiumPaypalButton").replaceChildren();
+  $("listingPremiumCardButton").replaceChildren();
+}
+async function listingPremiumCreateOrder(){
+  if(!$("listingPremiumConsent").checked) throw new Error("Please agree to the Terms of Service first.");
+  listingPremiumNote("Preparing your secure PayPal payment...");
+  var r=await sb.functions.invoke("paypal-listing-premium",{body:{action:"create",listing_id:listingPremiumCurrentId}});
+  if(r.error||!r.data||!r.data.id){
+    var m=r.data&&r.data.error||r.error&&r.error.message||"Could not create the PayPal order.";
+    listingPremiumNote(m,"err");throw new Error(m);
+  }
+  listingPremiumNote("");
+  return r.data.id;
+}
+async function listingPremiumCapture(data){
+  if(!data||!data.orderID) throw new Error("PayPal did not return an order ID.");
+  listingPremiumNote("Payment approved. Verifying the payment and activating Listing Premium...");
+  var r=await sb.functions.invoke("paypal-listing-premium",{body:{action:"capture",orderID:data.orderID}});
+  if(r.error||!r.data||r.data.ok!==true){
+    var m=r.data&&r.data.error||r.error&&r.error.message||"Payment verification is still pending.";
+    listingPremiumNote(m,"err");throw new Error(m);
+  }
+  var expiry=r.data.expires_at?new Date(r.data.expires_at).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}):"365 days from today";
+  listingPremiumNote("Payment successful! This listing has Premium priority until "+expiry+".","ok");
+  setTimeout(function(){closeListingPremium();say("Listing Premium is active until "+expiry+".","ok");load();},1200);
+  return r.data;
+}
+function listingPremiumCallbacks(){
+  return {
+    style:{layout:"vertical",shape:"rect",height:45,label:"pay"},
+    createOrder:listingPremiumCreateOrder,
+    onApprove:listingPremiumCapture,
+    onCancel:function(){listingPremiumNote("Payment canceled. You can try again whenever you are ready.");},
+    onError:function(error){console.error("Listing Premium PayPal error:",error);listingPremiumNote("PayPal could not complete checkout. Please try again.","err");}
+  };
+}
+async function renderListingPremiumButtons(){
+  if(!window.paypal||typeof window.paypal.Buttons!=="function") throw new Error("PayPal checkout is not ready.");
+  $("listingPremiumPaypalButton").replaceChildren();
+  $("listingPremiumCardButton").replaceChildren();
+  $("listingPremiumCardMessage").textContent="Checking card checkout availability...";
+  var paypalButton=window.paypal.Buttons(Object.assign(listingPremiumCallbacks(),{fundingSource:window.paypal.FUNDING.PAYPAL}));
+  if(paypalButton.isEligible()) await paypalButton.render("#listingPremiumPaypalButton");
+  else $("listingPremiumPaypalButton").textContent="PayPal wallet is not available for this buyer.";
+  var cardButton=window.paypal.Buttons(Object.assign(listingPremiumCallbacks(),{fundingSource:window.paypal.FUNDING.CARD,style:{layout:"vertical",shape:"rect",height:45,label:"pay",color:"black"}}));
+  if(cardButton.isEligible()){
+    await cardButton.render("#listingPremiumCardButton");
+    $("listingPremiumCardMessage").textContent="Card details are processed securely by PayPal.";
+  }else $("listingPremiumCardMessage").textContent="PayPal guest card checkout is not available for this buyer and merchant account. You can still use the PayPal option when offered.";
+  listingPremiumRendered=true;
+}
+async function initializeListingPremiumCheckout(){
+  try{
+    listingPremiumNote("Loading secure PayPal checkout...");
+    if(!listingPremiumConfig){
+      var q=await sb.functions.invoke("paypal-listing-premium",{body:{action:"config"}});
+      if(q.error||!q.data) throw new Error(q.data&&q.data.error||q.error&&q.error.message||"Could not load Listing Premium settings.");
+      listingPremiumConfig=q.data;
+    }
+    if(!listingPremiumConfig.ready||!listingPremiumConfig.client_id) throw new Error("Online payments are not configured right now. Please contact support.");
+    if(!listingPremiumSdkPromise){
+      listingPremiumSdkPromise=new Promise(function(resolve,reject){
+        if(window.paypal&&typeof window.paypal.Buttons==="function"){resolve();return;}
+        var old=document.querySelector('script[data-rh-listing-premium-paypal="1"]');if(old)old.remove();
+        var s=document.createElement("script");s.dataset.rhListingPremiumPaypal="1";
+        var params="client-id="+encodeURIComponent(listingPremiumConfig.client_id)+"&components=buttons,funding-eligibility&enable-funding=card&currency=USD&intent=capture&locale=en_US";
+        if(listingPremiumConfig.environment!=="live")params+="&buyer-country=US";
+        s.src="https://www.paypal.com/sdk/js?"+params;s.async=true;
+        s.onload=function(){window.paypal&&window.paypal.Buttons?resolve():reject(new Error("PayPal buttons did not initialize."));};
+        s.onerror=function(){listingPremiumSdkPromise=null;reject(new Error("Could not load PayPal. Check your connection and try again."));};
+        document.head.appendChild(s);
+      });
+    }
+    await listingPremiumSdkPromise;
+    if($("listingPremiumConsent").checked&&!listingPremiumRendered) await renderListingPremiumButtons();
+    else listingPremiumNote("Tick the box above to enable secure PayPal checkout.");
+  }catch(e){listingPremiumNote(e.message||"Could not initialize payment checkout.","err");}
+}
+function openListingPremium(id,title){
+  listingPremiumCurrentId=id;listingPremiumRendered=false;
+  $("listingPremiumProperty").textContent=title+" · One-time payment · No automatic renewal";
+  $("listingPremiumConsent").checked=false;
+  $("listingPremiumPaypalButton").replaceChildren();
+  $("listingPremiumCardButton").replaceChildren();
+  $("listingPremiumCardMessage").textContent="";
+  $("listingPremiumModal").classList.remove("hide");document.body.style.overflow="hidden";
+  listingPremiumNote("Tick the box above to enable secure PayPal checkout.");
+  initializeListingPremiumCheckout();
+}
+$("listingPremiumClose").addEventListener("click",closeListingPremium);
+$("listingPremiumModal").addEventListener("click",function(e){if(e.target===$("listingPremiumModal"))closeListingPremium();});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("listingPremiumModal").classList.contains("hide"))closeListingPremium();});
+$("listingPremiumConsent").addEventListener("change",function(){
+  if(this.checked&&listingPremiumConfig&&listingPremiumConfig.ready) initializeListingPremiumCheckout();
+  else if(!this.checked){$("listingPremiumPaypalButton").replaceChildren();$("listingPremiumCardButton").replaceChildren();listingPremiumRendered=false;listingPremiumNote("Tick the box above to enable secure PayPal checkout.");}
+});
+
 async function init(){
   var s = await sb.auth.getSession();
   if(!s.data.session){
