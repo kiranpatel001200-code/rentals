@@ -355,7 +355,11 @@ function listingPremiumCallbacks(){
     style:{layout:"vertical",shape:"rect",height:45,label:"pay"},
     createOrder:listingPremiumCreateOrder,
     onApprove:listingPremiumCapture,
-    onCancel:function(){listingPremiumNote("Payment canceled. You can try again whenever you are ready.");},
+    onCancel:async function(data){
+      listingPremiumNote("Payment canceled. Closing the pending order...");
+      try{await sb.functions.invoke("paypal-listing-premium",{body:{action:"cancel",orderID:data&&data.orderID}});}catch(e){}
+      listingPremiumNote("Payment canceled. You can try again whenever you are ready.");
+    },
     onError:function(error){console.error("Listing Premium PayPal error:",error);listingPremiumNote("PayPal could not complete checkout. Please try again.","err");}
   };
 }
