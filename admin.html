@@ -138,7 +138,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <main class="wrap">
 <div id="gate" class="hide"></div>
 <div id="area" class="hide">
-<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="support">Support requests</button><button type="button" class="tab" data-tab="users">Users</button><button type="button" class="tab" data-tab="payments">Payments & refunds</button><button type="button" class="tab" data-tab="activity">User activity</button></div>
+<div class="tabs"><button type="button" class="tab" data-tab="overview">Overview</button><button type="button" class="tab" data-tab="listings">Listings</button><button type="button" class="tab" data-tab="reports">Reports</button><button type="button" class="tab" data-tab="support">Support requests</button><button type="button" class="tab" data-tab="users">Users</button><button type="button" class="tab" data-tab="payments">Payments & refunds</button><button type="button" class="tab" data-tab="premium">Premium listings</button><button type="button" class="tab" data-tab="activity">User activity</button></div>
 <p id="msg" role="status"></p>
 <div id="list"></div>
 </div>
@@ -213,7 +213,7 @@ async function setListing(id, patch, okText){
   if(r.error){ say(r.error.message, "err"); return false; } say(okText, "ok"); render(); return true;
 }
 async function listings(box){
-  var r = await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,rejection_reason,deleted_at").order("created_at", { ascending: false }).limit(100);
+  var r = await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,rejection_reason,deleted_at,is_featured,premium_priority,premium_priority_until").order("created_at", { ascending: false }).limit(100);
   var rows = r.data || [];
   var ids = rows.map(function(x){ return x.landlord_id; });
   var p = ids.length ? await sb.from("profiles").select("id,email,is_banned").in("id", ids) : { data: [] };
@@ -230,6 +230,7 @@ async function listings(box){
     d.appendChild(el("div", "meta", (owner.email || "unknown owner") + "  \u00B7  " + l.city + ", " + String(l.state).trim() + "  \u00B7  $" + Number(l.monthly_rent).toLocaleString("en-US") + "/mo  \u00B7  " + when(l.created_at)));
     if(l.rejection_reason){ d.appendChild(el("div", "meta", "Reason: " + l.rejection_reason)); }
     var a = el("div", "acts");
+    if(l.premium_priority && (!l.premium_priority_until || new Date(l.premium_priority_until) > new Date())) tp.appendChild(chip("Premium priority", "live"));
     if(!l.deleted_at && l.status !== "rejected"){ a.appendChild(btn("Take down", function(){ var why = window.prompt("Reason (the owner can see it):", "Removed by RenterHere."); if(why !== null){ setListing(l.id, { status: "rejected", rejection_reason: why || "Removed by RenterHere." }, "Listing taken down."); } }, "del")); }
     if(!l.deleted_at && l.status !== "approved" && !ownerBlocked){ a.appendChild(btn("Make live", function(){ setListing(l.id, { status: "approved", rejection_reason: null }, "Listing is live."); })); }
     a.appendChild(btn("Delete permanently", async function(){ if(!window.confirm("Permanently delete \"" + l.title + "\"? This cannot be restored.")) return; var x = await sb.from("listings").delete().eq("id", l.id); if(x.error){ say(x.error.message, "err"); } else { say("Permanently deleted.", "ok"); render(); } }, "del"));
@@ -431,6 +432,52 @@ async function payments(box){
   drawRows();
 }
 
+
+/* ---------- premium listings ---------- */
+async function premiumListings(box){
+  var f=el("form","sf"),i=el("input"),b=el("button","act","Search");
+  i.placeholder="Filter by listing, owner email or city";i.value=window.__premiumQ||"";b.type="submit";
+  f.appendChild(i);f.appendChild(b);f.onsubmit=function(e){e.preventDefault();window.__premiumQ=i.value.trim().replace(/[%,()*"\\\\]/g,"");render();};box.appendChild(f);
+  var r=await sb.from("listings").select("id,title,status,city,state,monthly_rent,created_at,landlord_id,deleted_at,is_featured,premium_priority,premium_priority_until").order("created_at",{ascending:false}).limit(250);
+  if(r.error){say(r.error.message,"err");box.appendChild(el("p","empty","Could not load listings."));return;}
+  var rows=r.data||[],ids=Array.from(new Set(rows.map(function(x){return x.landlord_id;}).filter(Boolean)));
+  var pr=ids.length?await sb.from("profiles").select("id,email,full_name,is_banned").in("id",ids):{data:[]};
+  var owners={};(pr.data||[]).forEach(function(p){owners[p.id]=p;});
+  var gr=await sb.from("admin_listing_premium_grants").select("listing_id,granted_at,expires_at,reason");
+  if(gr.error){say(gr.error.message,"err");box.appendChild(el("p","empty","Could not load free Premium grants. Check the database migration and admin permissions."));return;}
+  var grants={};(gr.data||[]).forEach(function(g){grants[g.listing_id]=g;});
+  var term=(window.__premiumQ||"").toLowerCase();
+  if(term)rows=rows.filter(function(l){var p=owners[l.landlord_id]||{};return[l.title,l.city,l.state,p.email,p.full_name].some(function(v){return String(v||"").toLowerCase().includes(term);});});
+  var active=rows.filter(function(l){return l.premium_priority&&(!l.premium_priority_until||new Date(l.premium_priority_until)>new Date());});
+  var stats=el("div","stats");
+  [[rows.length,"Listings"],[active.length,"Premium priority"],[Object.keys(grants).filter(function(id){return grants[id].expires_at&&new Date(grants[id].expires_at)>new Date();}).length,"Free test grants"]].forEach(function(x){var d=el("div","stat");d.appendChild(el("b","",String(x[0])));d.appendChild(el("span","",x[1]));stats.appendChild(d);});box.appendChild(stats);
+  box.appendChild(el("p","sub","Grant free listing-specific Premium for testing. Choose a duration from 1 to 365 days. This does not create a payment or change a paid subscription."));
+  if(!rows.length){box.appendChild(el("p","empty","No matching listings."));return;}
+  rows.forEach(function(l){
+    var d=el("div","it"),p=owners[l.landlord_id]||{},g=grants[l.id],gActive=!!(g&&new Date(g.expires_at)>new Date()),isActive=!!(l.premium_priority&&(!l.premium_priority_until||new Date(l.premium_priority_until)>new Date()));
+    var tp=el("div","tp");tp.appendChild(l.deleted_at?el("b","",l.title):link(l.title,"listing.html?id="+encodeURIComponent(l.id)));
+    tp.appendChild(chip(l.deleted_at?"Deleted":l.status==="approved"?"Live":String(l.status),""));
+    tp.appendChild(chip(isActive?"Premium active":"Not Premium",isActive?"live":"pend"));
+    if(gActive)tp.appendChild(chip("Free test grant","live"));
+    if(p.is_banned)tp.appendChild(chip("Spam blocked","rej"));
+    d.appendChild(tp);
+    d.appendChild(el("div","meta",(p.full_name||"Unknown owner")+" · "+(p.email||"No email")));
+    d.appendChild(el("div","meta",l.city+", "+String(l.state||"").trim()+" · $"+Number(l.monthly_rent||0).toLocaleString("en-US")+"/mo · Created "+when(l.created_at)));
+    d.appendChild(el("div","meta","Listing ID: "+l.id));
+    if(l.premium_priority_until&&isActive)d.appendChild(el("div","meta","Premium priority expires: "+new Date(l.premium_priority_until).toLocaleString()));
+    if(g)d.appendChild(el("div","meta","Free test grant: "+(gActive?"Expires "+new Date(g.expires_at).toLocaleString():"Expired")+" · Granted "+new Date(g.granted_at).toLocaleString()));
+    var acts=el("div","acts");
+    if(!l.deleted_at){
+      if(gActive){
+        acts.appendChild(btn("Remove free Premium",async function(){if(!window.confirm("Remove the free test Premium grant for this listing? Paid subscription and admin featured status will remain unchanged."))return;var x=await sb.rpc("admin_set_listing_free_premium",{p_listing_id:l.id,p_enabled:false,p_days:30});if(x.error){say(x.error.message,"err");return;}say("Free test Premium removed. Other paid or featured priority is preserved.","ok");render();},"del"));
+      }else{
+        acts.appendChild(btn("Grant free Premium",async function(){var raw=window.prompt("How many days should this free test Premium grant last? Enter 1–365 days.","30");if(raw===null)return;var days=Number(raw);if(!Number.isInteger(days)||days<1||days>365){say("Enter a whole number from 1 to 365.","err");return;}if(!window.confirm("Grant free Premium to this listing for "+days+" days? No payment will be recorded."))return;var x=await sb.rpc("admin_set_listing_free_premium",{p_listing_id:l.id,p_enabled:true,p_days:days});if(x.error){say(x.error.message,"err");return;}say("Free test Premium granted until "+new Date(x.data).toLocaleString()+".","ok");render();}));
+      }
+    }
+    d.appendChild(acts);box.appendChild(d);
+  });
+}
+
 /* ---------- user activity ---------- */
 async function activity(box){
   var f=el("form","sf"),i=el("input"),b=el("button","act","Search");
@@ -451,7 +498,7 @@ async function activity(box){
 async function render(){
   document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("on", t.dataset.tab === tab); });
   var box = $("list"); box.textContent = "";
-  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "reports") await reports(box); else if(tab === "support") await support(box); else if(tab === "payments") await payments(box); else if(tab === "activity") await activity(box); else await users(box);
+  if(tab === "overview") await overview(box); else if(tab === "listings") await listings(box); else if(tab === "premium") await premiumListings(box); else if(tab === "reports") await reports(box); else if(tab === "support") await support(box); else if(tab === "payments") await payments(box); else if(tab === "activity") await activity(box); else await users(box);
 }
 async function init(){
   var s = await sb.auth.getSession();
