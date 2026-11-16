@@ -39,9 +39,8 @@ begin
     -- Keep this exception confined to the single update performed by this SECURITY DEFINER RPC.
     perform set_config('request.jwt.claims', '', true);
     begin
-      update public.profiles
-      set role = p_role
-      where id = v_uid;
+      -- Use a quoted literal so PostgreSQL can assign it to the user_role enum.
+      execute format('update public.profiles set role = %L where id = %L', p_role, v_uid);
       if not found then
         raise exception 'Profile not found.';
       end if;
