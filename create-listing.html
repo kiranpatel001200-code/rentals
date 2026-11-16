@@ -275,6 +275,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="places.js"></script>
+<script src="role-switch.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
@@ -528,7 +529,18 @@ async function init(){
   user = s.data.session.user;
   var p = await sb.from("profiles").select("role,full_name,phone,email").eq("id", user.id).maybeSingle();
   if(!p.data || p.data.role !== "landlord"){
-    gate([el("p", "", "Only landlord accounts can list properties. Sign up again with a different email and choose \"List my property\"."), link("Back to home", "index.html")]); return;
+    if(p.data && p.data.role === "renter" && window.RoleSwitch){
+      gate([window.RoleSwitch.notice({
+        to: "landlord",
+        plain: true,
+        title: "You are using your Renter account",
+        text: "To list a property, switch to your Landlord account. It is the same login and takes one tap. Your messages and passes stay as they are.",
+        cancelHref: "index.html",
+        cancelText: "Not now"
+      })]);
+      return;
+    }
+    gate([el("p", "", "Only landlord accounts can list properties."), link("Back to home", "index.html")]); return;
   }
   me = { full_name: p.data.full_name || "", phone: p.data.phone || "", email: p.data.email || user.email || "" };
   await loadStates(); refreshLists();
