@@ -237,7 +237,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 <div id="done" class="notice hide">
 <h2 id="doneTitle">Your listing is submitted</h2>
 <p id="doneText"></p>
-<div class="donelinks"><a id="viewLink" class="hide" href="#">View your listing</a><a href="my-listings.html">View my listings</a><a href="listings.html">Browse rentals</a></div>
+<div class="donelinks"><a id="viewLink" class="hide" href="#">View your listing</a><a id="promoteLink" class="hide" href="#">★ Get Listing Premium — $35/year</a><a href="my-listings.html">View my listings</a><a href="listings.html">Browse rentals</a></div>
 </div>
 </main>
 
@@ -419,7 +419,7 @@ async function uploadPhotos(id, startAt, firstIsCover){
   return failed;
 }
 function finish(title, text, failed, viewId){
-  if(viewId){ $("viewLink").href = "listing.html?id=" + encodeURIComponent(viewId); $("viewLink").classList.remove("hide"); }
+  if(viewId){ $("viewLink").href = "listing.html?id=" + encodeURIComponent(viewId); $("viewLink").classList.remove("hide"); $("promoteLink").href = "my-listings.html?promote=" + encodeURIComponent(viewId); $("promoteLink").classList.remove("hide"); }
   $("wizard").classList.add("hide"); $("doneTitle").textContent = title;
   $("doneText").textContent = text + (failed ? " " + failed + " photo(s) could not be uploaded." : "");
   $("done").classList.remove("hide"); window.scrollTo({ top: 0, behavior: "smooth" });
@@ -488,7 +488,7 @@ $("publish").onclick = async function(){
   }
   var failed = await uploadPhotos(id, 0, true);
   finish("Your listing is live!", "Renters can now find it in Rentals. You can edit, pause or delete it any time from My listings.", failed, id);
-  setTimeout(function(){ if(window.openPremium){ window.openPremium("landlord", { once: "live-" + id }); } }, 600);
+  /* Listing Premium is offered on My Listings and is separate from the Renter Contact Pass. */
 };
 
 function renderExisting(){
