@@ -8,7 +8,7 @@
      RoleSwitch.switchTo("landlord")  -> { ok: true, role } or { ok: false, error }
      RoleSwitch.notice({ to, title, text, plain, cancelHref, cancelText, onSwitched })
                                       -> a card with a one-click Switch button
-   It also adds a "Switch to Landlord / Renter" link to the header (#nav) for signed-in renter and landlord accounts. */
+   Account switching is exposed in My Account only. Contextual notices remain available on listing flows. */
 (function(){
   if(window.RoleSwitch) return;
   var SB_URL = "https://abppfpgazlngdhrejrog.supabase.co", SB_KEY = "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5";
@@ -25,8 +25,7 @@
     ".rs-card a.rs-link{color:var(--blue,#0b7a6e);font-weight:600}" +
     ".rs-msg{min-height:1.2em;margin:8px 0 0;font-size:.95rem;color:var(--muted,#5a6e6b)}" +
     ".rs-msg.err{color:#b3261e}" +
-    "#nav a.rs-nav{color:var(--blue,#0b7a6e);font-weight:600;white-space:nowrap}" +
-    ".rs-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100001;max-width:min(92vw,520px);padding:12px 18px;border-radius:12px;background:#b3261e;color:#fff;font:600 .95rem/1.4 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)}";
+    "";
   document.head.appendChild(css);
 
   function h(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
@@ -114,37 +113,6 @@
     box.appendChild(row); box.appendChild(msg);
     return box;
   }
-
-  function toast(text){
-    var old = document.querySelector(".rs-toast"); if(old) old.remove();
-    var t = h("div", "rs-toast", text); t.setAttribute("role", "alert");
-    document.body.appendChild(t);
-    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 9000);
-  }
-
-  /* ---- header link: one tap to switch from any page ---- */
-  async function mountHeader(){
-    var nav = document.getElementById("nav");
-    if(!nav || document.getElementById("rsNav")) return;
-    var role = await getRole();
-    if(role !== "renter" && role !== "landlord") return;
-    if(document.getElementById("rsNav")) return;
-    var to = role === "renter" ? "landlord" : "renter";
-    var a = h("a", "rs-nav", "Switch to " + cap(to));
-    a.id = "rsNav"; a.href = "#"; a.title = "You are using your " + cap(role) + " account";
-    a.onclick = async function(e){
-      e.preventDefault();
-      a.textContent = "Switching...";
-      var r = await switchTo(to);
-      if(r.ok){ location.reload(); return; }
-      a.textContent = "Switch to " + cap(to);
-      toast("Could not switch: " + r.error);
-    };
-    nav.insertBefore(a, nav.querySelector("a.pill") || null);
-  }
-  /* wait one tick so a page's own inline script has created its Supabase client first */
-  if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", mountHeader, { once: true }); }
-  else { setTimeout(mountHeader, 0); }
 
   window.RoleSwitch = { getRole: getRole, switchTo: switchTo, notice: notice };
 })();
