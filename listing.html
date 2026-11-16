@@ -210,6 +210,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 </div></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="pass.js"></script>
+<script src="role-switch.js"></script>
 <script>
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
@@ -282,8 +283,18 @@ function messageForm(box, l){
 }
 async function contactForm(box, l){
   var prior = await sentInquiry(l.id);
-  if(prior){ box.appendChild(sentCard(prior)); } else { messageForm(box, l); }
+  var myRole = window.RoleSwitch ? await window.RoleSwitch.getRole() : null;
+  var landlordMode = myRole === "landlord";
+  if(prior){ box.appendChild(sentCard(prior)); }
+  else if(landlordMode){
+    box.appendChild(window.RoleSwitch.notice({
+      to: "renter",
+      title: "You are using your Landlord account",
+      text: "To message this landlord, switch to your Renter account. It is the same login and takes one tap. Your listings stay live while you browse as a renter."
+    }));
+  } else { messageForm(box, l); }
   var pr = await sb.rpc("my_contact_pass");
+  if(landlordMode && pr.data !== true){ return; }
   var lock = el("div", "lockbox");
   lock.appendChild(el("h3", "", "Landlord phone and email"));
   if(pr.data === true){
