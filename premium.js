@@ -84,7 +84,7 @@
     return null;
   }
   async function getState(){
-    var st = { loggedIn: false, role: null, pass: null, usage: 0, passPrice: "$25.00" };
+    var st = { loggedIn: false, role: null, pass: null, usage: 0, passPrice: "$25.00", landlordPremiumActive: false };
     try{
       var c = getClient(); if(!c) return st;
       var s = await c.auth.getSession(); var session = s.data && s.data.session;
@@ -93,6 +93,20 @@
       var p = await c.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
       st.role = p.data && p.data.role ? p.data.role : "renter";
       if(st.role === "landlord") st.passPrice = "$17.99";
+      /* A paid Landlord Premium account must not see the post-listing upsell again. */
+      try{
+        var landlordPlan = await c.from("subscription_plans").select("id").eq("slug", "landlord-premium-yearly").maybeSingle();
+        if(!landlordPlan.error && landlordPlan.data && landlordPlan.data.id){
+          var landlordSub = await c.from("landlord_subscriptions")
+            .select("id,current_period_end")
+            .eq("landlord_id", session.user.id)
+            .eq("plan_id", landlordPlan.data.id)
+            .in("status", ["active", "trialing"])
+            .or("current_period_end.is.null,current_period_end.gt." + new Date().toISOString())
+            .limit(1);
+          st.landlordPremiumActive = !landlordSub.error && Array.isArray(landlordSub.data) && landlordSub.data.length > 0;
+        }
+      }catch(e){}
       if(st.role === "renter" || st.role === "landlord"){
         try{
           var quote = await c.functions.invoke("paypal-pass", { body: { action: "config" } });
@@ -185,6 +199,8 @@
     var forced = (kind === "renter" || kind === "landlord") ? kind : null;
     var known = (st.role === "renter" || st.role === "landlord") ? st.role : null;
     var mode = forced || known || "renter";
+    /* Suppress every landlord Premium upsell for an account with a currently active paid plan. */
+    if(mode === "landlord" && st.landlordPremiumActive) return;
     var tabs = !forced && !known;   /* logged out or admin: show both sides */
 
     lastFocus = document.activeElement;
