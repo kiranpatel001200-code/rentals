@@ -25,7 +25,8 @@
     ".rs-card a.rs-link{color:var(--blue,#0b7a6e);font-weight:600}" +
     ".rs-msg{min-height:1.2em;margin:8px 0 0;font-size:.95rem;color:var(--muted,#5a6e6b)}" +
     ".rs-msg.err{color:#b3261e}" +
-    "#nav a.rs-nav{color:var(--blue,#0b7a6e);font-weight:600;white-space:nowrap}";
+    "#nav a.rs-nav{color:var(--blue,#0b7a6e);font-weight:600;white-space:nowrap}" +
+    ".rs-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100001;max-width:min(92vw,520px);padding:12px 18px;border-radius:12px;background:#b3261e;color:#fff;font:600 .95rem/1.4 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)}";
   document.head.appendChild(css);
 
   function h(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
@@ -114,6 +115,13 @@
     return box;
   }
 
+  function toast(text){
+    var old = document.querySelector(".rs-toast"); if(old) old.remove();
+    var t = h("div", "rs-toast", text); t.setAttribute("role", "alert");
+    document.body.appendChild(t);
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 9000);
+  }
+
   /* ---- header link: one tap to switch from any page ---- */
   async function mountHeader(){
     var nav = document.getElementById("nav");
@@ -129,8 +137,8 @@
       a.textContent = "Switching...";
       var r = await switchTo(to);
       if(r.ok){ location.reload(); return; }
-      a.textContent = "Could not switch. Tap to retry.";
-      a.title = r.error;
+      a.textContent = "Switch to " + cap(to);
+      toast("Could not switch: " + r.error);
     };
     nav.insertBefore(a, nav.querySelector("a.pill") || null);
   }
