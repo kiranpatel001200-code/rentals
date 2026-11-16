@@ -3,7 +3,7 @@
   var URL_ = "https://abppfpgazlngdhrejrog.supabase.co", KEY = "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5";
   /* Premium popup: premium.js adds the Premium button to the header and opens the popup. */
   if(!window.openPremium && !document.getElementById("premJs")){ var pj = document.createElement("script"); pj.id = "premJs"; pj.src = "premium.js"; pj.defer = true; document.head.appendChild(pj); }
-  /* Role switch: role-switch.js adds the "Switch to Landlord/Renter" link to the header. */
+  /* Role switch helper for contextual notices; the account-mode control lives in My Account. */
   if(!window.RoleSwitch && !document.getElementById("rsJs")){ var rj = document.createElement("script"); rj.id = "rsJs"; rj.src = "role-switch.js"; rj.defer = true; document.head.appendChild(rj); }
   function showPage(){ document.documentElement.style.display = ""; }
   function notFound(){
