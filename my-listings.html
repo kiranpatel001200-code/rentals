@@ -227,7 +227,11 @@ async function setStatus(id, status, title){
   var r = await sb.from("listings").update({ status: status }).eq("id", id);
   if(r.error){ say(r.error.message, "err"); return; }
   say(status === "inactive" ? "Listing paused." : status === "approved" ? "Your listing is live." : "Sent for review.", "ok"); load();
-  if(status === "approved"){ setTimeout(function(){ openListingPremium(id,title||"Your listing"); }, 600); }
+  if(status === "approved"){
+    var current = await sb.from("listings").select("premium_priority,premium_priority_until").eq("id",id).maybeSingle();
+    var alreadyPremium = !current.error && current.data && current.data.premium_priority && (!current.data.premium_priority_until || new Date(current.data.premium_priority_until).getTime() > Date.now());
+    if(!alreadyPremium){ setTimeout(function(){ openListingPremium(id,title||"Your listing"); }, 600); }
+  }
 }
 async function remove(l){
   if(!window.confirm("Move \"" + l.title + "\" to Recently Deleted? You can restore it later.")) return;
