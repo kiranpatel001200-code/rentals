@@ -161,6 +161,14 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
 
 <main class="wrap hide" id="page">
 
+
+<section class="card hide" id="cAccountMode">
+<div class="head"><h2>Account mode</h2><span class="badge" id="accountModeCurrent">Renter mode</span></div>
+<p class="passfine" id="accountModeHelp">Use one RenterHere login for both renting and listing. Your profile, saved listings and messages stay with your account.</p>
+<div class="actions"><button type="button" class="main" id="switchAccountMode">Switch to Landlord</button></div>
+<p class="note" id="nAccountMode" role="status" aria-live="polite"></p>
+</section>
+
 <section class="card">
 <div class="head"><h2>Profile</h2><button type="button" class="ghost" id="eProfile">Edit</button></div>
 <div id="vProfile">
@@ -321,6 +329,20 @@ function edit(key, on){
   $(ids[2]).classList.toggle("hide", on);
   if(on){ note(ids[3], ""); }
 }
+
+function paintAccountMode(){
+  var card = $("cAccountMode"), button = $("switchAccountMode");
+  if(!card || !button) return;
+  if(accountRole !== "renter" && accountRole !== "landlord"){
+    card.classList.add("hide");
+    return;
+  }
+  var next = accountRole === "renter" ? "landlord" : "renter";
+  card.classList.remove("hide");
+  $("accountModeCurrent").textContent = accountRole === "renter" ? "Renter mode" : "Landlord mode";
+  button.textContent = "Switch to " + (next === "renter" ? "Renter" : "Landlord");
+}
+
 function paint(){
   $("dName").textContent = prof.full_name || "Not added";
   $("dPhone").textContent = prof.phone || "Not added";
@@ -361,6 +383,7 @@ async function init(){
   accountRole = role || "renter";
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
+  paintAccountMode();
   if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
   if(role === "landlord"){ $("cLandlordPremium").classList.remove("hide"); }
   if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
@@ -712,6 +735,24 @@ $("bReset").onclick = async function(){
   if(res.error){ note("nPass", friendly(res.error), "err"); return; }
   edit("pass", false);
   note("nPass", "Reset link sent to " + user.email + ".", "ok");
+};
+
+
+$("switchAccountMode").onclick = async function(){
+  var next = accountRole === "renter" ? "landlord" : "renter";
+  var button = $("switchAccountMode");
+  button.disabled = true;
+  note("nAccountMode", "Switching your account mode...");
+  try{
+    var result = await sb.rpc("switch_my_role", { p_role: next });
+    if(result.error) throw result.error;
+    if(String(result.data || "") !== next) throw new Error("The database did not confirm the account change. Please refresh and try again.");
+    note("nAccountMode", "Your account mode has been changed. Refreshing your account...", "ok");
+    location.reload();
+  }catch(error){
+    button.disabled = false;
+    note("nAccountMode", friendly(error), "err");
+  }
 };
 
 $("logout").onclick = async function(){ await sb.auth.signOut(); location.href = "login.html"; };
