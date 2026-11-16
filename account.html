@@ -384,7 +384,8 @@ async function init(){
   $("roleLine").textContent = role === "landlord" ? "Landlord account" : role === "admin" ? "Admin account" : "Renter account";
   paint();
   paintAccountMode();
-  if(role === "landlord" || role === "admin"){ $("cListings").classList.remove("hide"); }
+  if(role === "landlord" || role === "admin" || role === "renter"){ $("cListings").classList.remove("hide"); }
+  if(role === "renter"){ $("cListings").insertAdjacentHTML("beforeend", '<p class="passfine">You can manage and promote your own existing listings here without switching out of Renter mode. Listing Premium is separate from your Renter Contact Pass.</p>'); }
   if(role === "landlord"){ $("cLandlordPremium").classList.remove("hide"); }
   if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
   $("page").classList.remove("hide");
