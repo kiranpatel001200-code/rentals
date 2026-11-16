@@ -445,7 +445,7 @@ async function premiumListings(box){
   var owners={};(pr.data||[]).forEach(function(p){owners[p.id]=p;});
   var gr=await sb.from("admin_listing_premium_grants").select("listing_id,granted_at,expires_at,reason");
   if(gr.error){say(gr.error.message,"err");box.appendChild(el("p","empty","Could not load free Premium grants. Check database migration and admin permissions."));return;}
-  var paid=await sb.from("listing_premium_orders").select("id,listing_id,user_id,amount,currency,status,paypal_order_id,paypal_capture_id,created_at,completed_at,expires_at").order("created_at",{ascending:false}).limit(500);
+  var paid=await sb.from("listing_premium_orders").select("id,listing_id,user_id,amount,currency,status,paypal_order_id,paypal_capture_id,created_at,completed_at,expires_at,paypal_payer_id,payer_name,payer_email,payment_method,card_brand,card_last4,paypal_fee_amount,paypal_net_amount,paypal_environment").order("created_at",{ascending:false}).limit(500);
   if(paid.error){say(paid.error.message,"err");box.appendChild(el("p","empty","Could not load Listing Premium PayPal orders."));return;}
   var grants={};(gr.data||[]).forEach(function(g){grants[g.listing_id]=g;});
   var paidByListing={};(paid.data||[]).forEach(function(o){if(!paidByListing[o.listing_id])paidByListing[o.listing_id]=[];paidByListing[o.listing_id].push(o);});
@@ -474,7 +474,13 @@ async function premiumListings(box){
     d.appendChild(el("div","meta",l.city+", "+String(l.state||"").trim()+" · $"+Number(l.monthly_rent||0).toLocaleString("en-US")+"/mo · Created "+when(l.created_at)));
     d.appendChild(el("div","meta","Listing ID: "+l.id));
     if(l.premium_priority_until&&isActive)d.appendChild(el("div","meta","Premium priority expires: "+new Date(l.premium_priority_until).toLocaleString()));
-    if(activeOrder)d.appendChild(el("div","meta","Paid Listing Premium: $"+Number(activeOrder.amount).toFixed(2)+" "+activeOrder.currency+" · Expires "+new Date(activeOrder.expires_at).toLocaleString()+" · Order "+activeOrder.paypal_order_id));
+    if(activeOrder){
+      d.appendChild(el("div","meta","Paid Listing Premium: $"+Number(activeOrder.amount).toFixed(2)+" "+activeOrder.currency+" · Expires "+new Date(activeOrder.expires_at).toLocaleString()));
+      d.appendChild(el("div","meta","Payment: "+String(activeOrder.payment_method||"Not returned by PayPal")+(activeOrder.card_brand?" · "+activeOrder.card_brand:"")+(activeOrder.card_last4?" ending "+activeOrder.card_last4:"")+" · Environment: "+String(activeOrder.paypal_environment||"unknown")));
+      if(activeOrder.payer_name||activeOrder.payer_email)d.appendChild(el("div","meta","PayPal payer: "+[activeOrder.payer_name,activeOrder.payer_email].filter(Boolean).join(" · ")));
+      d.appendChild(el("div","meta","PayPal order: "+activeOrder.paypal_order_id+" · Capture: "+(activeOrder.paypal_capture_id||"—")));
+      d.appendChild(el("div","meta","PayPal fee: "+(activeOrder.paypal_fee_amount==null?"Not supplied":"$"+Number(activeOrder.paypal_fee_amount).toFixed(2))+" · Net received: "+(activeOrder.paypal_net_amount==null?"Not supplied":"$"+Number(activeOrder.paypal_net_amount).toFixed(2))));
+    }
     else if(latest&&latest.status!=="completed")d.appendChild(el("div","meta","Latest PayPal order: "+String(latest.status).toUpperCase()+" · $"+Number(latest.amount).toFixed(2)+" · "+latest.paypal_order_id));
     else if(latest&&latest.status==="completed"&&latest.expires_at&&new Date(latest.expires_at)<=new Date())d.appendChild(el("div","meta","Last paid promotion expired: "+new Date(latest.expires_at).toLocaleString()));
     if(g)d.appendChild(el("div","meta","Free test grant: "+(gActive?"Expires "+new Date(g.expires_at).toLocaleString():"Expired")+" · Granted "+new Date(g.granted_at).toLocaleString()));
