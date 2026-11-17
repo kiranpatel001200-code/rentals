@@ -345,72 +345,89 @@ async function users(box){
 
 /* ---------- PayPal Premium payments and refunds ---------- */
 async function payments(box){
-  box.appendChild(el("p","sub","Recent PayPal transactions. Full card numbers and CVV are never available to RenterHere."));
+  box.appendChild(el("p","sub","All completed PayPal purchases: Landlord Premium, Renter Contact Pass, Landlord Contact Pass and Listing Premium. PayPal only returns limited card details; full card numbers and CVV are never stored or shown."));
   var result=await sb.functions.invoke("paypal-landlord-premium",{body:{action:"admin_list"}});
   if(result.error||!result.data||result.data.ok!==true){
-    box.appendChild(el("p","empty","Could not load payments. Please sign in again with your admin account."));
+    box.appendChild(el("p","empty","Could not load payment records. Please sign in again with your admin account."));
     say(result.data&&result.data.error||result.error&&result.error.message||"Payment list unavailable.","err");
     return;
   }
-  var env=result.data.environment||"unknown";
-  var envLine=el("div","line");
-  envLine.appendChild(el("b","", "PayPal environment"));
-  envLine.appendChild(chip(env.toUpperCase(),env==="live"?"live":"pend"));
-  box.appendChild(envLine);
   var rows=result.data.payments||[];
-  var filters=el("div","filters");
-  var filter=el("select","filter");
-  [["all","All premium payments & refunds"],["paid","Premium paid — no refund"],["partial","Partially refunded"],["refunded","Fully refunded"],["pending","Refund pending"],["failed","Refund failed"]].forEach(function(item){
+  var summary=el("div","stats");
+  var totals={all:rows.length,paid:0,renter:0,landlord:0,listing:0};
+  var received=0;
+  rows.forEach(function(p){
+    if(p.status==="completed"||p.status==="refunded"){totals.paid++;received+=Number(p.amount||0);}
+    if(p.payment_type==="contact_pass"&&p.account_role==="renter")totals.renter++;
+    if((p.payment_type==="contact_pass"&&p.account_role==="landlord")||p.payment_type==="subscription")totals.landlord++;
+    if(p.payment_type==="listing_premium")totals.listing++;
+  });
+  [[""+totals.all,"Transactions"],[""+totals.paid,"Successful payments"],["$"+received.toFixed(2),"Gross paid (USD)"],[""+totals.renter,"Renter passes"],[""+totals.landlord,"Landlord purchases"],[""+totals.listing,"Listing upgrades"]].forEach(function(c){
+    var s=el("div","stat");s.appendChild(el("b","",c[0]));s.appendChild(el("span","",c[1]));summary.appendChild(s);
+  });
+  box.appendChild(summary);
+  var envLine=el("div","line");
+  envLine.appendChild(el("b","","Current PayPal environment"));
+  envLine.appendChild(chip(String(result.data.environment||"unknown").toUpperCase(),result.data.environment==="live"?"live":"pend"));
+  box.appendChild(envLine);
+  var filters=el("div","filters"),filter=el("select","filter");
+  [["all","All purchases"],["renter","Renter Contact Pass"],["landlord","Landlord Premium / Contact Pass"],["listing","Listing Premium"],["refunds","Refund activity"]].forEach(function(item){
     var option=document.createElement("option");option.value=item[0];option.textContent=item[1];filter.appendChild(option);
   });
   filters.appendChild(filter);
   var search=el("form","sf"),input=el("input"),submit=el("button","act","Search");
-  input.placeholder="Search email, name, order ID or capture ID";
-  submit.type="submit";search.appendChild(input);search.appendChild(submit);
+  input.placeholder="Search customer, email, role, order ID, capture ID or card";
+  submit.type="submit";search.appendChild(input);search.appendChild(submit);filters.appendChild(search);
   var list=el("div","");
   function drawRows(){
     var q=input.value.trim().toLowerCase(),mode=filter.value;
     list.textContent="";
     var matched=rows.filter(function(p){
-      var u=p.profiles||{},refunded=Number(p.refunded_amount||0),total=Number(p.amount||0);
-      var isFull=p.status==="refunded"||p.refund_status==="completed"|| (total>0&&refunded>=total);
-      var isPartial=refunded>0&&!isFull;
-      var isPending=p.refund_status==="pending";
-      var isFailed=p.refund_status==="failed";
-      var isPaid=!isFull&&!isPartial&&!isPending&&!isFailed&&p.status==="completed";
-      var statusMatch=mode==="all"||(mode==="paid"&&isPaid)||(mode==="partial"&&isPartial)||(mode==="refunded"&&isFull)||(mode==="pending"&&isPending)||(mode==="failed"&&isFailed);
-      var textMatch=[u.email,u.full_name,u.user_code,p.paypal_order_id,p.paypal_capture_id,p.payer_email,p.payer_name].some(function(v){return String(v||"").toLowerCase().includes(q);});
-      return statusMatch&&textMatch;
+      var u=p.profiles||{},refundAmount=Number(p.refunded_amount||0);
+      var isRefund=refundAmount>0||p.refund_status==="pending"||p.refund_status==="failed"||p.status==="refunded";
+      var typeMatch=mode==="all"||
+        (mode==="renter"&&p.payment_type==="contact_pass"&&p.account_role==="renter")||
+        (mode==="landlord"&&(p.payment_type==="subscription"||(p.payment_type==="contact_pass"&&p.account_role==="landlord")))||
+        (mode==="listing"&&p.payment_type==="listing_premium")||
+        (mode==="refunds"&&isRefund);
+      var textMatch=[u.email,u.full_name,u.user_code,p.payer_email,p.payer_name,p.paypal_order_id,p.paypal_capture_id,p.card_brand,p.card_last4,p.purchase_type,p.account_role,p.listing_title,p.listing_location].some(function(v){return String(v||"").toLowerCase().includes(q);});
+      return typeMatch&&textMatch;
     });
     matched.forEach(renderPayment);
-    if(!matched.length)list.appendChild(el("p","empty","No premium payments or refunds match this filter."));
+    if(!matched.length)list.appendChild(el("p","empty","No payment records match this filter."));
   }
   filter.onchange=drawRows;
   search.onsubmit=function(e){e.preventDefault();drawRows();};
-  filters.appendChild(search);
   box.appendChild(filters);box.appendChild(list);
   function renderPayment(p){
     var u=p.profiles||{},d=el("div","it"),head=el("div","tp");
     head.appendChild(el("b","",u.full_name||p.payer_name||"Customer"));
     head.appendChild(chip(String(p.status||"unknown").toUpperCase(),p.status==="completed"?"live":p.status==="pending"?"pend":"rej"));
-    if(p.refund_status&&p.refund_status!=="none")head.appendChild(chip("REFUND "+p.refund_status.toUpperCase(),p.refund_status==="completed"?"live":"pend"));
+    head.appendChild(chip(p.purchase_type||p.payment_type||"PayPal purchase",""));
+    if(p.refund_status&&p.refund_status!=="none")head.appendChild(chip("REFUND "+String(p.refund_status).toUpperCase(),p.refund_status==="completed"?"live":"pend"));
     d.appendChild(head);
-    d.appendChild(el("div","meta",(u.email||p.payer_email||"No email")+(u.user_code?" · "+u.user_code:"")+" · "+String(u.role||"user")));
-    d.appendChild(el("div","meta","Paid: $"+Number(p.amount||0).toFixed(2)+" "+String(p.currency||"USD")+" · "+new Date(p.created_at).toLocaleString()));
-    d.appendChild(el("div","meta","Method: "+(p.payment_method==="card"?"Card"+(p.card_brand?" · "+p.card_brand:"")+(p.card_last4?" ending "+p.card_last4:""):p.payment_method==="paypal"?"PayPal wallet":"Not returned by PayPal")));
+    d.appendChild(el("div","meta","Account holder: "+(u.full_name||"Name unavailable")+" · "+(u.email||"Email unavailable")+" · User ID: "+(p.user_id||"—")));
+    d.appendChild(el("div","meta","Account type at purchase: "+String(p.account_role||u.role||"unknown").toUpperCase()+(u.user_code?" · User code: "+u.user_code:"")));
+    d.appendChild(el("div","meta","Amount: $"+Number(p.amount||0).toFixed(2)+" "+String(p.currency||"USD")+" · "+(p.created_at?new Date(p.created_at).toLocaleString("en-US"):"Date unavailable")));
+    var method=p.payment_method==="card"?"Debit / credit card":p.payment_method==="paypal"?"PayPal wallet":"Not supplied by PayPal";
+    var cardText=p.card_brand?" · "+String(p.card_brand).toUpperCase():"";
+    if(p.card_last4)cardText+=" · ending "+p.card_last4;
+    d.appendChild(el("div","meta","Payment method: "+method+cardText));
     if(p.payer_name||p.payer_email)d.appendChild(el("div","meta","PayPal payer: "+[p.payer_name,p.payer_email].filter(Boolean).join(" · ")));
-    d.appendChild(el("div","meta","Order: "+(p.paypal_order_id||"—")+" · Capture: "+(p.paypal_capture_id||"—")));
     if(p.paypal_payer_id)d.appendChild(el("div","meta","PayPal payer ID: "+p.paypal_payer_id));
-    d.appendChild(el("div","meta","PayPal fee: "+(p.paypal_fee_amount==null?"Not supplied":"$"+Number(p.paypal_fee_amount).toFixed(2))+" · Net received: "+(p.paypal_net_amount==null?"Not supplied":"$"+Number(p.paypal_net_amount).toFixed(2))));
-    if(Number(p.refunded_amount||0)>0)d.appendChild(el("div","meta","Refunded: $"+Number(p.refunded_amount).toFixed(2)+" · Refund ID: "+(p.paypal_refund_id||"pending")));
-    d.appendChild(el("div","meta","Account: "+(u.is_banned?"Blocked":"Active")+" · Subscription ID: "+(p.subscription_id||"—")));
+    d.appendChild(el("div","meta","PayPal Order ID: "+(p.paypal_order_id||"—")+" · Capture ID: "+(p.paypal_capture_id||"—")));
+    d.appendChild(el("div","meta","PayPal fee: "+(p.paypal_fee_amount==null?"Not returned":"$"+Number(p.paypal_fee_amount).toFixed(2))+" · Net received: "+(p.paypal_net_amount==null?"Not returned":"$"+Number(p.paypal_net_amount).toFixed(2))+" · Environment: "+String(p.paypal_environment||result.data.environment||"unknown").toUpperCase()));
+    if(p.listing_title)d.appendChild(el("div","meta","Listing: "+p.listing_title+(p.listing_location?" · "+p.listing_location:"")+(p.listing_id?" · Listing ID: "+p.listing_id:"")));
+    if(p.subscription_id)d.appendChild(el("div","meta","Premium subscription ID: "+p.subscription_id));
+    if(p.expires_at)d.appendChild(el("div","meta","Premium expires: "+new Date(p.expires_at).toLocaleString("en-US")));
+    if(Number(p.refunded_amount||0)>0)d.appendChild(el("div","meta","Refunded: $"+Number(p.refunded_amount).toFixed(2)+" · Refund ID: "+(p.paypal_refund_id||"—")));
     if(p.refund_note)d.appendChild(el("div","meta","Refund note: "+p.refund_note));
     if(p.refund_error)d.appendChild(el("div","meta","Refund status note: "+p.refund_error));
     var actions=el("div","acts");
     if(p.status==="completed"&&p.payment_type==="subscription"&&p.paypal_capture_id&&p.refund_status!=="completed"&&p.refund_status!=="pending"){
       actions.appendChild(btn("Refund payment",async function(){
         var remaining=Math.max(0,Number(p.amount)-Number(p.refunded_amount||0));
-        var raw=window.prompt("Refund amount in USD (maximum $"+remaining.toFixed(2)+"):",remaining.toFixed(2));
+        var raw=window.prompt("Refund amount in USD (maximum $"+remaining.toFixed(2)+"):",""+remaining.toFixed(2));
         if(raw===null)return;
         var amount=Number(raw);
         if(!Number.isFinite(amount)||amount<=0||amount>remaining){say("Enter a valid amount not exceeding the remaining balance.","err");return;}
@@ -419,11 +436,8 @@ async function payments(box){
         if(!window.confirm("Send a PayPal refund of $"+amount.toFixed(2)+" to the original payment method? This cannot be undone."))return;
         say("Submitting refund to PayPal...");
         var x=await sb.functions.invoke("paypal-landlord-premium",{body:{action:"admin_refund",payment_id:p.id,amount:amount,note:note}});
-        if(x.error||!x.data||x.data.ok!==true){
-          say(x.data&&x.data.error||x.error&&x.error.message||"Refund result is not confirmed. Check PayPal activity before retrying.","err");
-        }else{
-          say(x.data.pending?"PayPal is still processing the refund.":"Refund submitted successfully. Refund ID: "+x.data.refund_id,"ok");
-        }
+        if(x.error||!x.data||x.data.ok!==true)say(x.data&&x.data.error||x.error&&x.error.message||"Refund result is not confirmed. Check PayPal before retrying.","err");
+        else say(x.data.pending?"PayPal is still processing the refund.":"Refund submitted successfully. Refund ID: "+x.data.refund_id,"ok");
         render();
       },"del"));
     }
@@ -431,7 +445,6 @@ async function payments(box){
   }
   drawRows();
 }
-
 
 /* ---------- premium listings ---------- */
 async function premiumListings(box){
