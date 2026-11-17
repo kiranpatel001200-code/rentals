@@ -306,6 +306,7 @@ header.top nav a.pill{margin-top:10px;text-align:center;border-radius:12px;borde
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="payment-toast.js"></script>
 <script src="pass.js"></script>
 <script>
 var SITE = "https://kiranpatel001200-code.github.io/rentals/";
@@ -515,6 +516,7 @@ async function landlordCaptureAndActivate(data){
   }
   var expiry = result.data.expires_at ? new Date(result.data.expires_at).toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"}) : "one year from today";
   landlordPremiumNote("Payment successful! Your Landlord Premium is active until " + expiry + ".", "ok");
+  if(window.renterHerePaymentToast) window.renterHerePaymentToast("Payment successful", "PayPal confirmed your Landlord Premium and it is active until " + expiry + ".");
   $("landlordPremiumStatus").textContent = "Your Landlord Premium is active until " + expiry + ".";
   $("landlordPremiumStatus").className = "passfine";
   $("landlordPremiumCheckout").classList.add("hide");
