@@ -31,7 +31,6 @@ function passBox(onDone){
   d.appendChild(passEl("p", "passfine", "Checking your Contact Pass..."));
   Promise.all([passInfo(), sb.auth.getSession()]).then(async function(r){
     var info = r[0], session = r[1].data.session; d.textContent = "";
-    d.appendChild(passEl("b", "", "Renter Premium"));
     var profileResult = session ? await sb.from("profiles").select("role").eq("id", session.user.id).maybeSingle() : null;
     var role = profileResult && profileResult.data ? profileResult.data.role : null;
     if(session && role === "landlord"){
@@ -67,7 +66,15 @@ function passBox(onDone){
   return d;
 }
 function buildPay(d, onDone, role){
-  d.appendChild(passEl("p", "", "Unlock the landlord's phone, email and WhatsApp details when provided, for up to 3 different rental listings. " + PASS.price + " USD for 1 year, as a one-time payment. No automatic renewal. Need more than 3 contact leads? Contact RenterHere about additional access."));
+  var price = passEl("p", "pass-plan-price");
+  price.appendChild(document.createTextNode(PASS.price + " USD "));
+  price.appendChild(passEl("small", "", "/ year"));
+  d.appendChild(price);
+  d.appendChild(passEl("p", "pass-plan-intro", "One secure payment for " + PASS.term + ". No automatic renewal. Your Renter Premium access starts after PayPal confirms the payment."));
+  var benefits = passEl("ul", "pass-plan-benefits");
+  ["Unlock landlord phone numbers when provided","View landlord email and WhatsApp details when available","Get up to 3 distinct listing contact leads per pass period","Use the pass while searching across available rental listings","No automatic renewal — one-time payment"].forEach(function(item){ benefits.appendChild(passEl("li", "", item)); });
+  d.appendChild(benefits);
+  d.appendChild(passEl("p", "passfine", "Need more than 3 contact leads? Contact RenterHere about additional access."));
   var fine = passEl("p", "passfine", "Contact Pass purchases are strictly non-refundable once unlocked, subject to applicable law. The pass does not renew automatically. By paying you agree to the ");
   var termsLink = passEl("a", "", "Terms of Service");
   termsLink.href = "terms.html";
