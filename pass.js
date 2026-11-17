@@ -75,111 +75,147 @@ function buildPay(d, onDone, role){
   ["Unlock landlord phone numbers when provided","View landlord email and WhatsApp details when available","Get up to 3 distinct listing contact leads per pass period","Use the pass while searching across available rental listings","No automatic renewal — one-time payment"].forEach(function(item){ benefits.appendChild(passEl("li", "", item)); });
   d.appendChild(benefits);
   d.appendChild(passEl("p", "passfine", "Need more than 3 contact leads? Contact RenterHere about additional access."));
-  var fine = passEl("p", "passfine", "Contact Pass purchases are strictly non-refundable once unlocked, subject to applicable law. The pass does not renew automatically. By paying you agree to the ");
-  var termsLink = passEl("a", "", "Terms of Service");
-  termsLink.href = "terms.html";
-  termsLink.target = "_blank";
-  termsLink.rel = "noopener";
-  fine.appendChild(termsLink);
-  fine.appendChild(document.createTextNode("."));
-  d.appendChild(fine);
 
-  var consentLine = passEl("label", "pass-consent");
-  consentLine.style.cssText = "display:flex;align-items:flex-start;gap:10px;margin:14px 0;padding:12px 14px;border:1px solid #cbd8e8;border-radius:10px;background:#f5f8fd;color:#172b4d;font-size:14px;line-height:1.5;cursor:pointer;";
-  var consent = document.createElement("input");
-  consent.type = "checkbox";
-  consent.required = true;
-  consent.setAttribute("aria-label", "I agree to the Terms of Service and understand that Contact Pass purchases are strictly non-refundable once unlocked.");
-  consent.style.cssText = "width:18px;height:18px;min-width:18px;margin:2px 0 0;accent-color:#155fc0;cursor:pointer;";
-  consentLine.appendChild(consent);
-  consentLine.appendChild(document.createTextNode("I agree to the "));
-  consentLine.appendChild(termsLink.cloneNode(true));
-  consentLine.appendChild(document.createTextNode(" and understand that Contact Pass purchases are strictly non-refundable once unlocked."));
-  d.appendChild(consentLine);
+  var continueButton = passEl("button", "main", "Continue to secure checkout — " + PASS.price + "/year");
+  continueButton.type = "button";
+  continueButton.style.cssText = "margin-top:14px;min-height:48px;padding:12px 22px;border-radius:12px;background:var(--blue);color:#fff;font-weight:700";
+  d.appendChild(continueButton);
+  d.appendChild(passEl("p", "passfine", "Choose PayPal or Debit/Credit Card in the secure checkout popup."));
+  var modal = null, sdkPromise = null, paymentUiReady = false;
 
-  var holder = passEl("div", "ppbtn");
-  holder.style.display = "none";
-  var note = passEl("p", "passnote", "Please tick the checkbox above to enable PayPal checkout.");
-  d.appendChild(holder);
-  d.appendChild(note);
+  function note(message, kind){
+    var el = modal && modal.querySelector("#renterPassCheckoutMessage");
+    if(el){ el.textContent = message || ""; el.className = "note" + (kind ? " " + kind : ""); }
+  }
+  function closeModal(){
+    if(!modal) return;
+    modal.classList.add("hide");
+    document.body.style.overflow = "";
+  }
+  function createModal(){
+    if(modal) return modal;
+    modal = passEl("div", "rh-checkout-overlay hide");
+    modal.id = "renterPassCheckoutModal";
+    modal.setAttribute("role","dialog");
+    modal.setAttribute("aria-modal","true");
+    modal.setAttribute("aria-labelledby","renterPassCheckoutTitle");
+    var dialog = passEl("div","rh-checkout-dialog");
+    var head = passEl("div","rh-checkout-head");
+    var heading = passEl("div","");
+    heading.appendChild(passEl("span","rh-checkout-kicker","RENTERHERE SECURE CHECKOUT"));
+    var title = passEl("h2","", "Complete your Renter Premium purchase");
+    title.id = "renterPassCheckoutTitle";
+    heading.appendChild(title);
+    var close = passEl("button","rh-checkout-close","×");
+    close.type = "button"; close.setAttribute("aria-label","Close checkout");
+    close.onclick = closeModal;
+    head.appendChild(heading); head.appendChild(close); dialog.appendChild(head);
 
-  var rendered = false;
-  var loading = false;
-  var fallbackAdded = false;
+    var total = passEl("div","rh-checkout-total");
+    var totalText = passEl("div","");
+    totalText.appendChild(passEl("b","","Renter Premium"));
+    totalText.appendChild(passEl("span","","One-time payment · " + PASS.term + " · No automatic renewal"));
+    total.appendChild(totalText);
+    var amount = passEl("strong", "", PASS.price + " ");
+    amount.appendChild(passEl("small","","USD"));
+    total.appendChild(amount); dialog.appendChild(total);
+    dialog.appendChild(passEl("p","rh-checkout-safe","🔒 Choose PayPal or Debit/Credit Card. PayPal securely processes card details; RenterHere never receives or stores your card number or CVV."));
 
-  function renderPaypal(){
-    if(!consent.checked || rendered || !window.paypal) return;
-    rendered = true;
-    var buttons = paypal.Buttons({
-      style: { layout: "vertical", shape: "rect", label: "pay" },
-      onClick: function(data, actions){
-        if(!consent.checked){
-          note.textContent = "Please agree to the Terms of Service before paying.";
-          return actions.reject();
-        }
-        note.textContent = "";
-        return actions.resolve();
-      },
-      createOrder: async function(){
-        if(!consent.checked) throw new Error("Please agree to the Terms of Service before paying.");
-        note.textContent = "";
-        var r = await passCall({ action: "create" });
-        return r.id;
-      },
-      onApprove: async function(data){
-        note.textContent = "Confirming your payment...";
-        try{
-          var r = await passCall({ action: "capture", orderID: data.orderID });
-          var expiresText = r && r.expires_at ? " until " + passDate(r.expires_at) : "";
-          var passName = role === "landlord" ? "Landlord Contact Pass" : "Renter Premium";
-          note.textContent = "Payment received. Your " + passName + " is active" + expiresText + ".";
-          if(window.renterHerePaymentToast) window.renterHerePaymentToast("Payment successful", "PayPal confirmed your " + passName + expiresText + ".");
-          if(onDone){ setTimeout(onDone, 1200); }
-        }catch(e){ note.textContent = e.message; }
-      },
-      onError: function(err){
-        note.textContent = (err && err.message && err.message.indexOf("already have") !== -1) ? err.message : "The payment could not be completed. Please try again.";
-      }
+    var terms = passEl("label","pass-consent");
+    terms.style.cssText = "display:flex;align-items:flex-start;gap:9px;margin:8px 0;padding:10px 12px;border:1px solid #cbd8e8;border-radius:10px;background:#f5f8fd;color:#172b4d;font-size:13px;line-height:1.45";
+    var checkbox = document.createElement("input");
+    checkbox.type="checkbox"; checkbox.style.cssText="margin-top:3px;min-width:16px";
+    terms.appendChild(checkbox);
+    terms.appendChild(document.createTextNode("I agree to the "));
+    var link=passEl("a","","Terms of Service"); link.href="terms.html"; link.target="_blank"; link.rel="noopener";
+    terms.appendChild(link);
+    terms.appendChild(document.createTextNode(" and understand this is a one-time payment with no automatic renewal."));
+    dialog.appendChild(terms);
+
+    var choices=passEl("div","rh-payment-choices");
+    var paypal=passEl("section","rh-payment-choice");
+    paypal.appendChild(passEl("h3","","Pay with PayPal"));
+    var paypalSlot=passEl("div","rh-paypal-button-slot"); paypalSlot.id="renterPassPayPalButton";
+    paypal.appendChild(paypalSlot);
+    var card=passEl("section","rh-payment-choice");
+    card.appendChild(passEl("h3","","Pay with Debit or Credit Card"));
+    card.appendChild(passEl("p","rh-card-hint","Pay securely through PayPal. A PayPal account is not required when guest card checkout is available."));
+    var cardSlot=passEl("div","rh-paypal-button-slot"); cardSlot.id="renterPassCardButton";
+    card.appendChild(cardSlot);
+    var cardMessage=passEl("p","rh-card-hint",""); cardMessage.id="renterPassCardMessage"; card.appendChild(cardMessage);
+    choices.appendChild(paypal); choices.appendChild(card); dialog.appendChild(choices);
+    dialog.appendChild(passEl("p","rh-checkout-foot","No automatic renewal. Contact Pass is separate from Landlord Premium."));
+    var message=passEl("p","note",""); message.id="renterPassCheckoutMessage"; message.setAttribute("role","status"); message.setAttribute("aria-live","polite");
+    dialog.appendChild(message); modal.appendChild(dialog);
+    modal.addEventListener("click",function(event){if(event.target===modal) closeModal();});
+    document.addEventListener("keydown",function(event){if(event.key==="Escape" && !modal.classList.contains("hide")) closeModal();});
+    document.body.appendChild(modal);
+    checkbox.addEventListener("change",function(){ if(checkbox.checked && !paymentUiReady) initialise(); });
+    modal._checkbox=checkbox;
+    return modal;
+  }
+  async function loadSdk(config){
+    if(sdkPromise) return sdkPromise;
+    if(window.paypal && typeof window.paypal.Buttons==="function" && window.paypal.FUNDING){ sdkPromise=Promise.resolve(); return sdkPromise; }
+    sdkPromise=new Promise(function(resolve,reject){
+      var script=document.createElement("script");
+      var params="client-id="+encodeURIComponent(config.client_id)+"&components=buttons,funding-eligibility&enable-funding=card&currency=USD&intent=capture&locale=en_US";
+      if(config.environment!=="live") params+="&buyer-country=US";
+      script.src="https://www.paypal.com/sdk/js?"+params; script.async=true;
+      script.onload=function(){ if(window.paypal && window.paypal.Buttons) resolve(); else reject(new Error("PayPal checkout did not initialize.")); };
+      script.onerror=function(){ sdkPromise=null; reject(new Error("Could not load PayPal checkout. Please try again.")); };
+      document.head.appendChild(script);
     });
-    var renderResult = buttons.render(holder);
-    if(renderResult && typeof renderResult.catch === "function"){
-      renderResult.catch(function(){
-        rendered = false;
-        note.textContent = "The payment button could not be loaded. Please try again.";
-      });
-    }
+    return sdkPromise;
   }
-
-  function enableCheckout(){
-    if(!consent.checked) return;
-    holder.style.display = "";
-    note.textContent = "";
-    if(!PASS.clientId){
-      if(!fallbackAdded){
-        var b = passEl("button", "", "Get Renter Premium (" + PASS.price + ")");
-        b.type = "button";
-        b.onclick = function(){ note.textContent = "Online payment is not switched on yet. It will be available soon."; };
-        holder.appendChild(b);
-        fallbackAdded = true;
+  async function createOrder(){
+    note("Preparing your secure payment...");
+    var result=await passCall({action:"create"});
+    if(!result || !result.id) throw new Error("Could not create the PayPal order.");
+    note(""); return result.id;
+  }
+  async function capture(data){
+    var orderID=data && data.orderID;
+    if(!orderID) throw new Error("PayPal did not return a payment order ID.");
+    note("Verifying your payment and activating Renter Premium...");
+    var result=await passCall({action:"capture",orderID:orderID});
+    if(!result || result.ok!==true) throw new Error("Payment verification is still pending. Please contact support.");
+    var expiry=result.expires_at ? " until " + passDate(result.expires_at) : "";
+    note("Payment successful! Your Renter Premium is active" + expiry + ".","ok");
+    if(window.renterHerePaymentToast) window.renterHerePaymentToast("Payment successful","PayPal confirmed your Renter Premium" + expiry + ".");
+    closeModal();
+    if(onDone) setTimeout(onDone,900);
+    return result;
+  }
+  async function initialise(){
+    if(paymentUiReady || !modal._checkbox.checked) return;
+    if(!modal._checkbox.checked){note("Please agree to the Terms of Service before paying.","err");return;}
+    note("Loading secure payment options...");
+    try{
+      if(!PASS.clientId) throw new Error("PayPal checkout is not configured for this account yet.");
+      await loadSdk({client_id:PASS.clientId,environment:PASS.environment||"sandbox"});
+      var common={style:{layout:"vertical",shape:"rect",height:48,label:"pay"},createOrder:createOrder,onApprove:capture,onCancel:function(){note("Payment canceled. You can try again.");},onError:function(error){console.error("Renter Premium PayPal error:",error);note("PayPal could not complete checkout. Please try again.","err");}};
+      var paypalSlot=modal.querySelector("#renterPassPayPalButton");
+      var cardSlot=modal.querySelector("#renterPassCardButton");
+      var paypalButton=window.paypal.Buttons(Object.assign({},common,{fundingSource:window.paypal.FUNDING.PAYPAL}));
+      if(paypalButton.isEligible()) await paypalButton.render("#renterPassPayPalButton");
+      else paypalSlot.textContent="PayPal checkout is not available for this buyer or merchant account.";
+      var cardButton=window.paypal.Buttons(Object.assign({},common,{fundingSource:window.paypal.FUNDING.CARD,style:{layout:"vertical",shape:"rect",height:48,label:"pay",color:"black"}}));
+      if(cardButton.isEligible()){
+        await cardButton.render("#renterPassCardButton");
+        modal.querySelector("#renterPassCardMessage").textContent="Card payments are securely processed by PayPal.";
+      }else{
+        modal.querySelector("#renterPassCardMessage").textContent="Guest card checkout is not currently enabled for this PayPal merchant account. You can still use PayPal.";
+        cardSlot.textContent="Debit/Credit Card checkout is not currently eligible.";
       }
-      return;
-    }
-    if(window.paypal){ renderPaypal(); return; }
-    if(loading) return;
-    loading = true;
-    var s = document.createElement("script");
-    s.src = "https://www.paypal.com/sdk/js?client-id=" + encodeURIComponent(PASS.clientId) + "&currency=USD&intent=capture&components=buttons";
-    s.onload = function(){ loading = false; renderPaypal(); };
-    s.onerror = function(){ loading = false; note.textContent = "Could not load PayPal. Please try again."; };
-    document.head.appendChild(s);
+      paymentUiReady=true; note("");
+    }catch(error){ console.error("Renter Premium checkout initialization:",error); note(error.message || "Could not load secure checkout.","err"); }
   }
-
-  consent.addEventListener("change", function(){
-    if(consent.checked){
-      enableCheckout();
-    }else{
-      holder.style.display = "none";
-      note.textContent = "Please tick the checkbox above to enable PayPal checkout.";
-    }
-  });
+  continueButton.onclick=function(){
+    createModal();
+    modal.classList.remove("hide");
+    document.body.style.overflow="hidden";
+    if(modal._checkbox.checked && !paymentUiReady) initialise();
+    modal.querySelector(".rh-checkout-close").focus();
+  };
 }
