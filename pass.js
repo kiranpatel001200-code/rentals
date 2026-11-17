@@ -62,11 +62,11 @@ function passBox(onDone){
       d.appendChild(passEl("p", "passnote", e.message || "Could not load the Premium price. Please refresh and try again."));
       return;
     }
-    buildPay(d, onDone);
+    buildPay(d, onDone, role);
   });
   return d;
 }
-function buildPay(d, onDone){
+function buildPay(d, onDone, role){
   d.appendChild(passEl("p", "", "Unlock the landlord's phone, email and WhatsApp details when provided, for up to 3 different rental listings. " + PASS.price + " USD for 1 year, as a one-time payment. No automatic renewal. Need more than 3 contact leads? Contact RenterHere about additional access."));
   var fine = passEl("p", "passfine", "Contact Pass purchases are strictly non-refundable once unlocked, subject to applicable law. The pass does not renew automatically. By paying you agree to the ");
   var termsLink = passEl("a", "", "Terms of Service");
@@ -123,7 +123,10 @@ function buildPay(d, onDone){
         note.textContent = "Confirming your payment...";
         try{
           var r = await passCall({ action: "capture", orderID: data.orderID });
-          note.textContent = "Payment received. Your Renter Premium is active" + (r && r.expires_at ? " until " + passDate(r.expires_at) : "") + ".";
+          var expiresText = r && r.expires_at ? " until " + passDate(r.expires_at) : "";
+          var passName = role === "landlord" ? "Landlord Contact Pass" : "Renter Premium";
+          note.textContent = "Payment received. Your " + passName + " is active" + expiresText + ".";
+          if(window.renterHerePaymentToast) window.renterHerePaymentToast("Payment successful", "PayPal confirmed your " + passName + expiresText + ".");
           if(onDone){ setTimeout(onDone, 1200); }
         }catch(e){ note.textContent = e.message; }
       },
