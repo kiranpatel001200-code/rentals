@@ -80,11 +80,159 @@ Deno.serve(async (req: Request) => {
       .eq("id", user.id)
       .maybeSingle();
     if (profileError) throw new Error("Could not verify the account profile.");
-    if (!profile || profile.role !== "landlord") return json({ error: "Landlord accounts only can buy Landlord Premium." }, 403);
-    if (profile.is_banned) return json({ error: "This account cannot make purchases. Contact support." }, 403);
-
     const body = await req.json().catch(() => ({}));
     const action = String(body.action ?? "");
+
+    // Administrator-only payment management. The browser never receives PayPal credentials.
+    if (action === "admin_list" || action === "admin_refund") {
+      if (!profile || profile.role !== "admin") return json({ error: "Administrator access required." }, 403);
+      if (action === "admin_list") {
+        const [landlordResult, renterResult, listingResult] = await Promise.all([
+          admin.from("payments")
+            .select("id,user_id,payment_type,subscription_id,paypal_order_id,paypal_capture_id,amount,currency,status,created_at,payer_name,payer_email,paypal_payer_id,payment_method,card_brand,card_last4,paypal_fee_amount,paypal_net_amount,paypal_environment,account_role,refund_status,refunded_amount,paypal_refund_id,refund_note,refunded_at,profiles!payments_user_id_fkey(full_name,email,user_code,role,is_banned)")
+            .eq("payment_type", "subscription")
+            .in("status", ["completed", "refunded"])
+            .not("paypal_capture_id", "is", null)
+            .order("created_at", { ascending: false }).limit(200),
+          admin.from("pass_payments")
+            .select("order_id,user_id,amount,currency,created_at,paypal_capture_id,paypal_payer_id,payer_name,payer_email,payment_method,card_brand,card_last4,paypal_fee_amount,paypal_net_amount,paypal_environment,account_role,profiles!pass_payments_user_id_fkey(full_name,email,user_code,role,is_banned)")
+            .not("paypal_capture_id", "is", null)
+            .order("created_at", { ascending: false }).limit(200),
+          admin.from("listing_premium_orders")
+            .select("id,listing_id,user_id,paypal_order_id,paypal_capture_id,amount,currency,status,created_at,completed_at,expires_at,paypal_payer_id,payer_name,payer_email,payment_method,card_brand,card_last4,paypal_fee_amount,paypal_net_amount,paypal_environment,account_role,profiles!listing_premium_orders_user_id_fkey(full_name,email,user_code,role,is_banned),listings!listing_premium_orders_listing_id_fkey(title,city,state)")
+            .in("status", ["completed", "refunded"])
+            .not("paypal_capture_id", "is", null)
+            .order("created_at", { ascending: false }).limit(200),
+        ]);
+        if (landlordResult.error || renterResult.error || listingResult.error) {
+          console.error("Admin payment report query failed:", landlordResult.error?.message, renterResult.error?.message, listingResult.error?.message);
+          throw new Error("Could not load all PayPal payment records. Check payment audit columns and admin permissions.");
+        }
+        const landlordPayments = (landlordResult.data ?? []).map((row: any) => ({
+          ...row,
+          purchase_type: "Landlord Premium",
+          account_role: row.account_role ?? "landlord",
+        }));
+        const renterPayments = (renterResult.data ?? []).map((row: any) => ({
+          ...row,
+          id: "pass-" + row.order_id,
+          paypal_order_id: row.order_id,
+          payment_type: "contact_pass",
+          subscription_id: null,
+          status: "completed",
+          refund_status: "none",
+          refunded_amount: 0,
+          purchase_type: row.account_role === "landlord" ? "Landlord Contact Pass" : "Renter Contact Pass",
+          account_role: row.account_role ?? row.profiles?.role ?? "renter",
+        }));
+        const listingPayments = (listingResult.data ?? []).map((row: any) => ({
+          ...row,
+          payment_type: "listing_premium",
+          subscription_id: null,
+          refund_status: "none",
+          refunded_amount: 0,
+          purchase_type: "Listing Premium",
+          listing_title: row.listings?.title ?? null,
+          listing_location: [row.listings?.city, row.listings?.state].filter(Boolean).join(", "),
+          account_role: row.account_role ?? row.profiles?.role ?? "landlord",
+        }));
+        const payments = [...landlordPayments, ...renterPayments, ...listingPayments]
+          .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 500);
+        return json({ ok: true, environment: isLive ? "live" : "sandbox", total: payments.length, payments });
+      }
+
+      const paymentId = String(body.payment_id ?? "");
+      const note = String(body.note ?? "").trim().slice(0, 500);
+      const requested = Number(body.amount);
+      if (!/^[0-9a-f-]{36}$/i.test(paymentId) || !Number.isFinite(requested) || requested <= 0) {
+        return json({ error: "Choose a valid payment and refund amount." }, 400);
+      }
+      const { data: payment, error: paymentError } = await admin.from("payments")
+        .select("id,user_id,payment_type,subscription_id,paypal_capture_id,amount,currency,status,refund_status,refund_request_id,refunded_amount")
+        .eq("id", paymentId).maybeSingle();
+      if (paymentError || !payment) return json({ error: "Payment record was not found." }, 404);
+      if (payment.payment_type !== "subscription" || payment.status !== "completed" || !payment.paypal_capture_id) {
+        return json({ error: "Only completed PayPal Premium payments can be refunded here." }, 409);
+      }
+      if (payment.refund_status === "completed") return json({ error: "This payment has already been fully refunded." }, 409);
+      if (payment.refund_status === "pending") return json({ error: "A refund request is already pending. Check PayPal before trying again." }, 409);
+      const remaining = Math.round((Number(payment.amount) - Number(payment.refunded_amount || 0)) * 100) / 100;
+      const refundAmount = Math.round(requested * 100) / 100;
+      if (refundAmount > remaining || refundAmount <= 0) return json({ error: "Refund amount exceeds the remaining captured amount." }, 400);
+
+      const requestId = crypto.randomUUID(); // Every distinct partial/full refund gets its own idempotency key.
+      const { data: locked, error: lockError } = await admin.from("payments")
+        .update({ refund_status: "pending", refund_request_id: requestId, refund_note: note || null, refund_error: null })
+        .eq("id", paymentId).eq("refund_status", payment.refund_status)
+        .select("id").maybeSingle();
+      if (lockError || !locked) return json({ error: "This payment is already being processed. Refresh the dashboard." }, 409);
+
+      const token = await paypalToken();
+      let refund: any;
+      try {
+        const response = await fetch(PAYPAL_BASE + "/v2/payments/captures/" + encodeURIComponent(payment.paypal_capture_id) + "/refund", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+            "PayPal-Request-Id": requestId,
+          },
+          body: JSON.stringify({
+            amount: { value: refundAmount.toFixed(2), currency_code: payment.currency },
+            ...(note ? { note_to_payer: note } : {}),
+          }),
+        });
+        refund = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const issue = Array.isArray(refund.details) ? refund.details[0]?.issue : null;
+          await admin.from("payments").update({ refund_status: "failed", refund_error: issue || "PayPal rejected the refund request." }).eq("id", paymentId).eq("refund_request_id", requestId);
+          return json({ error: issue ? "PayPal could not issue the refund (" + issue + ")." : "PayPal could not issue the refund. Check PayPal activity." }, 502);
+        }
+      } catch (_networkError) {
+        // Keep the request pending: PayPal may have received it even if the connection dropped.
+        return json({ error: "Refund result is not yet confirmed. Check PayPal activity before retrying.", pending: true }, 202);
+      }
+
+      if (!refund?.id || !["COMPLETED", "PENDING"].includes(String(refund.status || ""))) {
+        await admin.from("payments").update({ refund_status: "pending", refund_error: "PayPal refund status is not final. Verify in PayPal." }).eq("id", paymentId).eq("refund_request_id", requestId);
+        return json({ error: "PayPal accepted or is processing the request, but the final refund status is not confirmed yet.", pending: true }, 202);
+      }
+      if (refund.status === "PENDING") {
+        await admin.from("payments").update({ refund_status: "pending", paypal_refund_id: refund.id, refund_error: "PayPal is processing this refund." }).eq("id", paymentId).eq("refund_request_id", requestId);
+        return json({ ok: true, pending: true, refund_id: refund.id });
+      }
+
+      const totalRefunded = Math.round((Number(payment.refunded_amount || 0) + refundAmount) * 100) / 100;
+      const fullyRefunded = totalRefunded >= Number(payment.amount);
+      const { error: saveError } = await admin.from("payments").update({
+        refunded_amount: totalRefunded,
+        refund_status: fullyRefunded ? "completed" : "none",
+        status: fullyRefunded ? "refunded" : "completed",
+        paypal_refund_id: refund.id,
+        refund_error: null,
+        refunded_at: new Date().toISOString(),
+      }).eq("id", paymentId).eq("refund_request_id", requestId);
+      if (saveError) return json({ error: "PayPal refunded the payment, but RenterHere could not save the result. Keep PayPal refund ID " + refund.id + " for reconciliation." }, 500);
+
+      if (fullyRefunded && payment.subscription_id) {
+        const { count } = await admin.from("payments").select("id", { count: "exact", head: true })
+          .eq("subscription_id", payment.subscription_id).eq("status", "completed");
+        if (!count || count === 0) {
+          await admin.from("landlord_subscriptions").update({ status: "cancelled", current_period_end: new Date().toISOString(), cancel_at_period_end: false })
+            .eq("id", payment.subscription_id);
+        }
+      }
+      await admin.from("admin_audit_logs").insert({
+        admin_id: user.id, action: "paypal_premium_refund",
+        target_table: "payments", target_id: paymentId,
+        details: { refund_id: refund.id, amount: refundAmount, currency: payment.currency, fully_refunded: fullyRefunded, note: note || null },
+      });
+      return json({ ok: true, refund_id: refund.id, refunded_amount: totalRefunded, fully_refunded: fullyRefunded });
+    }
+
+    if (!profile || profile.role !== "landlord") return json({ error: "Landlord accounts only can buy Landlord Premium." }, 403);
+    if (profile.is_banned) return json({ error: "This account cannot make purchases. Contact support." }, 403);
 
     if (action === "config") {
       const clientId = Deno.env.get("PAYPAL_CLIENT_ID") ?? "";
@@ -155,6 +303,8 @@ Deno.serve(async (req: Request) => {
         amount: Number(PRICE),
         currency: "USD",
         status: "pending",
+        account_role: profile.role,
+        paypal_environment: isLive ? "live" : "sandbox",
       });
       if (pendingError) throw new Error("The payment order could not be saved. Please contact support before trying again.");
       return json({ id: order.id });
@@ -187,6 +337,7 @@ Deno.serve(async (req: Request) => {
 
       const token = await paypalToken();
       const order = await paypalApi("/v2/checkout/orders/" + encodeURIComponent(orderId), token);
+      let orderDetails: any = order;
       const unit = Array.isArray(order.purchase_units)
         ? order.purchase_units.find((item: any) => item.reference_id === PLAN_SLUG && item.custom_id === user.id)
         : null;
@@ -203,6 +354,7 @@ Deno.serve(async (req: Request) => {
           "POST",
           {},
         );
+        orderDetails = capturedOrder;
         const capturedUnit = capturedOrder.purchase_units?.find((item: any) => item.reference_id === PLAN_SLUG && item.custom_id === user.id);
         capture = capturedUnit?.payments?.captures?.find((item: any) => item.status === "COMPLETED");
         if (capturedOrder.status !== "COMPLETED") return json({ error: "PayPal has not marked this payment as completed." }, 402);
@@ -221,6 +373,28 @@ Deno.serve(async (req: Request) => {
         console.error("Landlord Premium activation error:", activationError?.message ?? "No subscription id returned");
         return json({ error: "PayPal received the payment, but Premium activation needs support. Contact us and provide PayPal order ID " + orderId + "." }, 500);
       }
+
+      const payer = orderDetails.payer ?? {};
+      const source = orderDetails.payment_source ?? {};
+      const card = source.card ?? {};
+      const paypalSource = source.paypal ?? {};
+      const breakdown = capture.seller_receivable_breakdown ?? {};
+      const fee = Number(breakdown.paypal_fee?.value);
+      const net = Number(breakdown.net_amount?.value);
+      const paymentMethod = card.last_digits ? "card" : (Object.keys(paypalSource).length ? "paypal" : "unknown");
+      const { error: metadataError } = await admin.from("payments").update({
+        paypal_payer_id: payer.payer_id ?? null,
+        payer_name: [payer.name?.given_name, payer.name?.surname].filter(Boolean).join(" ") || card.name || null,
+        payer_email: payer.email_address ?? null,
+        payment_method: paymentMethod,
+        card_brand: card.brand ?? null,
+        card_last4: /^\\d{4}$/.test(String(card.last_digits ?? "")) ? String(card.last_digits) : null,
+        paypal_fee_amount: Number.isFinite(fee) ? fee : null,
+        paypal_net_amount: Number.isFinite(net) ? net : null,
+        account_role: profile.role,
+        paypal_environment: isLive ? "live" : "sandbox",
+      }).eq("paypal_order_id", orderId).eq("user_id", user.id);
+      if (metadataError) console.error("Payment metadata could not be saved:", metadataError.message);
 
       const { data: subscription } = await admin
         .from("landlord_subscriptions")
