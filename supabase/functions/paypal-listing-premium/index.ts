@@ -256,7 +256,7 @@ Deno.serve(async (req: Request) => {
         payer_email: payer.email_address ?? null,
         payment_method: paymentMethod,
         card_brand: card.brand ?? null,
-        card_last4: /^\\d{4}$/.test(String(card.last_digits ?? "")) ? String(card.last_digits) : null,
+        card_last4: /^\d{4}$/.test(String(card.last_digits ?? "")) ? String(card.last_digits) : null,
         paypal_fee_amount: Number.isFinite(fee) ? fee : null,
         paypal_net_amount: Number.isFinite(net) ? net : null,
         paypal_environment: isLive ? "live" : "sandbox",
