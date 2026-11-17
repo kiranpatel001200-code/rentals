@@ -391,11 +391,16 @@ async function init(){
   paintAccountMode();
   if(role === "landlord" || role === "admin" || role === "renter"){ $("cListings").classList.remove("hide"); }
   if(role === "renter"){ $("cListings").insertAdjacentHTML("beforeend", '<p class="passfine">You can manage and promote your own existing listings here without switching out of Renter mode. Listing Premium is separate from your Renter Contact Pass.</p>'); }
-  if(role === "landlord"){ $("cLandlordPremium").classList.remove("hide"); }
+  // Show exactly one account-level Premium plan for the currently selected account mode.
+  // A user's other completed purchase remains in its own payment table and Admin history.
+  var isRenterMode = accountRole === "renter";
+  var isLandlordMode = accountRole === "landlord";
+  $("cPassCard").classList.toggle("hide", !isRenterMode);
+  $("cLandlordPremium").classList.toggle("hide", !isLandlordMode);
   if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
   $("page").classList.remove("hide");
-  showPass();
-  if(accountRole === "landlord"){ showLandlordPremium(); }
+  if(isRenterMode){ showPass(); }
+  if(isLandlordMode){ showLandlordPremium(); }
 }
 async function showPass(){
   if(accountRole === "admin"){
