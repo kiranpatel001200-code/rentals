@@ -490,7 +490,7 @@ function loadLandlordPayPalSdk(config){
     var script = document.createElement("script");
     script.dataset.rhLandlordPaypal = "1";
     var params = "client-id=" + encodeURIComponent(config.client_id) +
-      "&components=buttons,funding-eligibility&enable-funding=card&currency=USD&intent=capture&locale=en_US";
+      "&components=buttons&enable-funding=card&currency=USD&intent=capture&locale=en_US";
     if(config.environment !== "live") params += "&buyer-country=US";
     script.src = "https://www.paypal.com/sdk/js?" + params;
     script.async = true;
