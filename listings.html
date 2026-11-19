@@ -332,11 +332,17 @@ async function run(logIt, push){
   rows.forEach(function(l){
     var expires = l.premium_priority_until ? new Date(l.premium_priority_until).getTime() : Infinity;
     l._premiumPriority = l.premium_priority === true && expires > Date.now();
+    /* A signed-in landlord sees their own matching units first, regardless of plan. */
+    l._isMine = !!uid && l.landlord_id === uid;
+    l._createdTime = l.created_at ? new Date(l.created_at).getTime() : 0;
   });
   rows.sort(function(x, y){
+    if(x._isMine !== y._isMine){ return x._isMine ? -1 : 1; }
+    /* Among the current user's own listings, newest creation timestamp ranks first. */
+    if(x._isMine && y._isMine && x._createdTime !== y._createdTime){ return y._createdTime - x._createdTime; }
     if(x._premiumPriority !== y._premiumPriority){ return x._premiumPriority ? -1 : 1; }
     return sort === "low" ? x.monthly_rent - y.monthly_rent : sort === "high" ? y.monthly_rent - x.monthly_rent
-      : sort === "new" ? new Date(y.created_at) - new Date(x.created_at) : x._d - y._d;
+      : sort === "new" ? y._createdTime - x._createdTime : x._d - y._d;
   });
   var total = rows.length; rows = rows.slice(0, 100);
   if(logIt){ track("search", { city: text ? text.slice(0, 80) : "near me", state: ctr.state || null, bedrooms: beds === "" ? null : Math.min(parseInt(beds, 10), 10), results_count: total }); }
