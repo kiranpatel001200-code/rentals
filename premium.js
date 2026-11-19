@@ -40,7 +40,7 @@
         ["\uD83D\uDCBB", "Unlimited devices", "Access and manage your RenterHere landlord account across your devices."],
         ["\uD83D\uDCAC", "Email & chat support", "Get help from the RenterHere support team by email or live chat."]
       ],
-      fine: "Landlord Premium does not unlock other landlords' contact details. The separate Renter Contact Pass has a 3-listing contact limit; that limit does not cap enquiries received on your own listings."
+      fine: ""
     };
   }
 
@@ -179,9 +179,11 @@
       var price = (window.PASS && window.PASS.price) || "$4.99";
       parts.foot.appendChild(cta("account.html#cPassCard", "Get Renter Premium — " + d.price));
     }
-    var fine = h("p", "prem-fine", d.fine + (mode === "renter" ? " See the " : ""));
-    if(mode === "renter"){ var ta = h("a", "", "Terms of Service"); ta.href = "terms.html"; fine.appendChild(ta); fine.appendChild(document.createTextNode(".")); }
-    parts.foot.appendChild(fine);
+    if(d.fine){
+      var fine = h("p", "prem-fine", d.fine + (mode === "renter" ? " See the " : ""));
+      if(mode === "renter"){ var ta = h("a", "", "Terms of Service"); ta.href = "terms.html"; fine.appendChild(ta); fine.appendChild(document.createTextNode(".")); }
+      parts.foot.appendChild(fine);
+    }
   }
 
   async function openPremium(kind, opts){
