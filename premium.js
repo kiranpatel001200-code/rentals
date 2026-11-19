@@ -107,14 +107,8 @@
           st.landlordPremiumActive = !landlordSub.error && Array.isArray(landlordSub.data) && landlordSub.data.length > 0;
         }
       }catch(e){}
-      if(st.role === "renter" || st.role === "landlord"){
-        try{
-          var quote = await c.functions.invoke("paypal-pass", { body: { action: "config" } });
-          if(!quote.error && quote.data && quote.data.price){
-            st.passPrice = "$" + Number(quote.data.price).toFixed(2);
-          }
-        }catch(e){}
-      }
+      /* Keep the popup responsive: prices are configured in this file and the
+         payment screen confirms the authoritative price before checkout. */
       if(st.role === "renter" && typeof window.passInfo === "function"){
         st.pass = await window.passInfo();
         if(st.pass && st.pass.active){
