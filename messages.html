@@ -212,10 +212,10 @@ function receivedItem(r){
   var vb = el("button", "act viewbtn", r.read_at ? "View message" : "View new message"); vb.type = "button";
   function build(){
     if(r.locked){
-      detail.appendChild(el("p", "lockmsg", "\uD83D\uDD12 This message is protected. Open the Contact Pass overview to see what is included and how to unlock it."));
-      var learn = el("button", "act passlearn", "View Contact Pass details");
+      detail.appendChild(el("p", "lockmsg", "\uD83D\uDD12 Renter contact details are protected. View Landlord Premium options for your incoming renter enquiries."));
+      var learn = el("button", "act passlearn", "View Landlord Premium details");
       learn.type = "button";
-      learn.onclick = function(){ if(window.openPremium){ window.openPremium("renter", { compact: true }); } };
+      learn.onclick = function(){ if(window.openPremium){ window.openPremium("landlord", { compact: true }); } };
       detail.appendChild(learn);
       return;
     }
@@ -233,7 +233,7 @@ function receivedItem(r){
     if(open){ detail.classList.add("hide"); vb.textContent = r.read_at ? "View message" : "View new message"; return; }
     if(!built){ built = true; build(); }
     detail.classList.remove("hide"); vb.textContent = "Hide message";
-    if(r.locked && window.openPremium){ window.openPremium("renter", { compact: true }); }
+    if(r.locked && window.openPremium){ window.openPremium("landlord", { compact: true }); }
     /* The message becomes "read" only now, and only with an active pass (the database enforces it). */
     if(!r.locked && !r.read_at){
       sb.rpc("mark_inquiry_read", { p_id: r.id }).then(function(res){
