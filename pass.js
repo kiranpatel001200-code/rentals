@@ -57,6 +57,7 @@ function passBox(onDone){
       if(quote && quote.price){ PASS.price = "$" + Number(quote.price).toFixed(2); }
       if(quote && quote.days){ PASS.term = "one payment, valid for " + Number(quote.days) + " days"; }
       if(quote && quote.client_id){ PASS.clientId = quote.client_id; }
+      if(quote && quote.environment){ PASS.environment = quote.environment; }
     }catch(e){
       d.appendChild(passEl("p", "passnote", e.message || "Could not load the Premium price. Please refresh and try again."));
       return;
@@ -175,7 +176,7 @@ function buildPay(d, onDone, role){
       if(!script){
         script=document.createElement("script");
         script.dataset.rhRenterPaypal="1";
-        var params="client-id="+encodeURIComponent(config.client_id)+"&components=buttons,funding-eligibility&enable-funding=card&currency=USD&intent=capture&locale=en_US";
+        var params="client-id="+encodeURIComponent(config.client_id)+"&components=buttons&enable-funding=card&currency=USD&intent=capture&locale=en_US";
         if(config.environment!=="live") params+="&buyer-country=US";
         script.src="https://www.paypal.com/sdk/js?"+params;
         script.async=true;
