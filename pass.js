@@ -122,17 +122,12 @@ function buildPay(d, onDone, role){
     total.appendChild(amount); dialog.appendChild(total);
     dialog.appendChild(passEl("p","rh-checkout-safe","🔒 Choose PayPal or Debit/Credit Card. PayPal securely processes card details; RenterHere never receives or stores your card number or CVV."));
 
-    var terms = passEl("label","pass-consent");
-    terms.style.cssText = "display:flex;align-items:flex-start;gap:9px;margin:8px 0;padding:10px 12px;border:1px solid #cbd8e8;border-radius:10px;background:#f5f8fd;color:#172b4d;font-size:13px;line-height:1.45";
-    var checkbox = document.createElement("input");
-    checkbox.type="checkbox"; checkbox.style.cssText="margin-top:3px;min-width:16px";
-    terms.appendChild(checkbox);
-    var consentCopy=passEl("span","pass-consent-copy");
-    consentCopy.appendChild(document.createTextNode("I agree to the "));
+    var terms = passEl("p","pass-consent-copy");
+    terms.style.cssText = "margin:8px 0;padding:10px 12px;border:1px solid #d6e8e3;border-radius:10px;background:#f4faf8;color:#526966;font-size:13px;line-height:1.45";
+    terms.appendChild(document.createTextNode("By continuing with payment, you agree to the "));
     var link=passEl("a","","Terms of Service"); link.href="terms.html"; link.target="_blank"; link.rel="noopener";
-    consentCopy.appendChild(link);
-    consentCopy.appendChild(document.createTextNode(" and understand this is a one-time payment with no automatic renewal."));
-    terms.appendChild(consentCopy);
+    terms.appendChild(link);
+    terms.appendChild(document.createTextNode(". This is a one-time payment with no automatic renewal."));
     dialog.appendChild(terms);
 
     var choices=passEl("div","rh-payment-choices");
@@ -153,8 +148,7 @@ function buildPay(d, onDone, role){
     modal.addEventListener("click",function(event){if(event.target===modal) closeModal();});
     document.addEventListener("keydown",function(event){if(event.key==="Escape" && !modal.classList.contains("hide")) closeModal();});
     document.body.appendChild(modal);
-    checkbox.addEventListener("change",function(){ if(checkbox.checked && !paymentUiReady) initialise(); });
-    modal._checkbox=checkbox;
+    modal._checkbox=null;
     return modal;
   }
   async function loadSdk(config){
@@ -219,7 +213,7 @@ function buildPay(d, onDone, role){
     try{
       if(!PASS.clientId) throw new Error("PayPal checkout is not configured for this account yet.");
       await loadSdk({client_id:PASS.clientId,environment:PASS.environment||"sandbox"});
-      var common={style:{layout:"vertical",shape:"rect",height:48,label:"pay"},onClick:function(data,actions){if(!modal._checkbox.checked){note("Please agree to the Terms of Service before paying.","err");return actions.reject();}return actions.resolve();},createOrder:createOrder,onApprove:capture,onCancel:function(){note("Payment canceled. You can try again.");},onError:function(error){console.error("Renter Premium PayPal error:",error);note("PayPal could not complete checkout. Please try again.","err");}};
+      var common={style:{layout:"vertical",shape:"rect",height:48,label:"pay"},createOrder:createOrder,onApprove:capture,onCancel:function(){note("Payment canceled. You can try again.");},onError:function(error){console.error("Renter Premium PayPal error:",error);note("PayPal could not complete checkout. Please try again.","err");}};
       var paypalSlot=modal.querySelector("#renterPassPayPalButton");
       var cardSlot=modal.querySelector("#renterPassCardButton");
       var paypalButton=window.paypal.Buttons(Object.assign({},common,{fundingSource:window.paypal.FUNDING.PAYPAL}));
