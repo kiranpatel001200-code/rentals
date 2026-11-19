@@ -126,10 +126,12 @@ function buildPay(d, onDone, role){
     var checkbox = document.createElement("input");
     checkbox.type="checkbox"; checkbox.style.cssText="margin-top:3px;min-width:16px";
     terms.appendChild(checkbox);
-    terms.appendChild(document.createTextNode("I agree to the "));
+    var consentCopy=passEl("span","pass-consent-copy");
+    consentCopy.appendChild(document.createTextNode("I agree to the "));
     var link=passEl("a","","Terms of Service"); link.href="terms.html"; link.target="_blank"; link.rel="noopener";
-    terms.appendChild(link);
-    terms.appendChild(document.createTextNode(" and understand this is a one-time payment with no automatic renewal."));
+    consentCopy.appendChild(link);
+    consentCopy.appendChild(document.createTextNode(" and understand this is a one-time payment with no automatic renewal."));
+    terms.appendChild(consentCopy);
     dialog.appendChild(terms);
 
     var choices=passEl("div","rh-payment-choices");
@@ -156,15 +158,38 @@ function buildPay(d, onDone, role){
   }
   async function loadSdk(config){
     if(sdkPromise) return sdkPromise;
-    if(window.paypal && typeof window.paypal.Buttons==="function" && window.paypal.FUNDING){ sdkPromise=Promise.resolve(); return sdkPromise; }
+    if(window.paypal && typeof window.paypal.Buttons==="function" && window.paypal.FUNDING){
+      sdkPromise=Promise.resolve(); return sdkPromise;
+    }
     sdkPromise=new Promise(function(resolve,reject){
-      var script=document.createElement("script");
-      var params="client-id="+encodeURIComponent(config.client_id)+"&components=buttons,funding-eligibility&enable-funding=card&currency=USD&intent=capture&locale=en_US";
-      if(config.environment!=="live") params+="&buyer-country=US";
-      script.src="https://www.paypal.com/sdk/js?"+params; script.async=true;
-      script.onload=function(){ if(window.paypal && window.paypal.Buttons) resolve(); else reject(new Error("PayPal checkout did not initialize.")); };
-      script.onerror=function(){ sdkPromise=null; reject(new Error("Could not load PayPal checkout. Please try again.")); };
-      document.head.appendChild(script);
+      var script=document.querySelector('script[data-rh-renter-paypal="1"]');
+      var settled=false, timeoutId;
+      function finish(error){
+        if(settled) return;
+        settled=true;
+        if(timeoutId) clearTimeout(timeoutId);
+        if(error){ sdkPromise=null; reject(error); }
+        else if(window.paypal && typeof window.paypal.Buttons==="function" && window.paypal.FUNDING){ resolve(); }
+        else { sdkPromise=null; reject(new Error("PayPal loaded but its checkout buttons were unavailable. Please retry.")); }
+      }
+      if(!script){
+        script=document.createElement("script");
+        script.dataset.rhRenterPaypal="1";
+        var params="client-id="+encodeURIComponent(config.client_id)+"&components=buttons,funding-eligibility&enable-funding=card&currency=USD&intent=capture&locale=en_US";
+        if(config.environment!=="live") params+="&buyer-country=US";
+        script.src="https://www.paypal.com/sdk/js?"+params;
+        script.async=true;
+        script.onload=function(){ finish(); };
+        script.onerror=function(){ finish(new Error("PayPal's secure checkout service could not be reached. Check the connection and tap Continue to retry.")); };
+        document.head.appendChild(script);
+      }else{
+        script.addEventListener("load",function(){ finish(); },{once:true});
+        script.addEventListener("error",function(){ finish(new Error("PayPal's secure checkout service could not be reached. Check the connection and tap Continue to retry.")); },{once:true});
+        if(window.paypal && typeof window.paypal.Buttons==="function") finish();
+      }
+      timeoutId=setTimeout(function(){
+        finish(new Error("PayPal is taking too long to respond. Check your connection and tap Continue to retry."));
+      },20000);
     });
     return sdkPromise;
   }
@@ -188,13 +213,12 @@ function buildPay(d, onDone, role){
     return result;
   }
   async function initialise(){
-    if(paymentUiReady || !modal._checkbox.checked) return;
-    if(!modal._checkbox.checked){note("Please agree to the Terms of Service before paying.","err");return;}
+    if(paymentUiReady) return;
     note("Loading secure payment options...");
     try{
       if(!PASS.clientId) throw new Error("PayPal checkout is not configured for this account yet.");
       await loadSdk({client_id:PASS.clientId,environment:PASS.environment||"sandbox"});
-      var common={style:{layout:"vertical",shape:"rect",height:48,label:"pay"},createOrder:createOrder,onApprove:capture,onCancel:function(){note("Payment canceled. You can try again.");},onError:function(error){console.error("Renter Premium PayPal error:",error);note("PayPal could not complete checkout. Please try again.","err");}};
+      var common={style:{layout:"vertical",shape:"rect",height:48,label:"pay"},onClick:function(data,actions){if(!modal._checkbox.checked){note("Please agree to the Terms of Service before paying.","err");return actions.reject();}return actions.resolve();},createOrder:createOrder,onApprove:capture,onCancel:function(){note("Payment canceled. You can try again.");},onError:function(error){console.error("Renter Premium PayPal error:",error);note("PayPal could not complete checkout. Please try again.","err");}};
       var paypalSlot=modal.querySelector("#renterPassPayPalButton");
       var cardSlot=modal.querySelector("#renterPassCardButton");
       var paypalButton=window.paypal.Buttons(Object.assign({},common,{fundingSource:window.paypal.FUNDING.PAYPAL}));
@@ -215,7 +239,7 @@ function buildPay(d, onDone, role){
     createModal();
     modal.classList.remove("hide");
     document.body.style.overflow="hidden";
-    if(modal._checkbox.checked && !paymentUiReady) initialise();
+    if(!paymentUiReady) initialise();
     modal.querySelector(".rh-checkout-close").focus();
   };
 }
