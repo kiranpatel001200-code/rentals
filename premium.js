@@ -162,7 +162,7 @@
       li.appendChild(txt); parts.list.appendChild(li);
     });
     if(mode === "landlord"){
-      parts.foot.appendChild(st.loggedIn ? cta("account.html#cLandlordPremium", "Get Landlord Premium — $35/year") : cta("login.html?next=account.html%23cLandlordPremium", "Log in to get Landlord Premium"));
+      parts.foot.appendChild(st.loggedIn ? cta("account.html?checkout=landlord#cLandlordPremium", "Continue to Landlord Premium checkout — $35/year") : cta("login.html?next=account.html%3Fcheckout%3Dlandlord%23cLandlordPremium", "Log in to get Landlord Premium"));
     } else if(!st.loggedIn){
       parts.foot.appendChild(cta("login.html?next=account.html", "Log in or sign up"));
     } else if(st.pass && st.pass.active){
