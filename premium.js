@@ -34,11 +34,11 @@
       title: "Landlord Premium",
       sub: "$35 USD for 1 year · one-time payment · no automatic renewal",
       items: [
-        ["\u2B50", "Priority search placement", "Active Premium listings appear ahead of standard listings in matching rental searches."],
-        ["\uD83C\uDFE0", "Unlimited active listings", "Grow your rental portfolio without the Free plan's 5-active-listing limit."],
-        ["\uD83D\uDCE3", "Featured visibility", "Premium placement helps your eligible listings stand out to renters searching in your area."],
-        ["\u2705", "Spot verified-email enquiries", "The Messages inbox marks renters whose email address has been verified."],
-        ["\uD83D\uDCC8", "Keep renter enquiries together", "Review messages, move-in dates and viewing requests from your Messages inbox."]
+        ["\u2B50", "Priority search placement", "Give your eligible rental units priority visibility in matching renter searches."],
+        ["\uD83C\uDFE0", "Unlimited units", "Add and manage as many rental units as your property portfolio needs."],
+        ["\uD83D\uDCE3", "Featured visibility", "Help your eligible units stand out to renters searching in your area."],
+        ["\uD83D\uDCBB", "Unlimited devices", "Access and manage your RenterHere landlord account across your devices."],
+        ["\uD83D\uDCAC", "Email & live chat support", "Get help from the RenterHere support team by email or live chat."]
       ],
       fine: "Landlord Premium does not unlock other landlords' contact details. The separate Renter Contact Pass has a 3-listing contact limit; that limit does not cap enquiries received on your own listings."
     };
