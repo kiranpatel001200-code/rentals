@@ -238,7 +238,8 @@ Object.keys(PLACES.hoods).forEach(function(k){
   PLACES.hoods[k].forEach(function(h){ var n = RN_GEO.norm(h); (HOOD_CITY[n] = HOOD_CITY[n] || []).push({ city: c, state: st }); });
 });
 function hoodCity(name, st){
-  var list = HOOD_CITY[RN_GEO.norm(name)]; if(!list) return null;
+  var key = RN_GEO.norm(name), matched = HOOD_CITY[key] ? key : RN_GEO.matchName(name, Object.keys(HOOD_CITY));
+  var list = matched ? HOOD_CITY[matched] : null; if(!list) return null;
   for(var i = 0; i < list.length; i++){ if(!st || list[i].state === st) return list[i]; }
   return null;
 }
