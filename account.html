@@ -404,7 +404,13 @@ async function init(){
   if(role === "admin"){ $("cAdmin").classList.remove("hide"); }
   $("page").classList.remove("hide");
   if(isRenterMode){ showPass(); }
-  if(isLandlordMode){ showLandlordPremium(); }
+  if(isLandlordMode){
+    await showLandlordPremium();
+    if(new URLSearchParams(location.search).get("checkout") === "landlord" &&
+       !$("landlordPremiumCheckout").classList.contains("hide")){
+      openLandlordCheckout();
+    }
+  }
 }
 async function showPass(){
   if(accountRole === "admin"){
