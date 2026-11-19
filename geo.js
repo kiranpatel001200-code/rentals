@@ -37,9 +37,43 @@ var RN_GEO = (function(){
 
   /* ---- lookups (call ready() first) ---- */
   function zip(z){ return db && db.zips[String(z || "").trim().slice(0, 5)] || null; }
+  /* Conservative typo matching: correct only a close, clearly best city/neighborhood name. */
+  function editDistance(a, b){
+    var prev = [], curr = [], i, j;
+    for(j = 0; j <= b.length; j++) prev[j] = j;
+    for(i = 1; i <= a.length; i++){
+      curr[0] = i;
+      for(j = 1; j <= b.length; j++){
+        var cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+        curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+        if(i > 1 && j > 1 && a.charAt(i - 1) === b.charAt(j - 2) && a.charAt(i - 2) === b.charAt(j - 1)){
+          curr[j] = Math.min(curr[j], prev[j - 2] + 1);
+        }
+      }
+      var swap = prev; prev = curr; curr = swap;
+    }
+    return prev[b.length];
+  }
+  function matchName(value, candidates){
+    var q = norm(value);
+    if(!q) return null;
+    for(var x = 0; x < candidates.length; x++){ if(norm(candidates[x]) === q) return candidates[x]; }
+    if(q.length < 4) return null;
+    var best = null, bestD = Infinity, secondD = Infinity;
+    for(var i = 0; i < candidates.length; i++){
+      var c = norm(candidates[i]);
+      if(!c || Math.abs(c.length - q.length) > 2) continue;
+      var d = editDistance(q, c);
+      if(d < bestD){ secondD = bestD; bestD = d; best = candidates[i]; }
+      else if(d < secondD){ secondD = d; }
+    }
+    var limit = q.length <= 6 ? 1 : 2;
+    return best && bestD <= limit && (secondD - bestD >= 1) ? best : null;
+  }
   function city(name, st){
     if(!db) return null;
-    var list = db.byName[norm(name)]; if(!list) return null;
+    var key = norm(name), matched = db.byName[key] ? key : matchName(name, Object.keys(db.byName));
+    var list = matched ? db.byName[matched] : null; if(!list) return null;
     if(st){ for(var i = 0; i < list.length; i++){ if(list[i].state === st) return list[i]; } return null; }
     return list.slice().sort(function(a, b){ return b.n - a.n; })[0];   /* the biggest city with that name */
   }
@@ -78,5 +112,5 @@ var RN_GEO = (function(){
     return { minLat: lat - dLat, maxLat: lat + dLat, minLng: lng - dLng, maxLng: lng + dLng };
   }
 
-  return { RADIUS: RADIUS, ready: ready, norm: norm, zip: zip, city: city, zipCheck: zipCheck, forListing: forListing, center: center, dist: dist, bbox: bbox };
+  return { RADIUS: RADIUS, ready: ready, norm: norm, matchName: matchName, zip: zip, city: city, zipCheck: zipCheck, forListing: forListing, center: center, dist: dist, bbox: bbox };
 })();
