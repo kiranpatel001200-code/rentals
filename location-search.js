@@ -47,7 +47,7 @@
     var wrap=make("div","rn-location-wrap"); input.parentNode.insertBefore(wrap,input); wrap.appendChild(input);
     var box=make("div","rn-location-suggestions"); box.hidden=true; box.setAttribute("role","listbox"); wrap.appendChild(box);
     var lastRequest=0, selected=null;
-    function choose(item){ selected=item; input.value=item.label; close(box); input.dataset.rnSelected="1"; input.dispatchEvent(new Event("change",{bubbles:true})); if(form.matches(".search")) navigate(form,input,item); }
+    function choose(item){ selected=item; input.value=item.label; close(box); input.dataset.rnSelected="1"; input.dispatchEvent(new Event("change",{bubbles:true})); navigate(form,input,item); }
     function render(items){
       close(box); box._items=items;
       items.forEach(function(item,i){
