@@ -1,0 +1,9 @@
+.rn-location-wrap{position:relative;min-width:0;width:100%}
+.rn-location-wrap>input{width:100%}
+.rn-location-suggestions{position:absolute;z-index:10000;top:calc(100% + 6px);left:0;right:0;max-height: min(360px,55vh);overflow-y:auto;background:#fff;border:1px solid #d8e1e8;border-radius:12px;box-shadow:0 12px 32px rgba(10,35,55,.18);padding:5px}
+.rn-location-suggestions[hidden]{display:none}
+.rn-location-option{display:block;width:100%;text-align:left;background:#fff;border:0;border-radius:8px;padding:10px 12px;color:#172b35;cursor:pointer;font:inherit}
+.rn-location-option:hover,.rn-location-option.active{background:#eef5ff}
+.rn-location-main{display:block;font-weight:650;line-height:1.35}
+.rn-location-sub{display:block;color:#667784;font-size:12px;margin-top:3px}
+.rn-location-empty{padding:12px;color:#667784;font-size:13px}
