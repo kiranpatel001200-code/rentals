@@ -312,18 +312,32 @@ async function run(logIt, push){
   setTitle("Rentals within " + RADIUS + " miles of " + ctr.label);
   $("count").textContent = "Searching...";
   var b = RN_GEO.bbox(ctr.lat, ctr.lng, RADIUS), f4 = function(n){ return n.toFixed(4); };
+  /* A city search must include every active listing in that exact city/state, even when
+     a landlord entered an inaccurate ZIP or the listing has no coordinates. */
+  var citySearch = (p.city || p.free) && !p.zip && !p.street ? (p.city || p.free) : "";
+  var cityState = p.state || ctr.state || "";
+  var cityClause = citySearch ? ",and(city.ilike." + safe(citySearch) + (cityState ? ",state.eq." + cityState : "") + ")" : "";
   var q = sb.from("listings").select("id,title,monthly_rent,bedrooms,bathrooms,city,state,neighborhood,street_address,zip_code,latitude,longitude,status,landlord_id,created_at,premium_priority,premium_priority_until,listing_images(url,is_primary,display_order)")
-    .or("and(latitude.gte." + f4(b.minLat) + ",latitude.lte." + f4(b.maxLat) + ",longitude.gte." + f4(b.minLng) + ",longitude.lte." + f4(b.maxLng) + "),latitude.is.null")
-    .is("deleted_at", null)
-    .limit(500);
+    .or("and(latitude.gte." + f4(b.minLat) + ",latitude.lte." + f4(b.maxLat) + ",longitude.gte." + f4(b.minLng) + ",longitude.lte." + f4(b.maxLng) + "),latitude.is.null" + cityClause)
+    .is("deleted_at", null);
   if(ptype) q = q.eq("property_type", ptype);
   if(beds === "3") q = q.gte("bedrooms", 3); else if(beds !== "") q = q.eq("bedrooms", parseInt(beds, 10));
-  var res = await q;
-  if(res.error){ $("count").textContent = "Could not load rentals. Please try again."; return; }
 
-  /* the database gave us a box; keep only what is really inside the 20 mile circle */
+  /* Fetch every matching row in pages; do not silently stop at 500 or 100 results. */
+  var fetched = [], offset = 0, res;
+  do{
+    res = await q.range(offset, offset + 999);
+    if(res.error){ $("count").textContent = "Could not load rentals. Please try again."; return; }
+    fetched = fetched.concat(res.data || []);
+    offset += 1000;
+  }while((res.data || []).length === 1000);
+
+  /* ZIP searches use the 20-mile radius. City searches include all listings in that city. */
   var rows = [];
-  (res.data || []).forEach(function(l){
+  fetched.forEach(function(l){
+    var sameCity = !!citySearch && RN_GEO.norm(l.city) === RN_GEO.norm(citySearch) &&
+      (!cityState || String(l.state || "").trim() === cityState);
+    if(sameCity){ l._d = 0; rows.push(l); return; }
     var lat = l.latitude, lng = l.longitude;
     if(lat === null || lat === undefined || lng === null || lng === undefined){ var g = RN_GEO.forListing(l); if(!g) return; lat = g.lat; lng = g.lng; }
     var d = RN_GEO.dist(ctr.lat, ctr.lng, lat, lng);
@@ -344,7 +358,7 @@ async function run(logIt, push){
     return sort === "low" ? x.monthly_rent - y.monthly_rent : sort === "high" ? y.monthly_rent - x.monthly_rent
       : sort === "new" ? y._createdTime - x._createdTime : x._d - y._d;
   });
-  var total = rows.length; rows = rows.slice(0, 100);
+  var total = rows.length;
   if(logIt){ track("search", { city: text ? text.slice(0, 80) : "near me", state: ctr.state || null, bedrooms: beds === "" ? null : Math.min(parseInt(beds, 10), 10), results_count: total }); }
   if(!rows.length){ $("count").textContent = ""; grid.appendChild(emptyBox(ctr.label, ctr.state)); return; }
   $("count").textContent = total + " rental" + (total > 1 ? "s" : "") + " within " + RADIUS + " miles of " + ctr.label + (total > rows.length ? " (showing the first " + rows.length + ")" : "");
