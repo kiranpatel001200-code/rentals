@@ -272,7 +272,9 @@ async function showSession(){
   } else {
     show("stLogin");
     var params = new URLSearchParams(location.search);
-    var authError = params.get("error_description") || params.get("error") || params.get("error_code");
+    var hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
+    var authError = params.get("error_description") || params.get("error") || params.get("error_code") ||
+      hashParams.get("error_description") || hashParams.get("error") || hashParams.get("error_code");
     if(authError){
       authError = authError.replace(/[+._-]+/g, " ").trim();
       say(/access denied|cancel/i.test(authError) ? "Google sign-in was cancelled. You can try again or use email login." : "Google sign-in could not be completed: " + authError, "err");
