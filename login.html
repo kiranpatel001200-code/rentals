@@ -274,7 +274,7 @@ async function showSession(){
     var params = new URLSearchParams(location.search);
     var authError = params.get("error_description") || params.get("error") || params.get("error_code");
     if(authError){
-      authError = authError.replace(/\\+/g, " ").replace(/[._-]+/g, " ").replace(/\\s+/g, " ").trim();
+      authError = authError.replace(/[+._-]+/g, " ").trim();
       say(/access denied|cancel/i.test(authError) ? "Google sign-in was cancelled. You can try again or use email login." : "Google sign-in could not be completed: " + authError, "err");
     }
   }
