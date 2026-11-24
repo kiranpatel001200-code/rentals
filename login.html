@@ -226,7 +226,7 @@ var SITE = "https://kiranpatel001200-code.github.io/rentals/";
 var sb = supabase.createClient("https://abppfpgazlngdhrejrog.supabase.co", "sb_publishable_aDiJt8SXRag8hD73rhiFuQ_ezmlGWo5");
 var $ = function(id){ return document.getElementById(id); };
 var STEPS = ["stLogin","stSignup","stCheck","stForgot","stReset","stIn"];
-var PAGES = ["index.html","listings.html","listing.html","create-listing.html","account.html","reviews.html","my-listings.html","messages.html","admin.html","about.html","avoid-rental-scams.html","blog.html","contact.html","find-compatible-roommates.html","first-apartment-budget.html","privacy.html","questions-to-ask-roommate.html","rental-application-checklist.html","rental-faq.html","room-for-rent-search-guide.html","roommate-agreement-guide.html","safety.html","terms.html","whats-your-20-meaning.html","sitemap.html"];
+var PAGES = ["index.html","listings.html","create-listing.html","account.html","reviews.html","my-listings.html","messages.html","admin.html"];
 function pageFrom(v){
   v = (v || "").split("#")[0].split("?")[0].split("/").pop();
   if(v === "account") v = "account.html";
@@ -270,8 +270,7 @@ async function showSession(){
     $("who").textContent = "Signed in as " + r.data.session.user.email;
     show("stIn");
   } else {
-    var mode = new URLSearchParams(location.search).get("mode");
-    show(mode === "signup" ? "stSignup" : "stLogin");
+    show("stLogin");
     var params = new URLSearchParams(location.search);
     var hashParams = new URLSearchParams(location.hash.replace(/^#/, ""));
     var authError = params.get("error_description") || params.get("error") || params.get("error_code") ||
