@@ -294,6 +294,7 @@ $("googleBtn").onclick = async function(){
       provider: "google",
       options: {
         redirectTo: SITE + "login.html?next=" + encodeURIComponent(NEXT),
+        scopes: "openid email profile",
         queryParams: { prompt: "consent select_account" }
       }
     });
