@@ -294,7 +294,7 @@ $("googleBtn").onclick = async function(){
       provider: "google",
       options: {
         redirectTo: SITE + "login.html?next=" + encodeURIComponent(NEXT),
-        queryParams: { prompt: "select_account" }
+        queryParams: { prompt: "consent select_account" }
       }
     });
     if(result.error){
