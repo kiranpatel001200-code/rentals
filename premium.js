@@ -37,6 +37,7 @@
         ["\u2B50", "Priority search placement", "Give your eligible rental units priority visibility in matching renter searches."],
         ["\uD83C\uDFE0", "Unlimited units", "Add and manage as many rental units as your property portfolio needs."],
         ["\uD83D\uDCE3", "Featured visibility", "Help your eligible units stand out to renters searching in your area."],
+        ["\uD83D\uDD17", "Share your listing anywhere", "Every listing you create on RenterHere gets its own unique URL. Share it on Instagram, Facebook, WhatsApp, or anywhere else to reach more renters."],
         ["\uD83D\uDCBB", "Unlimited devices", "Access and manage your RenterHere landlord account across your devices."],
         ["\uD83D\uDCAC", "Email & chat support", "Get help from the RenterHere support team by email or live chat."]
       ],
